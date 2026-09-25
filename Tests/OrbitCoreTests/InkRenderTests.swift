@@ -51,7 +51,11 @@ final class InkRenderTests: XCTestCase {
         XCTAssertEqual(be32(Array(idat.suffix(4)), 0), PNGEncoder.adler32(raw))
         let bmp = renderer.rasterize(region.strokes, lineHeight: region.lineHeight)!
         XCTAssertEqual(width, bmp.width)
-        let pixels = (0..<height).flatMap { y in raw[(y * (width + 1) + 1)..<((y + 1) * (width + 1))] }
+        var pixels: [UInt8] = []
+        for y in 0..<height {
+            let rowStart: Int = y * (width + 1) + 1
+            pixels += raw[rowStart..<(rowStart + width)]
+        }
         XCTAssertEqual(pixels, bmp.pixels)
     }
 
@@ -77,7 +81,8 @@ final class InkRenderTests: XCTestCase {
     // MARK: Helpers
 
     func be32(_ b: [UInt8], _ i: Int) -> UInt32 {
-        UInt32(b[i]) << 24 | UInt32(b[i + 1]) << 16 | UInt32(b[i + 2]) << 8 | UInt32(b[i + 3])
+        let hi: UInt32 = UInt32(b[i]) << 24 | UInt32(b[i + 1]) << 16
+        return hi | UInt32(b[i + 2]) << 8 | UInt32(b[i + 3])
     }
 
     /// Inflates a zlib stream made only of stored blocks.

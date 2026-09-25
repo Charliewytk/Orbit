@@ -110,8 +110,14 @@ public struct QuickAddParser: Sendable {
             }
         }
 
-        // Title.
+        // Title. Drop a connector that only became leading because text before it was removed
+        // ("deep work on dissertation" → "Dissertation").
         var title = Self.cleanTitle(s)
+        let firstWord = { (x: String) in x.split(separator: " ").first.map { $0.lowercased() } ?? "" }
+        if ["on", "at", "by", "due", "for", "with", "and"].contains(firstWord(title)),
+           firstWord(title) != firstWord(input.trimmingCharacters(in: .whitespaces)) {
+            title = Self.cleanTitle(String(title.drop { !$0.isWhitespace }))
+        }
         if title.isEmpty {
             title = Self.cleanTitle(input)
             confidence = 0.2

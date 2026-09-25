@@ -150,18 +150,24 @@ public struct NoteIndex: Codable, Sendable {
                 out.append(IndexedNoteChunk(id: "\(note.id)#\(out.count)", noteID: note.id, noteTitle: note.title,
                                             moduleCode: note.moduleCode, week: note.week, kind: run.kind,
                                             heading: head, text: text, modified: note.modified))
-                // Start the next chunk with the tail of this one.
-                var tail: [String] = [], tailLength = 0
-                for piece in current.reversed() where tailLength + piece.count <= overlap {
-                    tail.insert(piece, at: 0); tailLength += piece.count + 1
+                // Start the next chunk with the last `overlap` characters of this one (from a word start).
+                var tail = ""
+                if overlap > 0, let lastLine = current.last {
+                    tail = String(lastLine.suffix(overlap))
+                    if tail.count < lastLine.count, let space = tail.firstIndex(of: " ") {
+                        tail = String(tail[tail.index(after: space)...])
+                    }
+                    if tail.hasPrefix("#") { tail = "" }
                 }
-                current = tail; length = tailLength; fresh = false
+                current = tail.isEmpty ? [] : [tail]; length = tail.isEmpty ? 0 : tail.count + 1; fresh = false
                 chunkHeading = heading
             }
             for line in pieces(run.text, maxLength: max(80, size / 2)) {
                 if line.hasPrefix("#") {
+                    // A new heading starts a new chunk once the current one has some substance.
+                    if fresh && length > size / 4 { emit(); current = []; length = 0 }
                     heading = line.trimmingCharacters(in: CharacterSet(charactersIn: "# ")).trimmingCharacters(in: .whitespaces)
-                    if current.isEmpty || current.allSatisfy({ $0.hasPrefix("#") }) { chunkHeading = heading }
+                    if !fresh { chunkHeading = heading }
                 }
                 if length + line.count > size {
                     if fresh { emit() }

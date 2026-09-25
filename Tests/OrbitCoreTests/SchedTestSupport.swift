@@ -64,10 +64,15 @@ final class SchedStubTransport: HTTPTransport, @unchecked Sendable {
         return _requests
     }
 
+    private func record(_ rec: Recorded) {
+        lock.lock(); defer { lock.unlock() }
+        _requests.append(rec)
+    }
+
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let rec = Recorded(method: request.httpMethod ?? "GET", url: request.url!,
                            headers: request.allHTTPHeaderFields ?? [:], body: request.httpBody)
-        lock.lock(); _requests.append(rec); lock.unlock()
+        record(rec)
         let (status, body) = handler(rec)
         let resp = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1",
                                    headerFields: ["Content-Type": "application/json"])!

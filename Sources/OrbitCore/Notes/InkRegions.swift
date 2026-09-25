@@ -26,7 +26,8 @@ public struct InkRegion: Codable, Hashable, Sendable, Identifiable {
 public struct InkRegionFeatures: Codable, Hashable, Sendable {
     public var strokeCount: Int
     public var lineCount: Int
-    /// Share of strokes much longer than a line is tall (arrows, boxes, axes).
+    /// Share of long, nearly straight strokes (arrows, axes, box sides). Handwritten
+    /// words are long too, but their paths wiggle far more than their extent.
     public var longStrokeRatio: Double
     /// Share of strokes taller than 1.8 lines (brackets, integrals, axes).
     public var tallStrokeRatio: Double
@@ -38,7 +39,10 @@ public struct InkRegionFeatures: Codable, Hashable, Sendable {
         lineCount = r.lines.count
         let h = max(r.lineHeight, 1)
         let n = Double(max(r.strokes.count, 1))
-        longStrokeRatio = Double(r.strokes.filter { $0.length > 4 * h }.count) / n
+        longStrokeRatio = Double(r.strokes.filter { s in
+            let extent = max(s.bounds.width, s.bounds.height)
+            return extent > 3 * h && s.length < 1.6 * extent
+        }.count) / n
         tallStrokeRatio = Double(r.strokes.filter { $0.bounds.height > 1.8 * h }.count) / n
         verticalSpread = r.bounds.height / (Double(max(r.lines.count, 1)) * h)
     }

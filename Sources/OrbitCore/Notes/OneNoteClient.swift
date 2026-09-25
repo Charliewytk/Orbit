@@ -154,12 +154,14 @@ public struct OneNoteClient: Sendable {
         var changed: [(section: OneNoteSection, page: OneNotePage)] = []
         for section in sections {
             let since = cursor.sections[section.id]
-            if let since, let modified = section.lastModifiedDateTime, modified <= since { continue }
+            if let stamp = cursor.sectionStamps[section.id], let modified = section.lastModifiedDateTime,
+               modified <= stamp { continue }
             let pages = try await pages(inSection: section.id, modifiedAfter: since)
             changed += pages.map { (section, $0) }
             if let newest = pages.compactMap(\.lastModifiedDateTime).max() {
                 next.sections[section.id] = max(newest, since ?? .distantPast)
             }
+            next.sectionStamps[section.id] = section.lastModifiedDateTime
         }
         next.lastSync = now
         return OneNoteChangeSet(pages: changed, cursor: next)

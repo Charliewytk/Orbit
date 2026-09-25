@@ -160,12 +160,12 @@ public enum OneNoteHTMLParser {
             switch name {
             case "p", "div", "blockquote", "pre":
                 blockBreak()
+                if name == "p", cellDepth == 0, let tag = attrs["data-tag"]?.lowercased(), tag.hasPrefix("to-do") {
+                    linePrefix = tag.contains("completed") ? "☑ " : "☐ "
+                }
             case "tr", "table":
                 breakLine()
                 if name == "tr" { cellIndex = 0 }
-                if name == "p", let tag = attrs["data-tag"]?.lowercased(), tag.hasPrefix("to-do") {
-                    linePrefix = tag.contains("completed") ? "☑ " : "☐ "
-                }
             case "h1", "h2", "h3", "h4", "h5", "h6":
                 breakLine()
                 linePrefix = String(repeating: "#", count: Int(String(name.last!)) ?? 1) + " "
@@ -180,7 +180,10 @@ public enum OneNoteHTMLParser {
                     linePrefix = indent + (l.ordered ? "\(l.counter). " : "- ")
                 }
             case "td", "th":
-                if cellIndex > 0 { line += " | " }
+                if cellIndex > 0 {
+                    while line.hasSuffix(" ") { line.removeLast() }
+                    line += " | "
+                }
                 cellIndex += 1
                 cellDepth += 1
             default: break
@@ -229,12 +232,20 @@ public enum OneNoteHTMLParser {
 
         /// Paragraph breaks inside a table cell become spaces so the row stays on one line.
         mutating func blockBreak() {
-            if cellDepth > 0 { if !line.isEmpty && !line.hasSuffix(" ") { line += " " } } else { breakLine() }
+            if cellDepth > 0 {
+                if !line.isEmpty && !line.hasSuffix(" ") { line += " " }
+            } else if !line.isEmpty {
+                breakLine()
+            }
+            // An empty line keeps its pending prefix, so "<li><p>x</p></li>" still gets its bullet.
         }
 
         mutating func breakLine() {
-            let t = line.trimmingCharacters(in: .whitespaces)
-            if !t.isEmpty && t != "|" { lines.append(t) }
+            // Keep leading spaces: they're list indentation from `linePrefix`.
+            var t = line
+            while t.last?.isWhitespace == true { t.removeLast() }
+            let bare = t.trimmingCharacters(in: .whitespaces)
+            if !bare.isEmpty && bare != "|" { lines.append(t) }
             line = ""; linePrefix = ""
         }
 

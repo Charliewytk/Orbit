@@ -98,13 +98,16 @@ public struct OneNoteFetchedPage: Sendable {
     }
 }
 
-/// Where incremental sync got up to: the newest `lastModifiedDateTime` seen per section.
+/// Where incremental sync got up to.
 public struct OneNoteSyncCursor: Codable, Hashable, Sendable {
+    /// Newest page `lastModifiedDateTime` seen per section id.
     public var sections: [String: Date]
+    /// Each section's own `lastModifiedDateTime` at the last sync; unchanged sections are skipped.
+    public var sectionStamps: [String: Date]
     public var lastSync: Date?
 
-    public init(sections: [String: Date] = [:], lastSync: Date? = nil) {
-        self.sections = sections; self.lastSync = lastSync
+    public init(sections: [String: Date] = [:], sectionStamps: [String: Date] = [:], lastSync: Date? = nil) {
+        self.sections = sections; self.sectionStamps = sectionStamps; self.lastSync = lastSync
     }
 }
 

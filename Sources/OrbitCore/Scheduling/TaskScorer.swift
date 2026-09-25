@@ -52,8 +52,8 @@ public struct TaskScorer: Sendable {
             let hoursLeft = deadline.timeIntervalSince(now) / 3600
             if hoursLeft <= 0 {
                 overdue = true
-                // 10 when just overdue, growing a little each day late (capped).
-                urgency = 10 + min(5, -hoursLeft / 24)
+                // Above any on-time task (max 1 + 4 + 9 = 14), growing a little each day late.
+                urgency = 15 + min(5, -hoursLeft / 24)
             } else {
                 let daysLeft = hoursLeft / 24
                 let proximity = 1 / (1 + daysLeft / 2)             // 1 → 0 as the deadline recedes

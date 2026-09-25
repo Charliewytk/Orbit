@@ -28,13 +28,15 @@ final class NotesStubTransport: HTTPTransport, @unchecked Sendable {
         on(pattern, Reply(body: Data(json.utf8)))
     }
 
+    private func record(_ request: URLRequest, url: String) -> Reply? {
+        lock.lock(); defer { lock.unlock() }
+        _requests.append(request)
+        return routes.filter { url.contains($0.pattern) }.max { $0.pattern.count < $1.pattern.count }?.reply
+    }
+
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let url = request.url!.absoluteString.removingPercentEncoding ?? request.url!.absoluteString
-        lock.lock()
-        _requests.append(request)
-        let match = routes.filter { url.contains($0.pattern) }.max { $0.pattern.count < $1.pattern.count }
-        lock.unlock()
-        let reply = match?.reply ?? Reply(status: 404, body: Data("{\"error\":\"no stub for \(url)\"}".utf8))
+        let reply = record(request, url: url) ?? Reply(status: 404, body: Data("{\"error\":\"no stub for \(url)\"}".utf8))
         let response = HTTPURLResponse(url: request.url!, statusCode: reply.status, httpVersion: "HTTP/1.1",
                                        headerFields: reply.headers)!
         return (reply.body, response)

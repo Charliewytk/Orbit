@@ -114,13 +114,10 @@ public struct OllamaVisionOCR: OCREngine {
 
     /// Turns the model's reply into lines, estimating confidence from "[?]" markers.
     public static func parse(_ reply: String, engine: String = "Vision model") -> OCRResult {
-        var text = reply.trimmingCharacters(in: .whitespacesAndNewlines)
-        if text.hasPrefix("```") {
-            text = text.split(separator: "\n", omittingEmptySubsequences: false).dropFirst()
-                .joined(separator: "\n")
-            if let close = text.range(of: "```", options: .backwards) { text = String(text[..<close.lowerBound]) }
-        }
-        var rawLines = text.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }
+        // Drop code-fence lines ("```", "```text") wherever the model put them.
+        var rawLines = reply.components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !($0.hasPrefix("```") && !$0.dropFirst(3).contains(" ")) }
         // Drop a chatty first line such as "Here is the transcription:".
         if let first = rawLines.first(where: { !$0.isEmpty }), first.hasSuffix(":"),
            first.range(of: #"^(here|sure|transcription|the (handwritten )?text)"#, options: [.regularExpression, .caseInsensitive]) != nil {

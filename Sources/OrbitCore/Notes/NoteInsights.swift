@@ -127,7 +127,9 @@ public enum GapDetector {
         df.timeZone = timeZone
         df.dateFormat = "EEE d MMM"
         var reported = Set<String>()
-        for e in lectures.sorted(by: { $0.start > $1.start })
+        var missing: [NoteGap] = []
+        // Oldest first so a double lecture reports its first hour; listed newest first.
+        for e in lectures.sorted(by: { $0.start < $1.start })
         where !e.isAllDay && e.end <= now && e.start >= now.addingTimeInterval(-lookback) {
             guard let code = NoteMetadataDetector.moduleCode(in: [e.title, e.notes]) else { continue }
             let day = cal.startOfDay(for: e.start)
@@ -137,10 +139,11 @@ public enum GapDetector {
             }
             let key = "\(code)|\(day.timeIntervalSince1970)"
             guard !covered, reported.insert(key).inserted else { continue }
-            gaps.append(NoteGap(kind: .missingNotes, moduleCode: code, week: nil, date: e.start,
-                                message: "No notes for \(code) lecture on \(df.string(from: e.start))",
-                                noteIDs: [], eventID: e.id))
+            missing.append(NoteGap(kind: .missingNotes, moduleCode: code, week: nil, date: e.start,
+                                   message: "No notes for \(code) lecture on \(df.string(from: e.start))",
+                                   noteIDs: [], eventID: e.id))
         }
+        gaps += missing.reversed()
 
         // 3. Pages with unsure handwriting, as one reminder.
         let unsure = notes.filter { n in

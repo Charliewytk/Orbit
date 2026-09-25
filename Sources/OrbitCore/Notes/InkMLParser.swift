@@ -118,7 +118,8 @@ public struct InkMLParser: Sendable {
         let delegate = InkMLDelegate()
         let parser = XMLParser(data: data)
         parser.delegate = delegate
-        guard parser.parse() else {
+        // Linux's XMLParser can return true for truncated documents but still sets parserError.
+        guard parser.parse(), parser.parserError == nil else {
             throw InkMLError.invalidXML(parser.parserError.map { "\($0)" } ?? "unknown error")
         }
         return InkDocument(strokes: delegate.traces.enumerated().compactMap { build($0.element, index: $0.offset, delegate) })

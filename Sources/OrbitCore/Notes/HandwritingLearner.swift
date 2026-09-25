@@ -128,7 +128,8 @@ public struct PersonalHandwritingProfile: Codable, Hashable, Sendable {
 
     /// Keeps the vocabulary's own casing; otherwise copies capitalisation from the original.
     func matchCase(_ replacement: String, like original: String) -> String {
-        if let v = vocabulary.first(where: { $0.lowercased() == replacement.lowercased() }) { return v }
+        if let v = vocabulary.first(where: { $0.lowercased() == replacement.lowercased() }),
+           v.contains(where: \.isUppercase) { return v }
         if replacement.contains(where: \.isUppercase) { return replacement }
         if original.count > 1, original == original.uppercased(), original.contains(where: \.isLetter) {
             return replacement.uppercased()
@@ -202,6 +203,10 @@ public enum TextNormalizer {
         let sl = s.filter(\.isLetter), ll = l.filter(\.isLetter)
         guard let f = sl.first, f == ll.first, sl.count < ll.count,
               s.contains("/") || Double(sl.count) <= 0.75 * Double(ll.count) else { return false }
+        // "tax" → "taxes" is a different form of the word, not shorthand.
+        if ll.hasPrefix(sl), ["s", "es", "d", "ed", "ing", "er", "ers", "ly"].contains(String(ll.dropFirst(sl.count))) {
+            return false
+        }
         var it = ll.makeIterator()
         outer: for c in sl {
             while let n = it.next() { if n == c { continue outer } }

@@ -60,7 +60,7 @@ final class SchedSchedulerTests: XCTestCase {
 
     func testNeverBeforeNowOrEarliestStart() {
         let later = F.date(2026, 10, 5, 10, 3)
-        let t1 = F.task("A", minutes: 30, index: 1)
+        let t1 = F.task("A", minutes: 30, energy: .high, index: 1)
         let t2 = F.task("B", minutes: 30, earliestStart: F.date(2026, 10, 7, 14), index: 2)
         let plan = Scheduler(prefs: prefs).plan(tasks: [t1, t2], events: [], now: later)
         let a = plan.blocks(for: t1.id)[0], b = plan.blocks(for: t2.id)[0]
@@ -78,8 +78,8 @@ final class SchedSchedulerTests: XCTestCase {
         let plan = Scheduler(prefs: prefs).plan(tasks: tasks, events: events, now: now)
         XCTAssertEqual(plan.totalMinutes, 120)
         assertInvariants(plan, tasks: tasks, events: events)
-        // 12:10–12:30 is too short (min block 25), so the first block starts after lunch.
-        XCTAssertEqual(plan.blocks.map(\.start).min(), F.date(2026, 10, 5, 13, 15))
+        // 12:10–12:30 and 13:15–13:50 can't hold a whole 60-min block, so the first starts after the seminar.
+        XCTAssertEqual(plan.blocks.map(\.start).min(), F.date(2026, 10, 5, 15, 10))
     }
 
     func testLargeTaskIsSplitAndSpreadAcrossDays() {
@@ -115,19 +115,21 @@ final class SchedSchedulerTests: XCTestCase {
     }
 
     func testLocalImprovementSwapsForBetterEnergy() {
-        // Urgent low-energy task grabs the morning first; the swap pass gives the
-        // high-energy slot to the deep-work task on the same day.
+        // Greedy places the urgent medium-energy task at 08:00 (a tie), pushing the
+        // high-energy task out of the only high window. The swap pass fixes that.
         var p = prefs
-        p.energyWindows = [EnergyWindow(start: 8 * 60, end: 10 * 60, energy: .high),
-                           EnergyWindow(start: 10 * 60, end: 22 * 60, energy: .low)]
-        let restricted = OrbitTask(id: F.uuid(1), title: "Emails", estimateMinutes: 60,
-                                   deadline: F.date(2026, 10, 5, 10, 30), priority: .critical, energy: .low,
-                                   createdAt: F.date(2026, 9, 1))
+        p.energyWindows = [EnergyWindow(start: 8 * 60, end: 9 * 60, energy: .high),
+                           EnergyWindow(start: 9 * 60, end: 22 * 60, energy: .low)]
+        let urgent = F.task("Forms", minutes: 60, deadline: F.date(2026, 10, 5, 21), priority: .critical,
+                            energy: .medium, index: 1)
         let deep = F.task("Essay", minutes: 60, deadline: F.date(2026, 10, 5, 21), energy: .high, index: 2)
-        let plan = Scheduler(prefs: p).plan(tasks: [restricted, deep], events: [], now: now)
-        // The deadline pins "Emails" to the morning, so no swap is allowed there.
-        XCTAssertLessThanOrEqual(plan.blocks(for: restricted.id)[0].end, restricted.deadline!)
-        XCTAssertEqual(plan.totalMinutes, 120)
+        let plan = Scheduler(prefs: p).plan(tasks: [urgent, deep], events: [], now: now)
+        XCTAssertEqual(plan.blocks(for: deep.id)[0].start, F.date(2026, 10, 5, 8))
+        XCTAssertEqual(plan.blocks(for: urgent.id)[0].start, F.date(2026, 10, 5, 9, 10))
+        XCTAssertEqual(plan.blocks(for: deep.id)[0].id, Scheduler.blockID(taskID: deep.id, start: F.date(2026, 10, 5, 8)))
+
+        let noSwap = Scheduler(prefs: p, improvementPasses: 0).plan(tasks: [urgent, deep], events: [], now: now)
+        XCTAssertEqual(noSwap.blocks(for: urgent.id)[0].start, F.date(2026, 10, 5, 8))
     }
 
     func testWontFitBeforeDeadlineStillSchedules() {
