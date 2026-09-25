@@ -160,7 +160,7 @@ public struct PlanExtractor: Sendable {
             } else {
                 time = timeParser.parse(text, relativeTo: msg.date)
             }
-            if time == nil {
+            if time == nil, !Self.isConfirmation(text) {
                 // The time often comes in the next message ("dinner this week?" → "sat 7?").
                 for next in messages[(i + 1)..<min(messages.count, i + 3)] where next.date.timeIntervalSince(msg.date) < 2 * 3600 {
                     if let t = timeParser.parse(next.text, relativeTo: next.date) {
@@ -178,6 +178,7 @@ public struct PlanExtractor: Sendable {
             var agreed: [ChatMessage] = []
             var cancelled = false
             var timeConfidence = time.confidence
+            var involved = before + [msg]
             for n in after {
                 let nt = PlanTimeParser.normalize(n.text)
                 if Self.cancellation.contains(nt) { cancelled = true; break }
@@ -192,6 +193,7 @@ public struct PlanExtractor: Sendable {
                         timeConfidence = max(timeConfidence, other.confidence)
                     }
                 }
+                involved.append(n)
                 if n.sender != msg.sender, Self.isConfirmation(nt) { agreed.append(n) }
             }
             // A reply that agrees to someone else's suggestion ("yes! dinner sat 7?") counts for both.
@@ -214,12 +216,13 @@ public struct PlanExtractor: Sendable {
             if cancelled { confidence = min(confidence, 0.3) * 0.4 }
 
             var people: [String] = []
-            for m in before + [msg] + after where !m.isFromMe && !people.contains(m.sender) && !Self.isPlaceholderSender(m.sender) {
+            for m in involved where !m.isFromMe && !people.contains(m.sender) && !Self.isPlaceholderSender(m.sender) {
                 people.append(m.sender)
             }
             for name in Self.namesMentioned(in: msg.text) where !people.contains(name) { people.append(name) }
 
-            let plan = ExtractedPlan(title: Self.title(kind: kind, people: people), start: start,
+            let end = time.end.map { start.addingTimeInterval($0.timeIntervalSince(time.start)) }
+            let plan = ExtractedPlan(title: Self.title(kind: kind, people: people), start: start, end: end,
                                      location: Self.location(in: msg.text), people: people,
                                      source: source ?? msg.source, quote: String(quote.prefix(300)),
                                      confidence: min(0.99, max(0.01, (confidence * 100).rounded() / 100)))

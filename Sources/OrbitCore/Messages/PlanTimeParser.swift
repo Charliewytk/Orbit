@@ -13,10 +13,13 @@ public struct PlanTime: Hashable, Sendable {
     public var confidence: Double
     /// The words that were understood, e.g. "sat 7pm".
     public var matchedText: String
+    /// Set for ranges like "7-9pm".
+    public var end: Date?
 
-    public init(start: Date, hasDate: Bool, hasTime: Bool, isVague: Bool, confidence: Double, matchedText: String) {
+    public init(start: Date, hasDate: Bool, hasTime: Bool, isVague: Bool, confidence: Double, matchedText: String,
+                end: Date? = nil) {
         self.start = start; self.hasDate = hasDate; self.hasTime = hasTime; self.isVague = isVague
-        self.confidence = confidence; self.matchedText = matchedText
+        self.confidence = confidence; self.matchedText = matchedText; self.end = end
     }
 }
 
@@ -64,9 +67,10 @@ public struct PlanTimeParser: Sendable {
                       time == nil ? part.map { ($0.position, $0.text) } : nil]
             .compactMap { $0 }.sorted { $0.0 < $1.0 }.map(\.1)
         let vague = (day?.vague ?? false) || (time == nil && (part?.vague ?? false))
+        let end = time?.durationMinutes.map { start.addingTimeInterval(TimeInterval($0 * 60)) }
         return PlanTime(start: start, hasDate: day != nil, hasTime: time != nil, isVague: vague,
                         confidence: ((day?.confidence ?? 0.75) * timeConf * 100).rounded() / 100,
-                        matchedText: pieces.joined(separator: " "))
+                        matchedText: pieces.joined(separator: " "), end: end)
     }
 
     // MARK: - Normalising
@@ -119,30 +123,30 @@ public struct PlanTimeParser: Sendable {
             var year = m.group(3).flatMap { Int($0) }
             if let y = year, y < 100 { year = 2000 + y }
             if let ymd = resolve(day: d, month: mo, year: year, refDate: refDate) {
-                hits.append(DayHit(ymd: ymd, confidence: 0.95, rank: 5, position: pos(m), text: text(m)))
+                hits.append(DayHit(ymd: ymd, confidence: 0.95, rank: 6, position: pos(m), text: text(m)))
             }
         }
         for m in Self.dayMonth.matches(in: s) {
             if let d = Int(m.group(1) ?? ""), let mo = Self.month(m.group(2)), let ymd = resolve(day: d, month: mo, year: nil, refDate: refDate) {
-                hits.append(DayHit(ymd: ymd, confidence: 0.95, rank: 5, position: pos(m), text: text(m)))
+                hits.append(DayHit(ymd: ymd, confidence: 0.95, rank: 6, position: pos(m), text: text(m)))
             }
         }
         for m in Self.monthDay.matches(in: s) {
             if let d = Int(m.group(2) ?? ""), let mo = Self.month(m.group(1)), let ymd = resolve(day: d, month: mo, year: nil, refDate: refDate) {
-                hits.append(DayHit(ymd: ymd, confidence: 0.95, rank: 5, position: pos(m), text: text(m)))
+                hits.append(DayHit(ymd: ymd, confidence: 0.95, rank: 6, position: pos(m), text: text(m)))
             }
         }
         for m in Self.ordinal.matches(in: s) {
             guard let d = Int(m.group(1) ?? ""), (1...31).contains(d) else { continue }
             if let ymd = nextDayOfMonth(d, refDay: refDay) {
-                hits.append(DayHit(ymd: ymd, confidence: 0.85, rank: 4, position: pos(m), text: text(m)))
+                hits.append(DayHit(ymd: ymd, confidence: 0.85, rank: 5, position: pos(m), text: text(m)))
             }
         }
         for m in Self.relative.matches(in: s) {
             let word = m.group(1) ?? ""
             let offset = word == "tomorrow" ? 1 : word == "day after tomorrow" ? 2 : 0
             if let ymd = shift(refDate, days: offset) {
-                hits.append(DayHit(ymd: ymd, confidence: 0.95, rank: 5, position: pos(m), text: text(m)))
+                hits.append(DayHit(ymd: ymd, confidence: 0.95, rank: 6, position: pos(m), text: text(m)))
             }
         }
         for m in Self.weekday.matches(in: s) {
@@ -222,11 +226,13 @@ public struct PlanTimeParser: Sendable {
         calendar.date(byAdding: .day, value: days, to: date).map { calendar.dateComponents([.year, .month, .day], from: $0) }
     }
 
+    /// Wall-clock time on a day (safe across the clocks changing). 24:00 is the next midnight.
     func makeDate(_ ymd: DateComponents, minutes: Int) -> Date? {
-        var c = DateComponents(year: ymd.year, month: ymd.month, day: ymd.day, hour: 0, minute: 0)
+        var c = DateComponents(year: ymd.year, month: ymd.month, day: ymd.day,
+                               hour: (minutes % 1440) / 60, minute: minutes % 60)
         c.timeZone = timeZone
-        guard let midnight = calendar.date(from: c) else { return nil }
-        return calendar.date(byAdding: .minute, value: minutes, to: midnight)
+        guard let date = calendar.date(from: c) else { return nil }
+        return minutes >= 1440 ? calendar.date(byAdding: .day, value: minutes / 1440, to: date) : date
     }
 
     // MARK: - Parts of the day
@@ -274,9 +280,11 @@ public struct PlanTimeParser: Sendable {
         var rank: Int
         var position: Int
         var text: String
+        var durationMinutes: Int?
     }
 
     static let hourPattern = #"(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"#
+    static let range = PlanRegex(#"(?<![\d/:.£$€])(\d{1,2})(?:[:.](\d{2}))?\s*(?:-|–|to|till|til|until)\s*(\d{1,2})(?:[:.](\d{2}))?\s*([ap])\.?m\.?(?![a-z])"#)
     static let clock = PlanRegex(#"(?<![\d/:.£$€])(\d{1,2})[:.](\d{2})(?![\d/:.])(?:\s*([ap])\.?m\.?(?![a-z]))?"#)
     static let hourAmPm = PlanRegex(#"(?<![\d/:.£$€])(\d{1,2})\s*([ap])\.?m\.?(?![a-z])"#)
     static let half = PlanRegex(#"\bhalf\s+(?:past\s+)?"# + hourPattern + #"(?![\d:.])"#)
@@ -294,8 +302,22 @@ public struct PlanTimeParser: Sendable {
             hits.append(TimeHit(minutes: minutes, confidence: conf, rank: rank, position: pos(m), text: String(s[m.range])))
         }
 
+        for m in Self.range.matches(in: s) {
+            // "7-9pm": the am/pm at the end applies to both ends.
+            guard let h1 = Int(m.group(1) ?? ""), let h2 = Int(m.group(3) ?? ""), let ap = m.group(5),
+                  (1...12).contains(h1), (1...12).contains(h2) else { continue }
+            let m1 = Int(m.group(2) ?? "") ?? 0, m2 = Int(m.group(4) ?? "") ?? 0
+            let end = Self.apply(ap, to: h2) * 60 + m2
+            var start = Self.apply(ap, to: h1) * 60 + m1
+            if start > end { start -= 12 * 60 }   // "11-1pm"
+            guard start >= 0, end > start else { continue }
+            hits.append(TimeHit(minutes: start, confidence: 0.95, rank: 5, position: pos(m), text: String(s[m.range]),
+                                durationMinutes: end - start))
+        }
         for m in Self.clock.matches(in: s) {
             guard let h = Int(m.group(1) ?? ""), let min = Int(m.group(2) ?? ""), h <= 23, min <= 59 else { continue }
+            // "7.30" is a time but "room 4.02" isn't: dotted times need round minutes.
+            if s[m.range].contains("."), min % 5 != 0 { continue }
             if let ap = m.group(3), h >= 1, h <= 12 {
                 add(m, Self.apply(ap, to: h) * 60 + min, 0.95, 4)
             } else if h >= 13 || h == 0 || (m.group(1)?.hasPrefix("0") ?? false) {

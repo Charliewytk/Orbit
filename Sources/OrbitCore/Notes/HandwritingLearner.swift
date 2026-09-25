@@ -434,7 +434,8 @@ public struct HandwritingLearner: Sendable {
                 let code = w.contains(where: \.isNumber)
                 let midCapital = i > 0 && w.first!.isUppercase && !(words[i - 1].last.map { ".:!?".contains($0) } ?? false)
                 let long = w.count >= 9 && !w.contains("/")
-                if acronym || code || midCapital || long { out.insert(w) }
+                // Keep the typed casing only where it means something (names, acronyms, codes).
+                if acronym || code || midCapital { out.insert(w) } else if long { out.insert(w.lowercased()) }
             }
         }
         return out

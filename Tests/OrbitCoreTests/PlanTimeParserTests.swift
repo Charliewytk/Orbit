@@ -79,10 +79,22 @@ final class PlanTimeParserTests: XCTestCase {
         XCTAssertEqual(exact.matchedText, "sat 7pm")
     }
 
+    func testRangesAndSpecificDaysWin() throws {
+        let range = try XCTUnwrap(parser.parse("tomorrow 7-9pm", relativeTo: sent))
+        XCTAssertEqual(range.start, Self.date(2026, 10, 15, 19, 0))
+        XCTAssertEqual(range.end, Self.date(2026, 10, 15, 21, 0))
+        XCTAssertEqual(start("wed 21st"), Self.date(2026, 10, 21, 12, 0))
+        XCTAssertEqual(start("party at Sam's sat from 9"), Self.date(2026, 10, 17, 21, 0))
+        XCTAssertEqual(start("cinema tonight? 8:15 showing"), Self.date(2026, 10, 14, 20, 15))
+    }
+
     func testNoTimeMeansNil() {
         XCTAssertNil(start("I sat in the library all day"))
         XCTAssertNil(start("got 2 essays due, send help"))
         XCTAssertNil(start("it was £7.50 lol"))
+        XCTAssertNil(start("seminar room 4.02"))
+        XCTAssertNil(start("table for 2 people"))
+        XCTAssertNil(start("see you in 5 mins"))
         XCTAssertNil(start("haha yes"))
     }
 
