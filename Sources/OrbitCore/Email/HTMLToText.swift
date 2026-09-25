@@ -31,9 +31,13 @@ public enum HTMLToText {
                 }
                 switch tag.name {
                 case "br": out.append("\n")
-                case "li": if !tag.isClosing { out.append("\n• ") }
+                case "li":
+                    lineBreak(&out, blankLine: false)
+                    if !tag.isClosing { out.append("• ") }
                 case "td", "th": out.append(" ")
-                default: if blockElements.contains(tag.name) { out.append("\n") }
+                default:
+                    if paragraphElements.contains(tag.name) { lineBreak(&out, blankLine: true) }
+                    else if lineElements.contains(tag.name) { lineBreak(&out, blankLine: false) }
                 }
             } else if c == "&", let (text, next) = readEntity(chars, at: i) {
                 out.append(text); i = next
@@ -63,9 +67,13 @@ public enum HTMLToText {
     // MARK: - Internals
 
     private static let skippedElements: Set<String> = ["script", "style", "head", "title", "noscript", "template"]
-    private static let blockElements: Set<String> = [
-        "p", "div", "ul", "ol", "tr", "table", "h1", "h2", "h3", "h4", "h5", "h6", "hr",
-        "blockquote", "pre", "section", "article", "header", "footer", "dl", "dt", "dd", "address",
+    /// Start and end on their own line.
+    private static let lineElements: Set<String> = [
+        "div", "tr", "dt", "dd", "section", "article", "header", "footer", "address", "hr",
+    ]
+    /// Separated from surrounding text by a blank line.
+    private static let paragraphElements: Set<String> = [
+        "p", "ul", "ol", "table", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "pre", "dl",
     ]
 
     private static let namedEntities: [String: String] = [
@@ -126,6 +134,16 @@ public enum HTMLToText {
         }
         guard let text = namedEntities[name] ?? namedEntities[name.lowercased()] else { return nil }
         return (text, j + 1)
+    }
+
+    /// Ends the text so far with one line break (or a blank line), without stacking
+    /// breaks when block tags are nested or adjacent.
+    private static func lineBreak(_ out: inout String, blankLine: Bool) {
+        while out.last == " " { out.removeLast() }
+        guard !out.isEmpty else { return }
+        let have = out.reversed().prefix { $0 == "\n" }.count
+        let need = blankLine ? 2 : 1
+        if have < need { out.append(String(repeating: "\n", count: need - have)) }
     }
 
     /// Collapses runs of spaces, trims lines, and keeps at most one blank line in a row.
