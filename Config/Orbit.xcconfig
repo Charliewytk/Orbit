@@ -1,0 +1,19 @@
+// Orbit build settings, shared by every target.
+//
+// 1. Set DEVELOPMENT_TEAM to your 10-character Apple Team ID
+//    (Xcode → Settings → Accounts → your team, or developer.apple.com → Membership).
+// 2. Put your OAuth client IDs in Config/Secrets.xcconfig (copy Secrets.example.xcconfig).
+//    That file is git-ignored, so your IDs never end up in the repo.
+
+ORBIT_BUNDLE_PREFIX = com.charliewytk
+DEVELOPMENT_TEAM =
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
+
+// Defaults so the app builds before Secrets.xcconfig exists. Sign-in buttons
+// explain what's missing until real values are set.
+GOOGLE_CLIENT_ID =
+GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.not-configured
+MICROSOFT_CLIENT_ID =
+
+#include? "Secrets.xcconfig"

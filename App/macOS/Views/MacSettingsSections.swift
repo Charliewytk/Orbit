@@ -1,0 +1,412 @@
+import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
+import OrbitCore
+
+// MARK: - Account rows (used by Settings and onboarding)
+
+private struct AccountRow<Actions: View>: View {
+    var title: String
+    var symbol: String
+    var connected: Bool
+    var detail: String?
+    var busy: Bool
+    @ViewBuilder var actions: Actions
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: symbol)
+                .font(.title3)
+                .frame(width: 28)
+                .foregroundStyle(connected ? Theme.success : Theme.textSecondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(Theme.body.weight(.medium))
+                Text(detail ?? (connected ? "Connected" : "Not connected"))
+                    .font(Theme.caption)
+                    .foregroundStyle(connected ? Theme.success : Theme.textSecondary)
+            }
+            Spacer()
+            if busy { ProgressView().controlSize(.small) }
+            actions
+        }
+    }
+}
+
+struct GoogleConnectRow: View {
+    @Environment(OrbitBrain.self) private var brain
+
+    var body: some View {
+        let accounts = brain.accounts
+        VStack(alignment: .leading, spacing: 6) {
+            AccountRow(title: "Google (Gmail + Calendar)", symbol: "envelope.badge", connected: accounts.googleConnected,
+                       detail: accounts.googleEmail, busy: accounts.busy == "google") {
+                if accounts.googleConnected {
+                    Button("Disconnect") { Task { await accounts.disconnectGoogle() } }
+                } else {
+                    Button("Connect") {
+                        Task {
+                            await accounts.connectGoogle()
+                            await brain.syncCalendar()
+                            await brain.syncMail()
+                        }
+                    }
+                    .buttonStyle(PillButtonStyle())
+                }
+            }
+            if accounts.googleConfig == nil {
+                Text("Add your Google client ID to Config/Secrets.xcconfig first (docs/SETUP.md, step 1).")
+                    .font(Theme.caption).foregroundStyle(Theme.warning)
+            }
+        }
+    }
+}
+
+struct MicrosoftConnectRow: View {
+    @Environment(OrbitBrain.self) private var brain
+
+    var body: some View {
+        let accounts = brain.accounts
+        VStack(alignment: .leading, spacing: 6) {
+            AccountRow(title: "Exeter (Microsoft 365)", symbol: "building.columns", connected: accounts.microsoftConnected,
+                       detail: accounts.microsoftEmail, busy: accounts.busy == "microsoft") {
+                if accounts.microsoftConnected {
+                    Button("Disconnect") { Task { await accounts.disconnectMicrosoft() } }
+                } else {
+                    Button("Connect") {
+                        Task {
+                            await accounts.connectMicrosoft()
+                            await brain.syncCalendar()
+                            await brain.syncMail()
+                        }
+                    }
+                    .buttonStyle(PillButtonStyle())
+                }
+            }
+            if accounts.microsoftConfig == nil {
+                Text("Add your Microsoft client ID to Config/Secrets.xcconfig first (docs/SETUP.md, step 3).")
+                    .font(Theme.caption).foregroundStyle(Theme.warning)
+            }
+            if let error = accounts.lastError {
+                Text(error).font(Theme.caption).foregroundStyle(Theme.danger).textSelection(.enabled)
+            }
+        }
+    }
+}
+
+struct ExeterMailSourcePicker: View {
+    @AppStorage(MacPrefs.exeterMailSource) private var source = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker("Read Exeter email from", selection: $source) {
+                Text("Automatic").tag("")
+                Text("Microsoft (Graph)").tag("graph")
+                Text("Apple Mail on this Mac").tag("appleMail")
+                Text("Don't read Exeter email").tag("none")
+            }
+            if source == "appleMail" {
+                HStack {
+                    Text("Add your Exeter account to the Mail app, then give Orbit Full Disk Access.")
+                        .font(Theme.caption).foregroundStyle(Theme.textSecondary)
+                    Button("Open Full Disk Access") { OrbitBrain.openFullDiskAccessSettings() }
+                        .buttonStyle(.link)
+                }
+            }
+        }
+    }
+}
+
+struct ELEConnectRow: View {
+    @Environment(OrbitBrain.self) private var brain
+    @AppStorage(MacPrefs.eleCalendarURL) private var calendarURL = ""
+
+    var body: some View {
+        let accounts = brain.accounts
+        VStack(alignment: .leading, spacing: 8) {
+            AccountRow(title: "ELE (Moodle)", symbol: "graduationcap", connected: accounts.eleConnected,
+                       detail: accounts.eleConnected ? "Signed in with the Moodle app method" : nil,
+                       busy: accounts.busy == "ele") {
+                if accounts.eleConnected {
+                    Button("Disconnect") { accounts.disconnectELE() }
+                } else {
+                    Button("Sign in to ELE") {
+                        Task {
+                            await accounts.connectELE()
+                            await brain.syncELE()
+                        }
+                    }
+                    .buttonStyle(PillButtonStyle())
+                }
+            }
+            if !accounts.eleConnected {
+                TextField("Or paste your ELE calendar export link (ELE → Calendar → Export calendar)", text: $calendarURL)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit { Task { await brain.syncELE() } }
+                if let error = accounts.lastError, error.contains("ELE") {
+                    Text(error).font(Theme.caption).foregroundStyle(Theme.warning)
+                }
+            }
+        }
+    }
+}
+
+struct NotesSourcePicker: View {
+    @Environment(OrbitBrain.self) private var brain
+    @AppStorage(MacPrefs.noteSource) private var source = ""
+    @AppStorage(MacPrefs.notesFolderPath) private var folderPath = ""
+    @State private var choosing = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Picker("Read notes from", selection: $source) {
+                Text("Automatic").tag("")
+                Text("OneNote (Exeter account)").tag("graph")
+                Text("Exported PDF / Markdown folder").tag("folder")
+                Text("Don't read notes").tag("none")
+            }
+            if source == "folder" {
+                HStack {
+                    Text(folderPath.isEmpty ? "No folder chosen" : folderPath)
+                        .font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
+                    Spacer()
+                    Button("Choose folder…") { choosing = true }
+                }
+                Text("In OneNote: File → Export → Section → PDF, into this folder. Orbit picks up new files automatically.")
+                    .font(Theme.caption).foregroundStyle(Theme.textTertiary)
+            }
+            HStack {
+                Button("Read notes now") { Task { await brain.syncNotes() } }
+                    .disabled(brain.running.contains(.notes))
+                if brain.running.contains(.notes) { ProgressView().controlSize(.small); Text("Reading…").font(Theme.caption) }
+            }
+        }
+        .fileImporter(isPresented: $choosing, allowedContentTypes: [.folder]) { result in
+            if case .success(let url) = result { folderPath = url.path }
+        }
+    }
+}
+
+struct IMessageToggle: View {
+    @Environment(OrbitBrain.self) private var brain
+    @AppStorage(MacPrefs.iMessageEnabled) private var enabled = false
+
+    var body: some View {
+        HStack {
+            Toggle("Watch iMessage for plans", isOn: $enabled)
+                .onChange(of: enabled) { _, on in if on { Task { await brain.syncIMessage() } } }
+            Spacer()
+            Button("Full Disk Access…") { OrbitBrain.openFullDiskAccessSettings() }
+                .buttonStyle(.link)
+                .font(Theme.caption)
+        }
+    }
+}
+
+// MARK: - AI
+
+struct AIStatusPanel: View {
+    @Environment(OrbitBrain.self) private var brain
+    @AppStorage(MacPrefs.openCodeModel) private var openCodeModel = ""
+    struct ModelOption: Identifiable, Hashable {
+        var id: String
+        var name: String
+        var free: Bool
+    }
+
+    @State private var models: [ModelOption] = []
+    @State private var loadingModels = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                StatusDot(color: brain.openCodeUp ? Theme.success : Theme.danger)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("OpenCode").font(Theme.body.weight(.medium))
+                    Text(brain.launcher.status.label + (brain.launcher.binaryPath.map { " · \($0)" } ?? ""))
+                        .font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
+                }
+                Spacer()
+                Button("Restart") { Task { await brain.launcher.restart(); await brain.checkAI() } }
+            }
+            if brain.launcher.status == .notInstalled {
+                Text("Install OpenCode (opencode.ai), then press Restart. Orbit will run `opencode serve` for you.")
+                    .font(Theme.caption).foregroundStyle(Theme.warning)
+            }
+            if !models.isEmpty || loadingModels {
+                Picker("OpenCode model", selection: $openCodeModel) {
+                    Text("OpenCode's default").tag("")
+                    ForEach(models) { m in
+                        Text("\(m.name)\(m.free ? " · free" : "")").tag(m.id)
+                    }
+                }
+                .onChange(of: openCodeModel) { _, _ in brain.rebuildRouter() }
+            }
+
+            Divider()
+
+            HStack(spacing: 12) {
+                StatusDot(color: brain.ollama.available ? Theme.success : Theme.danger)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Ollama (offline backup)").font(Theme.body.weight(.medium))
+                    Text(brain.ollama.available ? "\(brain.ollama.installed.count) models installed" : "Not running. Install from ollama.com and open it.")
+                        .font(Theme.caption).foregroundStyle(Theme.textSecondary)
+                }
+                Spacer()
+            }
+            ForEach(OllamaManager.recommended) { item in
+                HStack {
+                    Image(systemName: brain.ollama.isInstalled(item.model) ? "checkmark.circle.fill" : "arrow.down.circle")
+                        .foregroundStyle(brain.ollama.isInstalled(item.model) ? Theme.success : Theme.textSecondary)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(item.model).font(Theme.mono)
+                        Text(item.why).font(.caption2).foregroundStyle(Theme.textTertiary)
+                    }
+                    Spacer()
+                    if brain.ollama.pulling.contains(item.model) {
+                        ProgressView().controlSize(.small)
+                        Text("Downloading…").font(Theme.caption)
+                    } else if !brain.ollama.isInstalled(item.model) {
+                        Button("Download") { Task { await brain.ollama.pull(item.model) } }
+                            .disabled(!brain.ollama.available)
+                    }
+                }
+            }
+            if let error = brain.ollama.lastError {
+                Text(error).font(Theme.caption).foregroundStyle(Theme.danger)
+            }
+        }
+        .task { await loadModels() }
+    }
+
+    private func loadModels() async {
+        loadingModels = true
+        defer { loadingModels = false }
+        await brain.checkAI()
+        guard brain.openCodeUp else { return }
+        let list = (try? await brain.launcher.provider(model: nil).availableModels()) ?? []
+        models = list.map { ModelOption(id: $0.ref.string, name: "\($0.ref.providerID)/\($0.name)", free: $0.free) }
+    }
+}
+
+// MARK: - Settings sections
+
+struct MacAccountsSection: View {
+    @Environment(OrbitBrain.self) private var brain
+    @AppStorage(MacPrefs.timetableURL) private var timetableURL = ""
+    @AppStorage(MacPrefs.useExeterCalendar) private var useExeterCalendar = true
+
+    var body: some View {
+        Section {
+            GoogleConnectRow()
+            MicrosoftConnectRow()
+            ExeterMailSourcePicker()
+            Toggle("Include my Exeter (Outlook) calendar", isOn: $useExeterCalendar)
+            ELEConnectRow()
+            NotesSourcePicker()
+            TextField("Timetable calendar link (optional .ics)", text: $timetableURL)
+                .textFieldStyle(.roundedBorder)
+        } header: {
+            Text("Accounts")
+        } footer: {
+            Text("Orbit writes only to its own “Orbit” calendar and saves email replies as drafts. It never sends email or edits your own events.")
+        }
+        .task { await brain.accounts.refreshStatus() }
+    }
+}
+
+struct MacAISection: View {
+    @Environment(OrbitBrain.self) private var brain
+    @AppStorage(MacPrefs.shareAIWithPhone) private var share = false
+
+    var body: some View {
+        Section {
+            AIStatusPanel()
+            Toggle("Share AI with iPhone (Tailscale / home Wi-Fi)", isOn: $share)
+                .onChange(of: share) { _, _ in
+                    brain.configureAISharing()
+                    Task { await brain.checkAI() }
+                }
+            if share, let password = brain.context.existingSettings?.macServerPassword {
+                LabeledContent("iPhone password", value: password)
+                    .textSelection(.enabled)
+                Text("On the iPhone: Settings → iPhone instant chat → enter this Mac's Tailscale address and this password. For Ollama too, run `launchctl setenv OLLAMA_HOST 0.0.0.0` and restart Ollama.")
+                    .font(Theme.caption).foregroundStyle(Theme.textSecondary)
+            }
+        } header: {
+            Text("AI")
+        } footer: {
+            Text("Everything is free: OpenCode's free models first, Ollama on this Mac as the backup.")
+        }
+    }
+}
+
+struct MacSystemSection: View {
+    @Environment(OrbitBrain.self) private var brain
+    @State private var loginItem = false
+
+    var body: some View {
+        Section("Mac") {
+            Toggle("Open Orbit when I log in", isOn: $loginItem)
+                .onChange(of: loginItem) { _, on in
+                    if on != brain.launchesAtLogin { brain.setLaunchAtLogin(on) }
+                }
+            IMessageToggle()
+            HStack {
+                Text("Full Disk Access lets Orbit read Apple Mail and Messages.")
+                    .font(Theme.caption).foregroundStyle(Theme.textSecondary)
+                Spacer()
+                Button("Open Full Disk Access") { OrbitBrain.openFullDiskAccessSettings() }
+            }
+            HStack {
+                Button("Sync everything now") { Task { await brain.syncNow() } }
+                Button("Morning brief now") { Task { await brain.generateMorningBrief() } }
+                Button("Weekly review now") { Task { await brain.generateWeeklyReview() } }
+            }
+            Button("Show Orbit's files in Finder") { NSWorkspace.shared.activateFileViewerSelecting([brain.local.root]) }
+        }
+        .onAppear { loginItem = brain.launchesAtLogin }
+    }
+}
+
+struct MacDiagnosticsSection: View {
+    @Environment(OrbitBrain.self) private var brain
+
+    var body: some View {
+        Section("AI on this Mac") {
+            LabeledContent("OpenCode", value: brain.launcher.status.label)
+            LabeledContent("Ollama", value: brain.ollama.available ? "Running" : "Not running")
+            LabeledContent("Last answer from", value: brain.lastProviderName ?? "–")
+            LabeledContent("Indexed notes", value: "\(brain.noteIndex.noteIDs.count)")
+            LabeledContent("Handwriting pages learned", value: "\(brain.handwritingProfile.pagesLearned)")
+            DisclosureGroup("OpenCode log") {
+                ScrollView {
+                    Text(brain.launcher.logTail())
+                        .font(Theme.mono)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                }
+                .frame(height: 180)
+            }
+        }
+    }
+}
+
+/// Bottom of the sidebar: what the brain is doing.
+struct BrainStatusFooter: View {
+    @Environment(OrbitBrain.self) private var brain
+
+    var body: some View {
+        HStack(spacing: 8) {
+            StatusDot(color: brain.openCodeUp || brain.ollama.available ? Theme.success : Theme.danger)
+            if let source = brain.running.first {
+                ProgressView().controlSize(.mini)
+                Text("Syncing \(source.title.lowercased())…")
+            } else {
+                Text(brain.openCodeUp ? "OpenCode ready" : brain.ollama.available ? "Ollama ready" : "AI offline")
+            }
+            Spacer()
+        }
+        .font(Theme.caption)
+        .foregroundStyle(Theme.textSecondary)
+    }
+}
