@@ -14,8 +14,8 @@ iPhone that syncs between the two.
 │                                                                               │
 │  Connectors            AI layer                   Engines                     │
 │  ├ Gmail API           ├ LLMRouter                ├ Email triage              │
-│  ├ Google Calendar     │  ├ Claude API (default)  ├ Smart scheduler           │
-│  ├ ELE / Moodle        │  └ Local (Ollama/MLX)    ├ Study coach               │
+│  ├ Google Calendar     │  ├ OpenCode (default)    ├ Smart scheduler           │
+│  ├ ELE / Moodle        │  └ Ollama (backup)       ├ Study coach               │
 │  ├ OneNote (Graph)     └ Prompt + tool layer      ├ Daily brief / review      │
 │  └ Messages (import)                              └ Plan extractor (messages) │
 │                                                                               │
@@ -31,31 +31,33 @@ iPhone that syncs between the two.
 
 **Why the Mac is the brain:** the local LLM, OneNote files and heavy background work all live there.
 The phone mostly views synced data and captures input. If the Mac is asleep, the phone still works
-with the last synced state, and it can call Claude directly for chat.
+with the last synced state. Chat typed on the phone is queued in CloudKit and answered by the Mac
+(optionally live via a free Tailscale link between phone and Mac).
 
 ### Tech stack
 | Area | Choice |
 |---|---|
 | UI | SwiftUI multiplatform (macOS 15+ / iOS 18+) with a custom design system (see §6) |
 | Storage + sync | SwiftData backed by **CloudKit private database**: free, no server, uses your Apple ID |
-| Secrets | Keychain (Claude key, Google/Microsoft OAuth tokens), synced through iCloud Keychain |
+| Secrets | Keychain (Google/Microsoft OAuth tokens), synced through iCloud Keychain |
 | Google auth | OAuth 2.0 PKCE via `ASWebAuthenticationSession` |
-| Claude | Anthropic Messages API with tool use and prompt caching |
-| Local LLM | **Ollama** (easiest) with a Qwen 3 / Llama model; MLX later for speed |
+| AI (main) | **OpenCode** running headless on the Mac (`opencode serve`, local HTTP API) using its free models |
+| AI (backup) | **Ollama** with a small local model (e.g. Qwen 3 8B) |
 | Background | Mac: `NSBackgroundActivityScheduler` + login item. iOS: `BGAppRefreshTask` + CloudKit pushes |
 | Notifications | Local notifications from the Mac; CloudKit subscriptions trigger them on the phone |
 | Widgets | WidgetKit: "Next up", "Due this week" |
 
-### LLM routing (Claude ↔ local)
-`LLMRouter` picks a provider per request:
-1. **Claude** by default for quality (triage reasoning, scheduling, study plans).
-2. **Local** when there's no key, no credits (HTTP 402/429/credit error), no internet, or a monthly
-   spend cap you set is reached, or for private/bulk jobs (e.g. first pass over 500 emails).
-3. Every feature is written against one `LLMProvider` protocol, so both models get the same
-   prompts and tools. Structured outputs use JSON schemas, so smaller local models stay reliable.
-
-> Note: the Claude API is billed separately from a claude.ai subscription. You need an API key from
-> console.anthropic.com. The app shows running spend.
+### AI routing (free only: no paid API)
+`LLMRouter` picks a provider per request, and **never uses a paid API**:
+1. **OpenCode** by default. Orbit talks to `opencode serve` on `localhost`, which gives it whatever
+   models your OpenCode setup has (its free models, or any account you've already connected).
+   Orbit starts the server itself as a background helper if it isn't running.
+2. **Ollama** fallback when OpenCode is down, rate-limited or offline, and for private/bulk jobs
+   (e.g. first-pass sorting of 500 emails stays fully on-device).
+3. Every feature is written against one `LLMProvider` protocol, so both get the same prompts.
+   Structured outputs use JSON schemas and are validated/retried, so small local models stay reliable.
+4. Heavy lifting stays in plain code (scheduler, parsers, date extraction) so the AI does only the
+   judgement calls. This keeps it fast and works well with smaller models.
 
 ---
 
@@ -63,14 +65,14 @@ with the last synced state, and it can call Claude directly for chat.
 
 ### Phase 1: Core (the foundation)
 - Xcode multiplatform project, design system, SwiftData models, CloudKit sync Mac ↔ iPhone.
-- Settings: connect Google, add Claude key, detect Ollama, spend cap.
+- Settings: connect Google, detect OpenCode and Ollama, pick models.
 - **Google Calendar**: read all calendars, and write events to a dedicated "Orbit" calendar so the AI
   never edits your real events without asking.
 - **To-dos**: title, estimate, deadline, priority, energy level, module tag. Natural-language quick add
   ("essay plan for BEM2031, 2h, before Friday").
 - **Smart scheduler** (details in §3).
 - **Chat**: "what's my week look like?", "move gym to tomorrow", with tool access to everything.
-- **LLMRouter** with automatic fallback.
+- **LLMRouter**: OpenCode → Ollama automatic fallback.
 
 ### Phase 2: Gmail intelligence
 - Incremental sync via Gmail history IDs.
@@ -141,7 +143,7 @@ Raw email bodies and note text stay **on the Mac only**. Only summaries sync to 
 
 ## 5. Privacy and safety
 - No backend server; data stays on your devices and in your private iCloud.
-- Claude API calls send only what each task needs. A "local-only mode" toggle forces Ollama.
+- Cloud models (via OpenCode) get only what each task needs. A "local-only mode" toggle forces Ollama.
 - The AI can draft but never sends email, deletes anything, or edits your own events without confirmation.
 
 ## 6. Design direction
@@ -152,7 +154,7 @@ subtle haptics and spring animations. Light and dark mode from day one.
 ## 7. What you'll need to do (one-offs)
 - Create a Google Cloud project → enable Gmail and Calendar APIs → OAuth client (I'll give exact steps).
   It stays in "testing" mode with you as the only user, so no Google review is needed.
-- Claude API key from console.anthropic.com. Install Ollama and pull a model.
+- Have OpenCode installed (already done). Install Ollama and pull a small model (`ollama pull qwen3:8b`).
 - Check whether the ELE mobile app / web services are enabled (try logging into the Moodle app with ELE).
 - Sign in with your Exeter Microsoft account to test OneNote access.
 - In Xcode: set your team ID, enable iCloud (CloudKit) and Push capabilities → archive → TestFlight.
