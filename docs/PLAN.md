@@ -13,7 +13,7 @@ iPhone that syncs between the two.
 │  SwiftUI UI · menu bar item · background agent loop (runs while Mac is awake) │
 │                                                                               │
 │  Connectors            AI layer                   Engines                     │
-│  ├ Gmail API           ├ LLMRouter                ├ Email triage              │
+│  ├ Gmail + Exeter mail ├ LLMRouter                ├ Email triage              │
 │  ├ Google Calendar     │  ├ OpenCode (default)    ├ Smart scheduler           │
 │  ├ ELE / Moodle        │  └ Ollama (backup)       ├ Study coach               │
 │  ├ OneNote (Graph)     └ Prompt + tool layer      ├ Daily brief / review      │
@@ -74,12 +74,20 @@ with the last synced state. Chat typed on the phone is queued in CloudKit and an
 - **Chat**: "what's my week look like?", "move gym to tomorrow", with tool access to everything.
 - **LLMRouter**: OpenCode → Ollama automatic fallback.
 
-### Phase 2: Gmail intelligence
-- Incremental sync via Gmail history IDs.
+### Phase 2: Email intelligence (Gmail + Exeter)
+Both inboxes feed one unified, sorted view.
+- **Gmail**: Gmail API, incremental sync via history IDs.
+- **Exeter email** (Microsoft 365 / Outlook). Options in order:
+  1. **Microsoft Graph Mail API**: same Exeter Microsoft sign-in as OneNote (one login covers both).
+     Exeter IT *may* block third-party apps, so we test on day one.
+  2. **Apple Mail fallback**: add your Exeter account to the Mac's built-in Mail app (always allowed).
+     Orbit then reads the local mail store (needs Full Disk Access). It is fully local and needs no uni approval.
+  3. Last resort: auto-forward Exeter mail to Gmail (only if Exeter allows forwarding).
 - Triage every new email into: 🔴 urgent / 🟠 needs reply / 📅 contains a date or plan / 📚 uni / ⚪ ignore.
+  Exeter senders (lecturers, module leads, SID, ELE notifications) are boosted automatically.
 - Extract action items → suggested to-dos (one tap to accept) and events → suggested calendar entries.
 - Notify only on 🔴 and your chosen senders (lecturers, landlord, employer).
-- Draft replies in your tone. Drafts are saved to Gmail; **the app never sends email without you.**
+- Draft replies in your tone, saved as drafts in the right account. **The app never sends email without you.**
 
 ### Phase 3: Exeter degree integration (ELE)
 ELE is Moodle. The plan, in order of preference:
@@ -94,15 +102,42 @@ ELE is Moodle. The plan, in order of preference:
   - Weekly "on track for a First?" review: coverage of readings, lectures reviewed, upcoming load.
   - Exam season: revision timetable plus spaced-repetition prompts generated from your notes.
 
-### Phase 4: OneNote notes
-Caveat: modern OneNote notebooks on OneDrive usually **aren't real files in Finder**. What you see is
-often a shortcut, and the content lives in the cloud. Options:
-1. **Microsoft Graph OneNote API** (best: full text per page, stays current). Needs sign-in with your
-   Exeter Microsoft account. Exeter IT *may* require admin approval for third-party apps. We test this first.
-2. If blocked: periodic **export of notebooks to PDF**, which Orbit watches in a folder and indexes.
-3. Any real `.one`/PDF/Markdown files in your OneDrive folder are indexed directly.
-- Notes get chunked and embedded locally (on-device embeddings) → "what did the lecture say about X?",
-  auto-summaries per lecture, links between notes and assignments, and gap detection ("no notes for Week 6 of BEM2031").
+### Phase 4: OneNote notes: handwriting + typed
+**How you take notes:** Apple Pencil handwriting in lectures, then a typed version of the important
+parts further down the same page. Orbit reads **both**, merges them, and treats the typed part
+as "what mattered most".
+
+**Getting the notes out of OneNote:**
+1. **Microsoft Graph OneNote API**: gives typed text as HTML, and with `includeInkML=true` gives the
+   raw **pen strokes (InkML)** for handwriting. This is the best source, and uses the same Exeter sign-in as Exeter email.
+2. If blocked: export notebooks/sections to **PDF** into a watched folder; Orbit renders each page as an image.
+3. Any real `.one`/PDF/Markdown files in your OneDrive folder are picked up directly.
+
+**Reading the handwriting (all free, all on your Mac):**
+| Layer | Tool | Why |
+|---|---|---|
+| 1. First pass | **Apple Vision** (`VNRecognizeTextRequest`, accurate mode) | Built into macOS, free, fast, decent on handwriting |
+| 2. Hard bits | **Local vision model via Ollama** (e.g. `qwen2.5vl` / `llama3.2-vision`) | Reads messy writing, arrows, diagrams and maths. It's the "clever" pass and still free |
+| 3. Optional | **TrOCR** (Microsoft, open source, MIT) run via Core ML | Specialist handwriting model, fine-tunable on *your* writing |
+| Maths | **Texify / pix2tex** (open source) | Converts handwritten equations to LaTeX |
+
+Pen strokes (InkML) get rendered to clean high-res images first, which gives much better accuracy than screenshots.
+
+**Personalised to your handwriting:** when you type up a section below your handwriting, that is
+effectively a free answer key. Orbit matches the typed text to the handwriting above it, learns your
+common letter shapes and abbreviations, and builds a personal correction dictionary. It can later be
+used to fine-tune TrOCR on your writing, so accuracy keeps improving the more you use it.
+
+**Merging:** each page becomes one clean note that has
+- the typed notes (marked **key points**),
+- the handwriting transcription (marked **full lecture detail**, with low-confidence words flagged),
+- diagrams kept as images with an AI description.
+
+**What you can then do:**
+- "What did the lecture say about X?" searches across all notes, handwritten or typed.
+- Auto-summaries per lecture, and flashcards made from your key points (spaced repetition for exams).
+- Gap detection: "Week 6 of BEM2031 has handwriting but no typed summary yet" or "no notes at all".
+- Links notes to the assignments and readings they're relevant to.
 
 ### Phase 5: Messages → plans
 Meta offers **no official API for personal WhatsApp or Instagram DMs**. Unofficial scrapers break
@@ -156,7 +191,8 @@ subtle haptics and spring animations. Light and dark mode from day one.
   It stays in "testing" mode with you as the only user, so no Google review is needed.
 - Have OpenCode installed (already done). Install Ollama and pull a small model (`ollama pull qwen3:8b`).
 - Check whether the ELE mobile app / web services are enabled (try logging into the Moodle app with ELE).
-- Sign in with your Exeter Microsoft account to test OneNote access.
+- Sign in with your Exeter Microsoft account to test OneNote + Exeter mail access.
+- Pull a vision model for handwriting (`ollama pull qwen2.5vl:7b`).
 - In Xcode: set your team ID, enable iCloud (CloudKit) and Push capabilities → archive → TestFlight.
 
 ## 8. Build limits from this environment
@@ -168,9 +204,9 @@ I'll keep the project buildable with `xcodebuild`, add unit tests for the schedu
 | Phase | Scope |
 |---|---|
 | 1 | Project, sync, Calendar, to-dos, scheduler, LLM router, chat |
-| 2 | Gmail triage and notifications |
+| 2 | Gmail + Exeter email triage and notifications |
 | 3 | ELE + study coach |
-| 4 | OneNote |
+| 4 | OneNote typed + handwriting reading |
 | 5 | Messages import |
 | 6 | Widgets, briefs, polish |
 
