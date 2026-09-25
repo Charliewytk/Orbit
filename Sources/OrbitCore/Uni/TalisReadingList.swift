@@ -111,7 +111,9 @@ public struct TalisReadingList: Sendable {
             let importanceLabel = values(uri, rl + "importance").first.map { firstValue($0, labelPredicates) ?? $0 } ?? ""
             let importance = Importance(label: importanceLabel)
             let sectionName = section(of: uri)
-            let link = resource.flatMap { firstValue($0, ["http://purl.org/ontology/bibo/uri", "http://purl.org/ontology/bibo/doi"]) }
+            let doi = resource.flatMap { firstValue($0, ["http://purl.org/ontology/bibo/doi"]) }
+            let link = resource.flatMap { firstValue($0, ["http://purl.org/ontology/bibo/uri"]) }
+                ?? doi.map { $0.hasPrefix("http") ? $0 : "https://doi.org/" + $0 }
             let authors = resource.flatMap { firstValue($0, ["http://purl.org/ontology/bibo/authorList", "http://purl.org/dc/terms/creator"]) }
                 .flatMap { root[$0] == nil ? $0 : nil }
             let id = "talis-" + (uri.split(separator: "/").last.map(String.init) ?? MD5.hex(uri))

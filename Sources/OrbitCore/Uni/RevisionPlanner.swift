@@ -61,6 +61,8 @@ public struct RevisionPlanner: Sendable {
             for d in reviewDaysBefore {
                 let offset = d >= 3 && i % 2 == 1 ? d + 1 : d
                 let day = examStart.addingTimeInterval(-Double(offset) * 86400)
+                // In a short run-up, skip reviews that would come before the first pass.
+                guard coach.at(prefs.workCutoff, on: day) > to else { continue }
                 add("Review: \(topic) (\(offset)d before)", notes: "Active recall: test yourself before re-reading.",
                     minutes: d == 1 ? max(15, reviewEach / 2) : reviewEach,
                     earliest: coach.at(prefs.dayStart, on: day), deadline: coach.at(prefs.workCutoff, on: day), energy: .medium, maxBlock: 60)

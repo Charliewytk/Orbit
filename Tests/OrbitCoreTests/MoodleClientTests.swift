@@ -27,9 +27,14 @@ final class UniStubTransport: HTTPTransport, @unchecked Sendable {
 
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let fields = Self.formFields(request)
-        lock.lock(); _requests.append((request, fields)); lock.unlock()
+        record(request, fields)
         let (status, body) = try handler(request, fields)
         return (Data(body.utf8), HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!)
+    }
+
+    private func record(_ request: URLRequest, _ fields: [String: String]) {
+        lock.lock(); defer { lock.unlock() }
+        _requests.append((request, fields))
     }
 
     static func formFields(_ r: URLRequest) -> [String: String] {
