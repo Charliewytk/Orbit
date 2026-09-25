@@ -87,14 +87,9 @@ def run_trocr(image, checkpoint):
                 return_dict_in_generate=True,
             )
         text = processor.batch_decode(out.sequences, skip_special_tokens=True)[0].strip()
-        # Mean token probability of the chosen sequence as a rough confidence.
-        try:
-            scores = model.compute_transition_scores(
-                out.sequences, out.scores, out.beam_indices, normalize_logits=False
-            )
-            confidence = float(torch.exp(scores[0][scores[0] > -1e9]).mean().item())
-        except Exception:  # older transformers versions
-            confidence = 0.5
+        # Beam search gives a length-normalised log-probability per sequence: a rough confidence.
+        seq_scores = getattr(out, "sequences_scores", None)
+        confidence = float(torch.exp(seq_scores[0]).item()) if seq_scores is not None else 0.5
         if text:
             results.append({"text": text, "confidence": round(max(0.0, min(1.0, confidence)), 3)})
     return results

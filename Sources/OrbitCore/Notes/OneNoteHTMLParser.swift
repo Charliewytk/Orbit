@@ -60,7 +60,7 @@ public struct OneNotePageDocument: Codable, Hashable, Sendable {
 public enum OneNoteHTMLParser {
     public static func parse(_ html: String) -> OneNotePageDocument {
         var builder = Builder()
-        for token in HTMLTokenizer.tokens(html) { builder.consume(token) }
+        for token in OneNoteHTMLTokenizer.tokens(html) { builder.consume(token) }
         builder.flushText()
         let title = builder.title.trimmingCharacters(in: .whitespacesAndNewlines)
         return OneNotePageDocument(title: title, created: builder.created, blocks: builder.blocks)
@@ -116,7 +116,7 @@ public enum OneNoteHTMLParser {
 
         var container: Container? { containers.last?.container }
 
-        mutating func consume(_ token: HTMLTokenizer.Token) {
+        mutating func consume(_ token: OneNoteHTMLTokenizer.Token) {
             switch token {
             case .text(let raw):
                 if skipDepth > 0 { return }
@@ -349,7 +349,7 @@ public enum NoteMetadataDetector {
 
 /// A forgiving HTML tokenizer: tags with attributes, text with entities decoded.
 /// Comments, doctype and processing instructions are dropped.
-enum HTMLTokenizer {
+enum OneNoteHTMLTokenizer {
     enum Token: Equatable {
         case open(String, [String: String], selfClosing: Bool)
         case close(String)

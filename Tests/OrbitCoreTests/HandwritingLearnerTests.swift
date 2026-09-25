@@ -130,12 +130,12 @@ final class HandwritingLearnerTests: XCTestCase {
     }
 
     func testAbbreviationDetection() {
-        XCTAssertTrue(TextNormalizer.isAbbreviation("govt", of: "government"))
-        XCTAssertTrue(TextNormalizer.isAbbreviation("b/c", of: "because"))
-        XCTAssertTrue(TextNormalizer.isAbbreviation("ppl", of: "people"))
-        XCTAssertTrue(TextNormalizer.isAbbreviation("&", of: "and"))
-        XCTAssertFalse(TextNormalizer.isAbbreviation("tax", of: "taxes"))
-        XCTAssertFalse(TextNormalizer.isAbbreviation("cost", of: "price"))
-        XCTAssertEqual(TextNormalizer.levenshtein("partys", "parties"), 2)
+        XCTAssertTrue(HandwritingTextNormalizer.isAbbreviation("govt", of: "government"))
+        XCTAssertTrue(HandwritingTextNormalizer.isAbbreviation("b/c", of: "because"))
+        XCTAssertTrue(HandwritingTextNormalizer.isAbbreviation("ppl", of: "people"))
+        XCTAssertTrue(HandwritingTextNormalizer.isAbbreviation("&", of: "and"))
+        XCTAssertFalse(HandwritingTextNormalizer.isAbbreviation("tax", of: "taxes"))
+        XCTAssertFalse(HandwritingTextNormalizer.isAbbreviation("cost", of: "price"))
+        XCTAssertEqual(HandwritingTextNormalizer.levenshtein("partys", "parties"), 2)
     }
 }

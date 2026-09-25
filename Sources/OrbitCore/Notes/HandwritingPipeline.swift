@@ -144,14 +144,14 @@ public struct HandwritingPipeline: Sendable {
         }
         guard let a, !a.lines.isEmpty else { return b }
         let confident = Set(a.lines.filter { $0.confidence >= threshold }
-            .flatMap { $0.text.split(whereSeparator: \.isWhitespace).map { TextNormalizer.key(String($0)) } })
-        let aWords = Set(a.text.split(whereSeparator: \.isWhitespace).map { TextNormalizer.key(String($0)) })
-        let bWords = Set(b.text.split(whereSeparator: \.isWhitespace).map { TextNormalizer.key(String($0)) })
+            .flatMap { $0.text.split(whereSeparator: \.isWhitespace).map { HandwritingTextNormalizer.key(String($0)) } })
+        let aWords = Set(a.text.split(whereSeparator: \.isWhitespace).map { HandwritingTextNormalizer.key(String($0)) })
+        let bWords = Set(b.text.split(whereSeparator: \.isWhitespace).map { HandwritingTextNormalizer.key(String($0)) })
         let agreement = bWords.isEmpty ? 0 : Double(aWords.intersection(bWords).count) / Double(aWords.union(bWords).count)
         let lines = b.lines.map { line -> OCRLine in
             let words = line.text.split(separator: " ", omittingEmptySubsequences: false).map { raw -> String in
                 let w = PersonalHandwritingProfile.WordParts(String(raw))
-                return w.uncertain && confident.contains(TextNormalizer.key(w.core)) ? w.plain : String(raw)
+                return w.uncertain && confident.contains(HandwritingTextNormalizer.key(w.core)) ? w.plain : String(raw)
             }
             let text = words.joined(separator: " ")
             let base = line.text.hasPrefix("[Diagram") ? line.confidence : OllamaVisionOCR.confidence(text)

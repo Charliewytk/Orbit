@@ -65,7 +65,7 @@ final class OneNoteHTMLParserTests: XCTestCase {
     }
 
     func testEntitiesAndStyleUnits() {
-        XCTAssertEqual(HTMLTokenizer.decodeEntities("a &lt;b&gt; &#x2192; &#8364; &pound;5 &unknown;"), "a <b> → € £5 &unknown;")
+        XCTAssertEqual(OneNoteHTMLTokenizer.decodeEntities("a &lt;b&gt; &#x2192; &#8364; &pound;5 &unknown;"), "a <b> → € £5 &unknown;")
         let p = OneNoteHTMLParser.position(fromStyle: "position:absolute; LEFT: 72pt; top:1in; width:10mm")
         XCTAssertEqual(p.left, 96)
         XCTAssertEqual(p.top, 96)

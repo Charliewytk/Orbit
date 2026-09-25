@@ -27,15 +27,15 @@ public struct PersonalHandwritingProfile: Codable, Hashable, Sendable {
     }
 
     public mutating func recordCorrection(ocr: String, correct: String, count: Int = 1) {
-        corrections[TextNormalizer.key(ocr), default: [:]][correct, default: 0] += count
+        corrections[HandwritingTextNormalizer.key(ocr), default: [:]][correct, default: 0] += count
     }
 
     public mutating func recordAbbreviation(_ short: String, meaning: String, count: Int = 1) {
-        abbreviations[TextNormalizer.key(short), default: [:]][meaning.lowercased(), default: 0] += count
+        abbreviations[HandwritingTextNormalizer.key(short), default: [:]][meaning.lowercased(), default: 0] += count
     }
 
     public mutating func recordConfirmation(_ word: String, count: Int = 1) {
-        confirmations[TextNormalizer.key(word), default: 0] += count
+        confirmations[HandwritingTextNormalizer.key(word), default: 0] += count
     }
 
     /// Adds another profile's counts (e.g. from another Mac).
@@ -65,14 +65,14 @@ public struct PersonalHandwritingProfile: Codable, Hashable, Sendable {
     /// times (and more often than the word was confirmed as right), or seen once with no
     /// contradiction when the target is a known vocabulary term that looks very similar.
     public func correction(for word: String) -> String? {
-        let key = TextNormalizer.key(word)
+        let key = HandwritingTextNormalizer.key(word)
         guard !key.isEmpty, let options = corrections[key],
               let best = options.max(by: { ($0.value, $1.key) < ($1.value, $0.key) }) else { return nil }
         let confirmed = confirmations[key] ?? 0
         if best.value >= minCount && best.value > confirmed { return best.key }
         let vocab = Set(vocabulary.map { $0.lowercased() })
         if confirmed == 0, vocab.contains(best.key.lowercased()),
-           TextNormalizer.similarity(key, TextNormalizer.key(best.key)) >= 0.75 {
+           HandwritingTextNormalizer.similarity(key, HandwritingTextNormalizer.key(best.key)) >= 0.75 {
             return best.key
         }
         return nil
@@ -112,7 +112,7 @@ public struct PersonalHandwritingProfile: Codable, Hashable, Sendable {
                     if let fix = correction(for: w.core) {
                         replacements.append(Replacement(from: w.core, to: fix))
                         words[i] = w.prefix + matchCase(fix, like: w.core) + w.suffix
-                    } else if let full = abbreviations[TextNormalizer.key(w.core)] {
+                    } else if let full = abbreviations[HandwritingTextNormalizer.key(w.core)] {
                         replacements.append(Replacement(from: w.core, to: full))
                         words[i] = w.prefix + matchCase(full, like: w.core) + w.suffix
                     } else if w.uncertain {
@@ -164,7 +164,7 @@ public struct PersonalHandwritingProfile: Codable, Hashable, Sendable {
 
 // MARK: - Text normalisation
 
-public enum TextNormalizer {
+public enum HandwritingTextNormalizer {
     static let edgePunctuation = CharacterSet(charactersIn: ".,;:!?()[]{}\"'“”‘’*•#_`~<>")
 
     /// Lower-cased with edge punctuation removed ("Market," → "market"). Keeps "/" and "&" ("w/", "b/c").
@@ -293,7 +293,7 @@ public struct HandwritingLearner: Sendable {
             for raw in line.split(whereSeparator: \.isWhitespace) {
                 let s = String(raw)
                 if listMarker.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) != nil { continue }
-                let key = TextNormalizer.key(s)
+                let key = HandwritingTextNormalizer.key(s)
                 if key.isEmpty { continue }
                 out.append(AlignToken(text: s, key: key, region: region, line: li))
             }
@@ -329,7 +329,7 @@ public struct HandwritingLearner: Sendable {
 
     func pairScore(_ a: String, _ b: String) -> Double {
         if a == b { return matchScore }
-        if TextNormalizer.similarity(a, b) >= minSimilarity || TextNormalizer.isAbbreviation(a, of: b) { return similarScore }
+        if HandwritingTextNormalizer.similarity(a, b) >= minSimilarity || HandwritingTextNormalizer.isAbbreviation(a, of: b) { return similarScore }
         return mismatchPenalty
     }
 
@@ -399,17 +399,17 @@ public struct HandwritingLearner: Sendable {
         for a in alignments {
             for p in a.pairs where p.kind == .substitution || p.kind == .merge || p.kind == .split {
                 let ocr = p.kind == .merge
-                    ? p.ocr.split(separator: " ").map { TextNormalizer.key(String($0)) }.joined(separator: " ")
-                    : TextNormalizer.key(p.ocr)
+                    ? p.ocr.split(separator: " ").map { HandwritingTextNormalizer.key(String($0)) }.joined(separator: " ")
+                    : HandwritingTextNormalizer.key(p.ocr)
                 let typedWord = p.kind == .split
-                    ? p.typed.split(separator: " ").map { TextNormalizer.key(String($0)) }.joined(separator: " ")
-                    : TextNormalizer.key(p.typed)
+                    ? p.typed.split(separator: " ").map { HandwritingTextNormalizer.key(String($0)) }.joined(separator: " ")
+                    : HandwritingTextNormalizer.key(p.typed)
                 guard !ocr.isEmpty, !typedWord.isEmpty, ocr != typedWord else { continue }
                 let correct = Self.typedSpelling(p.typed)
-                if TextNormalizer.isAbbreviation(ocr, of: typedWord) {
+                if HandwritingTextNormalizer.isAbbreviation(ocr, of: typedWord) {
                     out.append(HarvestedSubstitution(ocr: ocr, correct: correct.lowercased(), kind: .abbreviation))
                 } else if p.kind != .substitution
-                            || TextNormalizer.similarity(ocr.replacingOccurrences(of: " ", with: ""), typedWord) >= minSimilarity {
+                            || HandwritingTextNormalizer.similarity(ocr.replacingOccurrences(of: " ", with: ""), typedWord) >= minSimilarity {
                     out.append(HarvestedSubstitution(ocr: ocr, correct: correct, kind: .misreading))
                 }
             }
@@ -507,10 +507,10 @@ public struct HandwritingLearner: Sendable {
             for p in a.pairs {
                 guard p.kind != .handwritingOnly, p.kind != .typedOnly else { continue }
                 covered.formUnion(p.ocrTokens)
-                let ocrKey = TextNormalizer.key(p.ocr.replacingOccurrences(of: " ", with: ""))
-                let typedKey = TextNormalizer.key(p.typed.replacingOccurrences(of: " ", with: ""))
-                guard p.kind != .match, !TextNormalizer.isAbbreviation(ocrKey, of: typedKey) else { continue }
-                if p.kind == .substitution, TextNormalizer.similarity(ocrKey, typedKey) < minSimilarity { continue }
+                let ocrKey = HandwritingTextNormalizer.key(p.ocr.replacingOccurrences(of: " ", with: ""))
+                let typedKey = HandwritingTextNormalizer.key(p.typed.replacingOccurrences(of: " ", with: ""))
+                guard p.kind != .match, !HandwritingTextNormalizer.isAbbreviation(ocrKey, of: typedKey) else { continue }
+                if p.kind == .substitution, HandwritingTextNormalizer.similarity(ocrKey, typedKey) < minSimilarity { continue }
                 let parts = PersonalHandwritingProfile.WordParts(hw[p.ocrTokens[0]].text)
                 fixed[p.ocrTokens[0]] = parts.prefix + PersonalHandwritingProfile.WordParts(p.typed).core
                     + PersonalHandwritingProfile.WordParts(hw[p.ocrTokens.last!].text).suffix
