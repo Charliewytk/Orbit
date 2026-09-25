@@ -59,7 +59,8 @@ final class PhoneAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificatio
                 task.setTaskCompleted(success: false)
                 return
             }
-            Self.handleRefresh(refresh)
+            // Registered on the main queue, so this runs on the main actor.
+            MainActor.assumeIsolated { Self.handleRefresh(refresh) }
         }
         // CloudKit sends silent pushes when synced data changes.
         application.registerForRemoteNotifications()
