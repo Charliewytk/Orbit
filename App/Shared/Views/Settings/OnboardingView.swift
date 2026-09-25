@@ -13,9 +13,9 @@ struct OnboardingView: View {
 
     private var steps: [Step] {
         #if os(macOS)
-        [.welcome, .google, .microsoft, .ele, .notes, .ai, .prefs, .done]
+        return [.welcome, .google, .microsoft, .ele, .notes, .ai, .prefs, .done]
         #else
-        [.welcome, .iphone, .notifications, .prefs, .done]
+        return [.welcome, .iphone, .notifications, .prefs, .done]
         #endif
     }
 
