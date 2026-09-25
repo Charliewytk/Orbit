@@ -10,10 +10,12 @@ DEVELOPMENT_TEAM =
 MARKETING_VERSION = 0.1.0
 CURRENT_PROJECT_VERSION = 1
 
-// Defaults so the app builds before Secrets.xcconfig exists. Sign-in buttons
-// explain what's missing until real values are set.
-GOOGLE_CLIENT_ID =
-GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.not-configured
+// Google iOS OAuth client (project gen-lang-client-0630020611). iOS-type
+// client IDs aren't secret: Google ships them inside apps, so it's fine here.
+GOOGLE_CLIENT_ID = 847336970377-bl2444batr4n09gg0anb4pfhhtqj44n7.apps.googleusercontent.com
+GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.847336970377-bl2444batr4n09gg0anb4pfhhtqj44n7
+
+// Filled in once the Microsoft app is registered. Sign-in explains what's missing until then.
 MICROSOFT_CLIENT_ID =
 
 #include? "Secrets.xcconfig"
