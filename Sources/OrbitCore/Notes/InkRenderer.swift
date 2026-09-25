@@ -68,7 +68,8 @@ public struct InkRenderer: Sendable {
         if longest * scale > usable { scale = usable / longest }
         let w = Int((bounds.width * scale).rounded(.up)) + 2 * padding
         let h = Int((bounds.height * scale).rounded(.up)) + 2 * padding
-        return Layout(scale: scale, originX: bounds.minX, originY: bounds.minY, width: max(w, 1), height: max(h, 1))
+        return Layout(scale: scale, originX: bounds.minX, originY: bounds.minY,
+                      width: min(max(w, 1), maxDimension), height: min(max(h, 1), maxDimension))
     }
 
     /// PNG of one region.

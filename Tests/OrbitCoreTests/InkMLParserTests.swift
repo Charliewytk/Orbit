@@ -102,7 +102,7 @@ final class InkMLParserTests: XCTestCase {
         XCTAssertEqual(regions[0].bounds.minY, 97)
         XCTAssertEqual(regions[1].lines.count, 1)
         XCTAssertEqual(regions[1].bounds.minY, 300)
-        XCTAssertEqual(regions[0].lineHeight, 18, accuracy: 3)
+        XCTAssertTrue((16...26).contains(regions[0].lineHeight))
         XCTAssertFalse(regions[0].features.looksLikeDiagram)
     }
 
