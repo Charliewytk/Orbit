@@ -1,8 +1,8 @@
 name: CI
 
+# Manual only: GitHub Actions needs billing on private repos. Run it from the
+# Actions tab if the repo is made public or billing is enabled.
 on:
-  push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
