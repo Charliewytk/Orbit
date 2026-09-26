@@ -60,6 +60,8 @@ final class StoredBlock {
     var skipped: Bool = false
     /// Started with "Start" (shows a focus state; the block is locked in place).
     var startedAt: Date?
+    /// Where the work happens ("Forum library (on campus)", "Holland Hall").
+    var locationHint: String?
 
     init(id: String = UUID().uuidString) { self.id = id }
 }

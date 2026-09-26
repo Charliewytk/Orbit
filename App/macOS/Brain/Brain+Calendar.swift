@@ -42,7 +42,8 @@ extension OrbitBrain {
                         if calendar.id == orbitID {
                             // Study blocks are tracked separately; other Orbit-calendar events are
                             // accepted plans, which are real commitments.
-                            events = events.filter { !blockEventIDs.contains($0.id) }.map { e in
+                            // Routine blocks Orbit wrote itself (opt-in) are not commitments either.
+                            events = events.filter { !blockEventIDs.contains($0.id) && !($0.notes ?? "").contains(RoutineService.googleTag) }.map { e in
                                 var e = e
                                 e.source = .local
                                 return e
@@ -157,11 +158,18 @@ extension OrbitBrain {
         let blocks = context.all(StoredBlock.self)
         let assessments = context.all(StoredAssessment.self).map(\.value)
         let scorer = TaskScorer(assessments: assessments, dailyCapacityMinutes: Double(prefs.maxFocusMinutesPerDay) * 0.7)
+        let events = context.all(StoredEvent.self).map(\.value)
+        // The fixed routine: work stops at the shutdown, starts after waking, and hall meals,
+        // reading and travel to and from campus are busy time.
+        let routine = prefs.effectiveRoutine
+        var scheduler = Scheduler(prefs: routine.adjusted(prefs), scorer: scorer, horizonDays: 14)
+        let now = Date()
+        scheduler.extraBusy = RoutinePlanner(prefs: prefs).busyIntervals(from: now, to: now.addingTimeInterval(15 * 86400), events: events)
         return PlanInputs(tasks: context.all(StoredTask.self).map(\.value),
-                          events: context.all(StoredEvent.self).map(\.value),
+                          events: events,
                           current: blocks.map(\.value),
                           completed: Set(blocks.filter(\.completed).map(\.uuid)),
-                          replanner: Replanner(prefs: prefs, scorer: scorer, horizonDays: 14))
+                          replanner: Replanner(scheduler: scheduler))
     }
 
     /// Re-runs the scheduler over the next two weeks and writes the changes to the Orbit calendar.
@@ -189,6 +197,18 @@ extension OrbitBrain {
     }
 
     private func commit(_ result: ReplanResult) async -> SchedulePlan {
+        // Where each block happens (library between classes, else the hall), for the UI and nudges.
+        let routinePlanner = RoutinePlanner(prefs: prefs)
+        let events = context.all(StoredEvent.self).map(\.value)
+        func withHints(_ list: [ScheduledBlock]) -> [ScheduledBlock] {
+            list.map { b in
+                var b = b
+                if b.locationHint == nil {
+                    b.locationHint = routinePlanner.locationHint(for: DateInterval(start: b.start, end: max(b.start, b.end)), events: events)
+                }
+                return b
+            }
+        }
         var blocks = result.plan.blocks
         var changes = result.changes
         // Blocks planned while Google wasn't connected (or after a failed write) have no
@@ -209,7 +229,7 @@ extension OrbitBrain {
                 return result.plan
             }
         }
-        writeBlocks(blocks)
+        writeBlocks(withHints(blocks))
         app?.refreshWidgets()
         return result.plan
     }

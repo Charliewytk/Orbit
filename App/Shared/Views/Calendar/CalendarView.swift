@@ -21,7 +21,10 @@ struct CalendarView: View {
         let end = cal.endOfDay(days.last ?? anchor)
         VStack(spacing: 0) {
             header(cal: cal, days: days)
-            TimeGrid(days: days, items: items(from: start, to: end, cal: cal), calendar: cal,
+            TimeGrid(days: days, items: items(from: start, to: end, cal: cal),
+                     windows: TimeGridWindow.routine(prefs: app.prefs, events: events.filter { $0.start < end && $0.end > start },
+                                                     days: days, calendar: cal),
+                     calendar: cal,
                      hourHeight: mode == .day ? 56 : 48, scrolls: true,
                      onSelectDay: { day in
                          anchor = day
@@ -107,10 +110,14 @@ struct CalendarView: View {
                 // Blocks are coloured by where their work came from (You set / Orbit recommends / Required).
                 let origin = taskByID[b.taskID]?.origin ?? .recommended
                 return TimeGridItem(id: "b-\(b.id)", kind: .block, title: b.title, start: b.start, end: b.end,
-                                    color: origin.color,
+                                    color: origin.color, location: b.locationHint,
                                     calendarName: "Orbit study block · \(origin.label)", moduleCode: b.moduleCode, blockID: b.id,
                                     completed: b.completed, started: b.startedAt != nil)
             }
+        // The fixed routine (hall meals, reading, shutdown) in its soft neutral colour.
+        for day in cal.dayStarts(from: start, to: end) {
+            out += Agenda.routineItems(prefs: app.prefs, events: events, on: day, calendar: cal).map(TimeGridItem.init)
+        }
         return out
     }
 

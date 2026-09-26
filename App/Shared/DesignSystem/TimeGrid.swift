@@ -4,7 +4,7 @@ import OrbitCore
 
 /// One thing on a time grid: a calendar event or an Orbit study block.
 struct TimeGridItem: Identifiable, Hashable {
-    enum Kind: Hashable { case event, block }
+    enum Kind: Hashable { case event, block, routine }
 
     var id: String
     var kind: Kind = .event
@@ -29,10 +29,35 @@ struct TimeGridItem: Identifiable, Hashable {
 extension TimeGridItem {
     /// Converts a Today agenda item.
     init(_ a: AgendaItem) {
-        self.init(id: a.id, kind: a.kind == .block ? .block : .event, title: a.title, start: a.start, end: a.end,
-                  isAllDay: a.isAllDay, color: Theme.moduleColor(a.moduleCode), location: a.location,
-                  calendarName: a.kind == .block ? "Orbit" : nil, moduleCode: a.moduleCode, blockID: a.blockID,
+        self.init(id: a.id, kind: a.kind == .block ? .block : a.kind == .routine ? .routine : .event, title: a.title,
+                  start: a.start, end: a.end, isAllDay: a.isAllDay,
+                  color: a.kind == .routine ? Theme.routine : Theme.moduleColor(a.moduleCode), location: a.location,
+                  calendarName: a.kind == .block ? "Orbit" : a.kind == .routine ? "Routine" : nil, moduleCode: a.moduleCode, blockID: a.blockID,
                   completed: a.completed, started: a.started)
+    }
+}
+
+/// A faint background band on the grid: a hall meal's serving window, or sleep.
+struct TimeGridWindow: Identifiable, Hashable {
+    var id: String
+    var title: String
+    var start: Date
+    var end: Date
+    var color: Color = Theme.routine
+}
+
+extension TimeGridWindow {
+    /// Meal windows and the sleep band for the given days.
+    static func routine(prefs: UserPrefs, events: [StoredEvent], days: [Date], calendar: DayCalendar) -> [TimeGridWindow] {
+        let planner = RoutinePlanner(prefs: prefs)
+        let evs = events.map(\.value)
+        return days.flatMap { day in
+            planner.blocks(on: day, events: evs).compactMap { r -> TimeGridWindow? in
+                if let w = r.window { return TimeGridWindow(id: "w-\(r.id)", title: "\(r.title) \(calendar.time(w.start))–\(calendar.time(w.end))", start: w.start, end: w.end) }
+                if r.kind == .sleep { return TimeGridWindow(id: "w-\(r.id)", title: "Sleep", start: r.start, end: r.end, color: Theme.indigo) }
+                return nil
+            }
+        }
     }
 }
 
@@ -42,6 +67,8 @@ extension TimeGridItem {
 struct TimeGrid<Detail: View>: View {
     var days: [Date]
     var items: [TimeGridItem]
+    /// Faint bands behind the items (meal windows, sleep).
+    var windows: [TimeGridWindow] = []
     var calendar: DayCalendar
     var startHour: Int = 0
     var endHour: Int = 24
@@ -162,6 +189,7 @@ struct TimeGrid<Detail: View>: View {
                 let columnWidth = geo.size.width / CGFloat(max(1, days.count))
                 ZStack(alignment: .topLeading) {
                     hourLines
+                    windowBands(columnWidth: columnWidth)
                     if days.count > 1 { daySeparators(columnWidth: columnWidth) }
                     ForEach(days.indices, id: \.self) { index in
                         ForEach(layout(day: days[index], width: max(20, columnWidth - 6))) { placed in
@@ -207,6 +235,31 @@ struct TimeGrid<Detail: View>: View {
         }
         .overlay(alignment: .bottom) {
             Rectangle().fill(Theme.separator).frame(height: Theme.hairline)
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func windowBands(columnWidth: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(days.indices, id: \.self) { index in
+                let day = days[index]
+                let dayStart = calendar.startOfDay(day), dayEnd = calendar.endOfDay(day)
+                ForEach(windows.filter { $0.start < dayEnd && $0.end > dayStart }) { w in
+                    let y = yPosition(max(w.start, dayStart), on: day) ?? 0
+                    let yEnd = yPosition(min(w.end, dayEnd), on: day) ?? gridHeight
+                    ZStack(alignment: .topTrailing) {
+                        Rectangle().fill(w.color.opacity(0.07))
+                        Text(w.title)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(w.color.opacity(0.8))
+                            .padding(3)
+                            .lineLimit(1)
+                    }
+                    .frame(width: columnWidth, height: max(0, yEnd - y))
+                    .padding(.leading, CGFloat(index) * columnWidth)
+                    .padding(.top, y)
+                }
+            }
         }
         .allowsHitTesting(false)
     }
@@ -364,7 +417,11 @@ struct TimeGridBlock: View {
         let compact = height < 34
         let doNow = item.kind == .block && !item.completed && item.contains(Date())
         HStack(spacing: 0) {
-            Rectangle().fill(item.color.gradient).frame(width: 4)
+            if item.kind == .routine {
+                Rectangle().fill(item.color.opacity(0.6)).frame(width: 2)
+            } else {
+                Rectangle().fill(item.color.gradient).frame(width: 4)
+            }
             VStack(alignment: .leading, spacing: 1) {
                 if compact {
                     HStack(spacing: 4) {
@@ -409,7 +466,7 @@ struct TimeGridBlock: View {
     }
 
     private var fillOpacity: Double {
-        let base = item.kind == .block ? 0.14 : 0.2
+        let base = item.kind == .routine ? 0.1 : item.kind == .block ? 0.14 : 0.2
         return hovering || isSelected ? base + 0.08 : base
     }
 

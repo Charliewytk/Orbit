@@ -52,6 +52,8 @@ enum Theme {
     static let danger = Color.dynamic(light: 0xEF3B5D, dark: 0xFF6B81)
     /// The calendar "now" line.
     static let now = Color.dynamic(light: 0xFF2D55, dark: 0xFF4F70)
+    /// Routine blocks (meals, reading, shutdown): soft and neutral, never competing with study.
+    static let routine = Color.dynamic(light: 0x9A93AD, dark: 0xA8A2BE)
 
     /// The signature gradient (indigo → violet → pink).
     static let accentGradient = LinearGradient(colors: [indigo, violet, pink], startPoint: .topLeading, endPoint: .bottomTrailing)

@@ -83,13 +83,14 @@ extension StoredBlock {
         moduleCode = b.moduleCode
         externalEventID = b.externalEventID
         locked = b.locked
+        if b.locationHint != nil { locationHint = b.locationHint }
     }
 
     var uuid: UUID { StoreCoding.uuid(id) }
 
     var value: ScheduledBlock {
         ScheduledBlock(id: uuid, taskID: StoreCoding.uuid(taskID), title: title, start: start, end: end,
-                       moduleCode: moduleCode, externalEventID: externalEventID, locked: locked)
+                       moduleCode: moduleCode, externalEventID: externalEventID, locked: locked, locationHint: locationHint)
     }
 
     var minutes: Int { max(0, Int(end.timeIntervalSince(start) / 60)) }
