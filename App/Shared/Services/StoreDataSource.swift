@@ -14,6 +14,11 @@ final class StoreDataSource: OrbitDataSource {
     var replanHandler: (() async throws -> SchedulePlan)?
     var lightenHandler: ((Date, Double) async throws -> SchedulePlan)?
     var noteSearchHandler: ((String, String?, Int) async -> [String])?
+    // Academic data (Mac only; see StoreDataSource+Academic.swift).
+    var knowledgeProvider: (() -> CourseKnowledgeBase)?
+    var lectureReviewsProvider: (() -> [LectureReview])?
+    var embedderProvider: (() -> NoteEmbedder?)?
+    var lectureReviewRunner: ((String, Int) async -> LectureReview?)?
 
     init(context: ModelContext) {
         self.context = context

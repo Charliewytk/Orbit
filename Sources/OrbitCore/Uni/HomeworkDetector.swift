@@ -374,7 +374,9 @@ public struct HomeworkDetector: Sendable {
         if h.dueSource == .assumed { notes += (notes.isEmpty ? "" : "\n") + "No due date given on ELE; planned for the end of the week it was set." }
         if let url = h.url { notes += (notes.isEmpty ? "" : "\n") + url }
         let label = h.kind == .prep ? "Prep" : h.kind.label
-        let title = h.title.lowercased().hasPrefix(label.lowercased()) || h.kind == .prep ? h.title : "\(label): \(h.title)"
+        // "HW stats sheet" and "Problem Set 2" say what they are; "Chapter 2" gets "Homework: ".
+        let title = h.kind == .prep || Self.looksLikeHomework(h.title) || h.title.lowercased().hasPrefix(label.lowercased())
+            ? h.title : "\(label): \(h.title)"
         return OrbitTask(id: h.taskID, title: "\(h.moduleCode) \(title)", notes: notes, estimateMinutes: h.estimateMinutes,
                          deadline: h.due, priority: priority, energy: h.kind == .prep ? .medium : .high, moduleCode: h.moduleCode,
                          source: .ele, sourceRef: h.id, minBlockMinutes: min(25, h.estimateMinutes),

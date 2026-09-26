@@ -38,7 +38,7 @@ struct SettingsView: View {
                         Stepper(value: Binding(get: { m.credits }, set: { app.setCredits(m, $0) }), in: 0...60, step: 15) {
                             HStack {
                                 ModuleChip(code: m.id)
-                                Text(m.name).lineLimit(1)
+                                Text(m.name).foregroundStyle(Theme.textSecondary).lineLimit(1)
                                 Spacer()
                                 Text("\(m.credits) credits").foregroundStyle(Theme.textSecondary)
                             }
@@ -163,10 +163,10 @@ struct DiagnosticsView: View {
                 ForEach(SyncSource.allCases) { source in
                     let entry = status[source.rawValue]
                     HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: source.symbol).frame(width: 22).foregroundStyle(Theme.accent)
+                        Image(systemName: source.symbol).frame(width: 22).foregroundStyle(Theme.textSecondary)
                         VStack(alignment: .leading, spacing: 3) {
                             HStack {
-                                Text(source.title).font(Theme.body.weight(.medium))
+                                Text(source.title).font(Theme.body)
                                 Spacer()
                                 StatusDot(color: color(entry))
                             }

@@ -392,7 +392,7 @@ extension StoredPlan {
         case "imessage": "message"
         case "screenshot": "photo"
         case "email": "envelope"
-        case "assistant": "sparkles"
+        case "assistant": "text.bubble"
         default: "square.and.arrow.down"
         }
     }

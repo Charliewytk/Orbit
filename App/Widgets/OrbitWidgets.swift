@@ -76,7 +76,7 @@ struct NextUpWidgetView: View {
                     RoundedRectangle(cornerRadius: 2).fill(Theme.moduleColor(first.moduleCode)).frame(width: 4)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(first.title)
-                            .font(.system(.headline, design: .rounded))
+                            .font(.headline)
                             .foregroundStyle(Theme.textPrimary)
                             .lineLimit(family == .systemSmall ? 3 : 2)
                         if let start = first.start {
@@ -104,8 +104,8 @@ struct NextUpWidgetView: View {
             }
         } else {
             VStack(alignment: .leading, spacing: 6) {
-                Image(systemName: "sparkles").foregroundStyle(Theme.accent)
-                Text("Nothing else today").font(.system(.headline, design: .rounded)).foregroundStyle(Theme.textPrimary)
+                Image(systemName: "checkmark.circle").foregroundStyle(Theme.textTertiary)
+                Text("Nothing else today").font(.headline).foregroundStyle(Theme.textPrimary)
                 Text("Enjoy the space.").font(.caption).foregroundStyle(Theme.textSecondary)
                 Spacer(minLength: 0)
             }

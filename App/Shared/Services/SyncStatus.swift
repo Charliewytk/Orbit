@@ -27,9 +27,9 @@ enum SyncSource: String, CaseIterable, Codable, Identifiable {
         case .gmail: "envelope"
         case .exeterMail: "building.columns"
         case .ele: "graduationcap"
-        case .notes: "pencil.and.scribble"
+        case .notes: "note.text"
         case .imessage: "message"
-        case .ai: "sparkles"
+        case .ai: "cpu"
         case .briefs: "sun.max"
         case .chat: "bubble.left.and.bubble.right"
         }

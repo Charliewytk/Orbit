@@ -192,6 +192,32 @@ final class ELEWebSession: NSObject {
         return (data, type, finalURL)
     }
 
+    /// HEAD request (redirects followed): the final file URL, ETag, Last-Modified and size,
+    /// so unchanged files aren't downloaded again.
+    func head(_ url: URL) async throws -> ResourceCache.Head {
+        let view = try await page()
+        let js = """
+        try {
+          const r = await fetch(url, {method: 'HEAD', credentials: 'include', redirect: 'follow'});
+          return {status: r.status, url: r.url, type: r.headers.get('content-type') || '',
+                  etag: r.headers.get('etag') || '', modified: r.headers.get('last-modified') || '',
+                  length: r.headers.get('content-length') || ''};
+        } catch (e) { return {status: 0, url: url, error: String(e)}; }
+        """
+        let result = try await view.callAsyncJavaScript(js, arguments: ["url": url.absoluteString], in: nil, contentWorld: .page)
+        let dict = result as? [String: Any] ?? [:]
+        let status = (dict["status"] as? NSNumber)?.intValue ?? 0
+        let finalURL = dict["url"] as? String ?? url.absoluteString
+        try checkSession(status: status, finalURL: finalURL, text: "", error: dict["error"] as? String)
+        guard (200..<400).contains(status) else { throw SessionError.http(status, url.absoluteString) }
+        func nonEmpty(_ key: String) -> String? {
+            let s = (dict[key] as? String)?.trimmingCharacters(in: .whitespaces) ?? ""
+            return s.isEmpty ? nil : s
+        }
+        return ResourceCache.Head(finalURL: finalURL, etag: nonEmpty("etag"), lastModified: nonEmpty("modified"),
+                                  bytes: nonEmpty("length").flatMap(Int.init), contentType: nonEmpty("type") ?? "")
+    }
+
     /// Calls one Moodle AJAX function (POST /lib/ajax/service.php) and returns the raw response.
     func ajax(_ method: String, args: [String: Any]) async throws -> Data {
         let key = try await prepare()

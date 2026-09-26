@@ -526,8 +526,8 @@ public struct CourseKnowledgeBase: Codable, Sendable {
     }
 
     static func slideNumber(heading: String, text: String) -> Int? {
-        if let m = UniRegex.first("slide\\s*(\\d+)", in: heading), let n = m[1].flatMap(Int.init) { return n }
-        if let m = UniRegex.first("^#\\s*slide\\s*(\\d+)", in: text), let n = m[1].flatMap(Int.init) { return n }
+        if let m = UniRegex.first("(?:slide|page)\\s*(\\d+)", in: heading), let n = m[1].flatMap(Int.init) { return n }
+        if let m = UniRegex.first("^#\\s*(?:slide|page)\\s*(\\d+)", in: text), let n = m[1].flatMap(Int.init) { return n }
         return nil
     }
 

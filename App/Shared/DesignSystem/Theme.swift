@@ -64,6 +64,9 @@ enum Theme {
         return moduleColors[Int(hash % UInt32(moduleColors.count))]
     }
 
+    /// A palette colour by index (0 red, 1 orange, 2 yellow, 3 green, 4 blue, 5 purple, 6 pink, 7 brown).
+    static func paletteColor(_ index: Int) -> Color { moduleColors[abs(index) % moduleColors.count] }
+
     /// Flat tint used behind calendar blocks.
     static func tint(_ color: Color) -> Color { color.opacity(0.14) }
 

@@ -54,7 +54,7 @@ struct PreferencesSections: View {
         }
 
         Section("Rest days") {
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 ForEach(Self.weekdays.indices, id: \.self) { index in
                     let day = Self.weekdays[index]
                     let on = prefs.restDays.contains(day.0)
@@ -62,11 +62,13 @@ struct PreferencesSections: View {
                         if on { prefs.restDays.remove(day.0) } else { prefs.restDays.insert(day.0) }
                     } label: {
                         Text(day.1)
-                            .font(Theme.caption)
+                            .font(Theme.body)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .foregroundStyle(on ? Color.white : Theme.textPrimary)
-                            .background(on ? Theme.accent : Theme.surfaceRaised, in: Capsule())
+                            .padding(.vertical, 4)
+                            .foregroundStyle(on ? Theme.accent : Theme.textSecondary)
+                            .background(on ? Theme.selection : Theme.hover,
+                                        in: RoundedRectangle(cornerRadius: Theme.Radius.s, style: .continuous))
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }

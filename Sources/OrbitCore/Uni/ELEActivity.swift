@@ -161,6 +161,8 @@ public struct ELEGradeItem: Codable, Hashable, Sendable {
     public var name: String
     public var module: String?
     public var cmid: Int?
+    /// The activity's instance id (e.g. the assignment id for mod_assign calls).
+    public var instance: Int?
     public var grade: String?
     public var percentage: Double?
     public var feedback: String
@@ -274,7 +276,7 @@ public enum ELELive {
                 if percentage == nil, let raw = g["graderaw"] as? Double, let max = g["grademax"] as? Double, max > 0 { percentage = raw / max * 100 }
                 let hasGrade = !(formatted.isEmpty || formatted == "-") || percentage != nil
                 return ELEGradeItem(id: id, courseID: course, name: str(g["itemname"]), module: g["itemmodule"] as? String,
-                                    cmid: int(g["cmid"]), grade: hasGrade ? (formatted.isEmpty ? nil : formatted) : nil,
+                                    cmid: int(g["cmid"]), instance: int(g["iteminstance"]), grade: hasGrade ? (formatted.isEmpty ? nil : formatted) : nil,
                                     percentage: percentage, feedback: UniHTML.text(str(g["feedback"])),
                                     gradedAt: date(g["gradedategraded"]))
             }
@@ -295,7 +297,7 @@ public enum ELELive {
             let cmid = UniRegex.first("/mod/[a-z]+/view\\.php\\?id=(\\d+)", in: nameCell)?[1].flatMap(Int.init)
             let module = UniRegex.first("/mod/([a-z]+)/", in: nameCell)?[1]
             return ELEGradeItem(id: cmid ?? (courseID * 1000 + i), courseID: courseID, name: name, module: module, cmid: cmid,
-                                grade: grade.isEmpty || grade == "-" ? nil : grade, percentage: Double(pct),
+                                instance: nil, grade: grade.isEmpty || grade == "-" ? nil : grade, percentage: Double(pct),
                                 feedback: cell("feedback"), gradedAt: nil)
         }
     }
