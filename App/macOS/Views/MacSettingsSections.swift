@@ -332,7 +332,9 @@ struct NotesSourcePicker: View {
     @Environment(OrbitBrain.self) private var brain
     @AppStorage(MacPrefs.noteSource) private var source = ""
     @AppStorage(MacPrefs.notesFolderPath) private var folderPath = ""
+    @AppStorage(MacPrefs.typedNotesRoot) private var typedRoot = ""
     @State private var choosing = false
+    @State private var choosingTyped = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -357,8 +359,23 @@ struct NotesSourcePicker: View {
                 .font(Theme.caption).foregroundStyle(Theme.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Typed notes folder").font(Theme.body.weight(.medium))
+                    Text(typedRoot.isEmpty ? TypedNotesStore.defaultRoot().path : typedRoot)
+                        .font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
+                }
+                Spacer()
+                if !typedRoot.isEmpty {
+                    Button("Use default") { typedRoot = ""; Task { await brain.refreshLibrary() } }
+                }
+                Button("Change…") { choosingTyped = true }
+            }
+            Text("Notes you type in Orbit are Markdown files here, one folder per module (Introduction to Statistics/Week 1.md). Drop PDFs on a module in Notes → Library to copy them in.")
+                .font(Theme.caption).foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
                 Button("Read notes now") { Task { await brain.syncNotes() } }
-                    .disabled(brain.running.contains(.notes) || (folderPath.isEmpty && source != "graph"))
+                    .disabled(brain.running.contains(.notes))
                 if brain.running.contains(.notes) { ProgressView().controlSize(.small); Text("Reading…").font(Theme.caption) }
             }
         }
@@ -368,6 +385,15 @@ struct NotesSourcePicker: View {
                 if source.isEmpty || !brain.accounts.microsoftAvailable { source = "folder" }
                 OrbitLog.log("notes", "Notes folder picked: \(url.path)")
                 Task { await brain.syncNotes() }
+            }
+        }
+        .background {
+            // A second importer on the same view is ignored by SwiftUI; hang it on a background view.
+            Color.clear.fileImporter(isPresented: $choosingTyped, allowedContentTypes: [.folder]) { result in
+                if case .success(let url) = result {
+                    typedRoot = url.path
+                    Task { await brain.syncNotes() }
+                }
             }
         }
     }

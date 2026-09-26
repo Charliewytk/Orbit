@@ -10,13 +10,18 @@ extension OrbitBrain {
     }
 
     func syncNotes() async {
-        guard noteSource != "none", begin(.notes) else { return }
+        guard begin(.notes) else { return }
         defer { end(.notes) }
+        loadNotesLibraryIfNeeded()
         switch noteSource {
         case "graph": await syncOneNote()
         case "folder": await syncNotesFolder()
         default: break
         }
+        // Orbit's own typed notes (~/Documents/Orbit Notes) are read whatever the source.
+        await syncTypedNotes()
+        saveNotesLibrary()
+        await refreshLibrary()
         saveIndex()
         local.save(handwritingProfile, "handwriting-profile.json")
         await academicAfterNotesSync()
@@ -122,16 +127,17 @@ extension OrbitBrain {
             let text = try String(contentsOf: item.url, encoding: .utf8)
             return NotesFolderScanner.note(fromText: text, item: item)
         case .pdf:
+            // Text layer first (typed boxes, text an app already recognised); OCR only
+            // pages, or the parts of pages, the text layer doesn't cover.
             let pages = await Self.renderPDF(item.url)
             var segments: [NoteSegment] = []
-            for (i, page) in pages.enumerated() {
-                if let text = page.text { segments.append(NoteSegment(kind: .typed, text: text)) }
-                if let image = page.image {
-                    let hint = page.text.map { String($0.prefix(300)) }
-                    let region = try await pipeline.transcribe(image: image, regionID: "\(item.relativePath)#\(i)", hint: hint)
-                    segments += region.segments
-                }
+            for page in pages {
+                segments += try await read(page, item: item, pipeline: pipeline)
             }
+            recordReadStatus(noteID: "file:" + item.relativePath, pages: pages.count,
+                             textPages: pages.filter { $0.text != nil }.count,
+                             ocrPages: pages.filter { $0.plan.usesOCR }.count,
+                             lowConfidence: segments.contains { $0.kind != .typed && $0.confidence < 0.6 })
             return Self.makeNote(item, segments: segments)
         case .image:
             let data = try Data(contentsOf: item.url)
@@ -160,7 +166,37 @@ extension OrbitBrain {
         note.section = meta.subject ?? "Notability"
         note.moduleCode = meta.moduleCode ?? note.moduleCode
         note.week = meta.week ?? academic.calendar.week(for: item.modified)?.week
+        // Keep the handwriting as read, then fold in the typed-up version of this week if there is one.
+        local.saveRawNote(note)
+        if let typed = typedCompanion(for: note) {
+            let merged = NoteMerger().combine(handwritten: note, typed: typed)
+            learn(fromCombined: merged, typed: typed.keyPoints)
+            if local.note(id: typed.id) != nil {
+                local.deleteNote(id: typed.id)
+                noteIndex.remove(noteID: typed.id)
+                if let s = context.record(StoredNote.self, id: typed.id) { context.delete(s) }
+            }
+            return merged.note
+        }
         return note
+    }
+
+    /// One PDF page → segments: the text layer as `.typed`, OCR of the rest as handwriting.
+    private func read(_ page: PDFPageRead, item: NotesFolderScanner.Item,
+                      pipeline: HandwritingPipeline) async throws -> [NoteSegment] {
+        var segments: [NoteSegment] = []
+        if let text = page.text { segments.append(NoteSegment(kind: .typed, text: text)) }
+        if page.plan.usesOCR, let image = page.ocrImage {
+            let hint = page.text.map { String($0.prefix(300)) }
+            do {
+                let region = try await pipeline.transcribe(image: image, regionID: "\(item.relativePath)#\(page.index)", hint: hint)
+                // Blanked-out text leaves nothing to read on some pages: that's fine.
+                segments += region.segments
+            } catch where page.text != nil {
+                // The text layer alone is still a good note.
+            }
+        }
+        return segments
     }
 
     /// A GoodNotes notebook PDF → one note per page. The notebook name picks the
@@ -182,15 +218,11 @@ extension OrbitBrain {
         var out: [LectureNote] = []
         for (i, page) in pages.enumerated() {
             let id = "file:\(item.relativePath)#p\(i + 1)"
-            let hash = page.image.map { MD5.digest($0).map { String(format: "%02x", $0) }.joined() } ?? MD5.hex(page.text ?? "")
+            let hash = page.ocrImage.map { MD5.digest($0).map { String(format: "%02x", $0) }.joined() } ?? MD5.hex(page.text ?? "")
             if hashes[id] == hash, local.note(id: id) != nil { continue }
-            var segments: [NoteSegment] = []
-            if let text = page.text { segments.append(NoteSegment(kind: .typed, text: text)) }
-            if let image = page.image {
-                let hint = page.text.map { String($0.prefix(300)) }
-                let region = try await pipeline.transcribe(image: image, regionID: "\(item.relativePath)#\(i)", hint: hint)
-                segments += region.segments
-            }
+            let segments = try await read(page, item: item, pipeline: pipeline)
+            recordReadStatus(noteID: id, pages: 1, textPages: page.text == nil ? 0 : 1, ocrPages: page.plan.usesOCR ? 1 : 0,
+                             lowConfidence: segments.contains { $0.kind != .typed && $0.confidence < 0.6 })
             let text = segments.map(\.text).joined(separator: "\n")
             let header = PageHeaderDate.parse(text, timeZone: tz, reference: item.modified)
             let date = header.date ?? item.modified
@@ -217,13 +249,12 @@ extension OrbitBrain {
                            segments: segments)
     }
 
-    /// Text and a PNG for each page, rendered off the main thread.
-    private nonisolated static func renderPDF(_ url: URL) async -> [(text: String?, image: Data?)] {
-        await Task.detached(priority: .utility) { () -> [(text: String?, image: Data?)] in
+    /// Each page's meaningful text layer and, where OCR is needed, a PNG of what the
+    /// text layer doesn't cover. Rendered off the main thread.
+    private nonisolated static func renderPDF(_ url: URL) async -> [PDFPageRead] {
+        await Task.detached(priority: .utility) { () -> [PDFPageRead] in
             guard let source = PDFPageImageSource(url: url) else { return [] }
-            return (0..<source.pageCount).map { i -> (text: String?, image: Data?) in
-                (text: source.text(page: i), image: source.renderPage(i))
-            }
+            return (0..<source.pageCount).map { source.read(page: $0) }
         }.value
     }
 
@@ -234,6 +265,7 @@ extension OrbitBrain {
     func store(note incoming: LectureNote) async {
         var note = incoming
         let previous = local.note(id: note.id)
+        let textChanged = previous?.allText != note.allText
         if let previous, previous.allText == note.allText { note.summary = previous.summary }
         let hasText = !note.allText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         if note.summary == nil, hasText {
@@ -260,6 +292,8 @@ extension OrbitBrain {
             for card in cards { context.insert(StoredFlashcard(card: card)) }
         }
         context.saveQuietly()
+        // To-dos and notes-to-self ("homework: …", "→ ask … at end") → tasks and suggestions.
+        if textChanged, hasText { await extractNoteActions(from: note) }
     }
 
     // MARK: Search & answers

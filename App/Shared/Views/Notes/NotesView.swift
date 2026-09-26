@@ -2,8 +2,37 @@ import SwiftUI
 import SwiftData
 import OrbitCore
 
-/// Notes: lecture pages grouped by module and week on the left, the page on the right.
+/// Notes. On the Mac: "Library" (the notes folder tree, PDFs, typed notes) and "Review"
+/// (lecture pages by module and week, gaps, flashcards). The iPhone shows Review only.
 struct NotesView: View {
+    #if os(macOS)
+    enum Tab: String { case library, review }
+    @AppStorage("notesTab") private var tab: Tab = .library
+    #endif
+
+    var body: some View {
+        #if os(macOS)
+        Group {
+            switch tab {
+            case .library: NotesLibraryView()
+            case .review: NotesReviewView()
+            }
+        }
+        .navigationTitle("Notes")
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                GlassSegmented(options: [(value: Tab.library, title: "Library"), (value: Tab.review, title: "Review")],
+                               selection: $tab)
+            }
+        }
+        #else
+        NotesReviewView()
+        #endif
+    }
+}
+
+/// Notes review: lecture pages grouped by module and week on the left, the page on the right.
+struct NotesReviewView: View {
     @Environment(AppModel.self) private var app
     @Query(sort: \StoredNote.created, order: .reverse) private var notes: [StoredNote]
     @Query private var cards: [StoredFlashcard]

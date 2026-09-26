@@ -9,7 +9,9 @@
 /* Begin PBXBuildFile section */
 		01DE1A4879BE78BE9732D532 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD7A44B1680FD84ECB59F588 /* Assets.xcassets */; };
 		0288C9A6AEFD2FCD36149638 /* Brain+ELE.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274FECF61DA10B767D5A132C /* Brain+ELE.swift */; };
+		0484AA025F794A236D5146A3 /* NotesLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF8760B0D5BE2094833E4CF1 /* NotesLibraryView.swift */; };
 		04A95A38828861E623F3A02B /* Origin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A122FCD6568F75F623516CA /* Origin.swift */; };
+		06047ADACB0CD2C46026B14B /* Brain+NotesLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7104344EC937C3A0D9BC7C7 /* Brain+NotesLibrary.swift */; };
 		063DDDF73F2C9BCAB3A5CD4F /* MacOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3DCEE85A3D93E1AA03CEE7 /* MacOnboardingView.swift */; };
 		069E649DF51D25F8DB5C21BF /* ELEDocumentText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A26E953E9B6E92FE92FD2D2 /* ELEDocumentText.swift */; };
 		07DE17DE903E9379A2C9EDD4 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE13C7AC804A7A563E656418 /* Components.swift */; };
@@ -123,6 +125,7 @@
 		C62FB87F949AA3FD4E2843ED /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2789015C9A4150ED5727F9C3 /* ChatView.swift */; };
 		C811ED41D43A88AB58142D1E /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D34A2B583EAD4F05D20E26D /* CalendarView.swift */; };
 		C9CC8DFEF813884C52260167 /* FirmLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC7E2EB28BE5526E96A624B4 /* FirmLogo.swift */; };
+		CA0CD55E0EEF74F113C4F6C3 /* TypedNoteEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EEC129320CDAFAB5FBB7C4 /* TypedNoteEditor.swift */; };
 		CD39FC453C3CC8A2E113324F /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9640A58E558060830DCA7407 /* UpdateService.swift */; };
 		D3B5E335919BCCEC5F47175D /* AccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303B379BEDA23F2539284A6A /* AccountManager.swift */; };
 		D4138D08E97D5FA749FFAEC3 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D34A2B583EAD4F05D20E26D /* CalendarView.swift */; };
@@ -158,6 +161,7 @@
 		F354B5DEB976BAB58C355878 /* OrbitBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4DC07C2D54DF82512F861B /* OrbitBackend.swift */; };
 		F5E6AEA3FB825AA32CC5AD69 /* Brain+Mail.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6EF5153F35AC0F6B83AD866 /* Brain+Mail.swift */; };
 		F61A0859EDFDD222E6110896 /* QuickAddField.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF86FC6D84DBEC6ECAAAEB17 /* QuickAddField.swift */; };
+		F6700BBB51C446344D4F0893 /* PDFKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6601A2B24F721AF8F7072B /* PDFKitView.swift */; };
 		F8F8D9ADCEF08E8E475604A9 /* OrbitWidgets-iOS.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8CF6C2283D0C21720F294D20 /* OrbitWidgets-iOS.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F9150AEA254D5633E5B9A439 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */; };
 		F988BC80119CB0467988E5D2 /* RemoteBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42BF85C042D7905237723FD /* RemoteBackend.swift */; };
@@ -306,12 +310,16 @@
 		BD29CEE775EA196E0554F489 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		BFB3B29A0348205153B617FD /* Hub+WeeklyReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hub+WeeklyReport.swift"; sourceTree = "<group>"; };
 		C225250CC867FBEEC5E147D9 /* OrbitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitStore.swift; sourceTree = "<group>"; };
+		C2EEC129320CDAFAB5FBB7C4 /* TypedNoteEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedNoteEditor.swift; sourceTree = "<group>"; };
+		CC6601A2B24F721AF8F7072B /* PDFKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFKitView.swift; sourceTree = "<group>"; };
 		CD5B66B9875DE00B48ABD530 /* Orbit-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Orbit-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE13C7AC804A7A563E656418 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		CF8760B0D5BE2094833E4CF1 /* NotesLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesLibraryView.swift; sourceTree = "<group>"; };
 		D0FB6F9DEA2C69650C0AFAC0 /* LocalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStore.swift; sourceTree = "<group>"; };
 		D42BF85C042D7905237723FD /* RemoteBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteBackend.swift; sourceTree = "<group>"; };
 		D63BB3124ED0C8CE330DE1B4 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
 		D6BE7520F8D1BE911D7440F5 /* MoneyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyViews.swift; sourceTree = "<group>"; };
+		D7104344EC937C3A0D9BC7C7 /* Brain+NotesLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+NotesLibrary.swift"; sourceTree = "<group>"; };
 		D823B103CAB0715EAC2BEAE6 /* PreferencesForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesForm.swift; sourceTree = "<group>"; };
 		DC9BB158FF8A480EA9CA3998 /* UniView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniView.swift; sourceTree = "<group>"; };
 		E0E7F528960B8DE484704617 /* OrbitBrain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitBrain.swift; sourceTree = "<group>"; };
@@ -378,6 +386,16 @@
 				827C2B245279B5622E07EF2E /* Views */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		10DC1AB7BDADDF928111AF52 /* Notes */ = {
+			isa = PBXGroup;
+			children = (
+				CF8760B0D5BE2094833E4CF1 /* NotesLibraryView.swift */,
+				CC6601A2B24F721AF8F7072B /* PDFKitView.swift */,
+				C2EEC129320CDAFAB5FBB7C4 /* TypedNoteEditor.swift */,
+			);
+			path = Notes;
 			sourceTree = "<group>";
 		};
 		2C4E87FCDCCB800A134D868D /* Calendar */ = {
@@ -609,6 +627,7 @@
 				63D50184D9EFFB2CF26D875E /* MacSettingsView.swift */,
 				3E476945CCFCD6386F244FCF /* MenuBarView.swift */,
 				73ECFE08259F0EF5C66DD054 /* Home */,
+				10DC1AB7BDADDF928111AF52 /* Notes */,
 				BF2D7617166136A8050A9E33 /* Onboarding */,
 			);
 			path = Views;
@@ -643,6 +662,7 @@
 				E6EF5153F35AC0F6B83AD866 /* Brain+Mail.swift */,
 				129617BC2BF2814F433D0541 /* Brain+Messages.swift */,
 				4F52C507EADC6AE6C338F2BB /* Brain+Notes.swift */,
+				D7104344EC937C3A0D9BC7C7 /* Brain+NotesLibrary.swift */,
 				292C45DFEBC84F0CC29F16EB /* Brain+Setup.swift */,
 				069805F40B399A2BD824C5C6 /* GoogleEventWriter.swift */,
 				D0FB6F9DEA2C69650C0AFAC0 /* LocalStore.swift */,
@@ -1005,6 +1025,7 @@
 				F5E6AEA3FB825AA32CC5AD69 /* Brain+Mail.swift in Sources */,
 				9DFD2CF5EEF4A2A0D1ED64E9 /* Brain+Messages.swift in Sources */,
 				C19924F34C22CD2581D700C5 /* Brain+Notes.swift in Sources */,
+				06047ADACB0CD2C46026B14B /* Brain+NotesLibrary.swift in Sources */,
 				763957B0935E642515D757C9 /* Brain+Setup.swift in Sources */,
 				D4138D08E97D5FA749FFAEC3 /* CalendarView.swift in Sources */,
 				2FEB16A9A9EA75A29A601218 /* CareersService.swift in Sources */,
@@ -1048,6 +1069,7 @@
 				31E057151BF272BCADE62561 /* MoneySettingsView.swift in Sources */,
 				C5C88747F909932A21F2CF75 /* MoneyViews.swift in Sources */,
 				357F8E3090855AF7968C85A6 /* MonzoLoopback.swift in Sources */,
+				0484AA025F794A236D5146A3 /* NotesLibraryView.swift in Sources */,
 				B0A15F16A3AE3B785488E11D /* NotesView.swift in Sources */,
 				363F09496EA926A0412A171F /* Notifier.swift in Sources */,
 				9975F1D3FD12F3DC78912B73 /* OllamaManager.swift in Sources */,
@@ -1059,6 +1081,7 @@
 				D7882431DEDB2FEA3FD3248E /* OrbitMacApp.swift in Sources */,
 				941DD2FD3B037802EB7928F8 /* OrbitStore.swift in Sources */,
 				04A95A38828861E623F3A02B /* Origin.swift in Sources */,
+				F6700BBB51C446344D4F0893 /* PDFKitView.swift in Sources */,
 				6E2F316BB3B0A314A7544ED5 /* PendingInbox.swift in Sources */,
 				55C17733860931C3C8DDDD2D /* PlanImporter.swift in Sources */,
 				E206C6F1574701BB139814E7 /* PlansView.swift in Sources */,
@@ -1079,6 +1102,7 @@
 				AE21C29E60BC7F62028B6F83 /* Theme.swift in Sources */,
 				3F92513EEE1B6515DCB0F24B /* TimeGrid.swift in Sources */,
 				8FA85BD9D676B41F9638D3C2 /* TodayView.swift in Sources */,
+				CA0CD55E0EEF74F113C4F6C3 /* TypedNoteEditor.swift in Sources */,
 				68BD83009812C97E6462BCEC /* UniView.swift in Sources */,
 				CD39FC453C3CC8A2E113324F /* UpdateService.swift in Sources */,
 				9B3FD4BE13915A3A59B069F6 /* WidgetSnapshot.swift in Sources */,

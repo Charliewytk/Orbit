@@ -129,6 +129,11 @@ public enum NotabilityNote {
             if let code = matcher.moduleCode(forNotebook: f) { module = code; break }
         }
         if module == nil { module = NoteMetadataDetector.moduleCode(in: [title]) }
+        // "Hoe week 1" → the title's words without the week ("Hoe" → History of Economic Thought).
+        if module == nil {
+            let bare = title.replacingOccurrences(of: #"(?i)\b(?:week|wk|w)[ ._-]?\d{1,2}\b"#, with: " ", options: .regularExpression)
+            module = matcher.moduleCode(forNotebook: bare)
+        }
         return Metadata(title: title, subject: folders.last, moduleCode: module,
                         week: NoteMetadataDetector.week(in: [title]))
     }
@@ -160,8 +165,44 @@ public struct NotebookModuleMatcher: Sendable {
         "i": "1", "ii": "2", "iii": "3", "one": "1", "two": "2",
         "maths": "mathematics", "math": "mathematics", "stats": "statistics", "stat": "statistics",
         "intro": "introduction", "econ": "economics", "econs": "economics", "hist": "history",
-        "economists": "economist", "economic": "economics", "thoughts": "thought",
+        "economists": "economist", "economic": "economics", "thoughts": "thought", "statistic": "statistics",
+        "introductory": "introduction", "mathematical": "mathematics",
     ]
+
+    /// Short names students give notebooks, expanded before matching ("HoE week 1").
+    static let aliases: [String: String] = [
+        "hoe": "history of economic thought", "het": "history of economic thought", "hoet": "history of economic thought",
+        "hist econ": "history of economic thought",
+        "mfe": "mathematics for economists", "m4e": "mathematics for economists",
+        "its": "introduction to statistics", "i2s": "introduction to statistics", "stats": "introduction to statistics",
+        "econ": "economics 1", "econs": "economics 1", "e1": "economics 1",
+    ]
+
+    /// A notebook name with a whole-name or whole-word alias expanded.
+    static func expandAliases(_ s: String) -> String {
+        let lower = s.lowercased().trimmingCharacters(in: .whitespaces)
+        if let full = aliases[lower] { return full }
+        let words = lower.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map(String.init)
+        // Only expand letter acronyms (not ordinary words like "stats" in "Intro to Stats").
+        let expanded = words.map { w -> String in
+            guard words.count > 1, ["hoe", "het", "hoet", "mfe", "m4e", "i2s"].contains(w) else { return w }
+            return aliases[w] ?? w
+        }
+        return expanded.joined(separator: " ")
+    }
+
+    /// "HoE", "HET" → initials of a module name (with or without the little words).
+    func acronymMatch(_ notebook: String) -> String? {
+        let words = notebook.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).map { $0.lowercased() }
+        guard words.count == 1, let w = words.first, (2...5).contains(w.count), w.allSatisfy(\.isLetter) else { return nil }
+        for m in modules {
+            let all = m.name.lowercased().split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+            let initialsAll = String(all.compactMap(\.first))
+            let initialsCore = String(all.filter { !Self.stopWords.contains(String($0)) }.compactMap(\.first))
+            if w == initialsAll || w == initialsCore { return m.code }
+        }
+        return nil
+    }
 
     static func tokens(_ s: String) -> [String] {
         let cleaned = String(s.lowercased().unicodeScalars.map { CharacterSet.alphanumerics.contains($0) ? Character($0) : " " })
@@ -174,7 +215,8 @@ public struct NotebookModuleMatcher: Sendable {
     public func moduleCode(forNotebook notebook: String) -> String? {
         // A code in the name wins ("BEE1022 Stats").
         if let code = NoteMetadataDetector.moduleCode(in: [notebook]) { return code }
-        let a = Self.tokens(notebook)
+        if let code = acronymMatch(notebook) { return code }
+        let a = Self.tokens(Self.expandAliases(notebook))
         guard !a.isEmpty else { return nil }
         var best: (code: String, score: Double)?
         for m in modules {

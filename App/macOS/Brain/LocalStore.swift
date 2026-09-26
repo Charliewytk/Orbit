@@ -52,6 +52,37 @@ struct LocalStore {
         return try? JSONDecoder().decode(LectureNote.self, from: data)
     }
 
+    func deleteNote(id: String) {
+        try? FileManager.default.removeItem(at: noteURL(id))
+    }
+
+    // MARK: Handwritten notes before typed notes are merged in
+
+    /// Handwritten notes as read (before a typed-up companion is merged in), so a typed
+    /// note can be re-merged without OCR'ing the PDF again. Not part of `allNotes()`.
+    var rawNotesDirectory: URL { root.appendingPathComponent("RawNotes", isDirectory: true) }
+
+    private func rawNoteURL(_ id: String) -> URL {
+        let name = SHA256Digest.hexString(Data(id.utf8)).prefix(40)
+        return rawNotesDirectory.appendingPathComponent("\(name).json")
+    }
+
+    func saveRawNote(_ note: LectureNote) {
+        try? FileManager.default.createDirectory(at: rawNotesDirectory, withIntermediateDirectories: true)
+        try? JSONEncoder().encode(note).write(to: rawNoteURL(note.id), options: .atomic)
+    }
+
+    func rawNote(id: String) -> LectureNote? {
+        guard let data = try? Data(contentsOf: rawNoteURL(id)) else { return nil }
+        return try? JSONDecoder().decode(LectureNote.self, from: data)
+    }
+
+    func allRawNotes() -> [LectureNote] {
+        let files = (try? FileManager.default.contentsOfDirectory(at: rawNotesDirectory, includingPropertiesForKeys: nil)) ?? []
+        return files.filter { $0.pathExtension == "json" }
+            .compactMap { try? JSONDecoder().decode(LectureNote.self, from: Data(contentsOf: $0)) }
+    }
+
     func allNotes() -> [LectureNote] {
         let files = (try? FileManager.default.contentsOfDirectory(at: notesDirectory, includingPropertiesForKeys: nil)) ?? []
         return files.filter { $0.pathExtension == "json" }
@@ -89,6 +120,8 @@ enum MacPrefs {
     /// "graph", "folder" or "none".
     static let noteSource = "noteSource"
     static let notesFolderPath = "notesFolderPath"
+    /// Root of Orbit's typed notes (default ~/Documents/Orbit Notes).
+    static let typedNotesRoot = "typedNotesRoot"
     static let iMessageEnabled = "iMessageEnabled"
     static let eleCalendarURL = "eleCalendarURL"
     static let eleWebSignedIn = "eleWebSignedIn"

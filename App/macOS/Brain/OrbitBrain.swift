@@ -39,6 +39,8 @@ final class OrbitBrain: OrbitBackend {
     @ObservationIgnored let dataSource: StoreDataSource
     /// Courses, homework, lectures, reviews and ELE activity (see Brain+Academic.swift for the API).
     let academic = AcademicModel()
+    /// The notes Library (file tree, OCR status, to-dos found in notes). See Brain+NotesLibrary.swift.
+    let notesLibrary = NotesLibraryModel()
     @ObservationIgnored var academicLoaded = false
     @ObservationIgnored var eleLiveRunning = false
 

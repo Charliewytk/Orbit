@@ -34,7 +34,10 @@ public enum TaskOrigin: String, Codable, CaseIterable, Sendable, Identifiable {
         switch source {
         case .manual, .message:
             return .yours
-        case .assistant, .notes:
+        case .notes:
+            // Homework the student wrote in their lecture notes is set work.
+            return ref.hasPrefix("note-homework:") ? .required : .recommended
+        case .assistant:
             return .recommended
         case .ele:
             return .required

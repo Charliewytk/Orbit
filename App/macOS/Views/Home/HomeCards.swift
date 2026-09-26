@@ -950,3 +950,22 @@ struct AskCard: View {
         Task { await app.backend.sendChat(q) }
     }
 }
+
+// MARK: - Suggested from your notes
+
+/// To-dos and notes-to-self found in handwritten notes ("find some Excel course…"),
+/// each one click from the to-do list. Only on Home while there are some.
+struct NoteSuggestionsCard: View {
+    @Environment(OrbitBrain.self) private var brain
+
+    var body: some View {
+        HomeCard(title: "Suggested from your notes", symbol: "note.text.badge.plus", color: Destination.notes.color,
+                 destination: .notes, tint: TaskOrigin.recommended.color.opacity(0.06)) {
+            Text("\(brain.notesLibrary.suggestions.count)")
+                .font(Theme.number(15))
+                .foregroundStyle(TaskOrigin.recommended.color)
+        } content: {
+            NoteSuggestionsList(limit: 4)
+        }
+    }
+}

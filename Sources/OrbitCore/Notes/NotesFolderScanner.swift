@@ -22,6 +22,10 @@ public struct NotesFolderScanner: Sendable {
         public var size: Int
         /// Path below the root, e.g. "BEM2031/Week 5.pdf". Useful for module/week detection.
         public var relativePath: String
+
+        public init(url: URL, kind: Kind, modified: Date, size: Int, relativePath: String) {
+            self.url = url; self.kind = kind; self.modified = modified; self.size = size; self.relativePath = relativePath
+        }
     }
 
     public struct Result: Sendable {
