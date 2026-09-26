@@ -349,7 +349,7 @@ struct PDFNoteDetail: View {
                 HSplitView {
                     PDFKitView(url: entry.url, controller: controller, showThumbnails: false)
                         .frame(minWidth: 320)
-                    TypedNoteEditor(url: typingUp)
+                    RichNoteEditor(url: typingUp)
                         .frame(minWidth: 320)
                 }
             } else {
@@ -407,12 +407,14 @@ struct PDFNoteDetail: View {
             .frame(width: 110)
             Button {
                 if typingUp != nil { typingUp = nil; return }
-                Task { typingUp = await brain.createTypedNote(moduleCode: entry.moduleCode, week: entry.week) }
+                let subject = brain.notesLibrary.subjects.first { $0.entries.contains { $0.id == entry.id } }?.name
+                    ?? brain.moduleName(entry.moduleCode) ?? "Notes"
+                Task { typingUp = await brain.createRichNote(subject: subject, title: entry.title + " (typed)") }
             } label: {
                 Label(typingUp == nil ? "Type up" : "Done typing", systemImage: typingUp == nil ? "keyboard" : "checkmark")
             }
             .orbitGlassProminentButton(Destination.notes.color)
-            .help("Type up this note side by side (Markdown in Orbit Notes)")
+            .help("Type up this note side by side (a typed note in the same subject)")
             Menu {
                 Toggle("Page thumbnails", isOn: $showThumbnails)
                 Toggle("Notes panel", isOn: $showPanel)

@@ -8,7 +8,7 @@ public enum AskOrTell: String, Sendable {
     case ask, tell
 
     private static let askStarts = [
-        "what", "what's", "whats", "when", "where", "who", "why", "how", "which", "is ", "are ", "am i", "do i", "does ",
+        "what ", "what's", "whats ", "when ", "where ", "who ", "why ", "how ", "which ", "is ", "are ", "am i", "do i", "does ",
         "did ", "can ", "could ", "should ", "would ", "will ", "tell me", "explain", "quiz me", "summarise", "summarize",
         "help", "lighten", "reshuffle", "replan", "plan my", "show me", "give me", "find ", "ask ",
     ]

@@ -2,29 +2,14 @@ import SwiftUI
 import SwiftData
 import OrbitCore
 
-/// Notes. On the Mac: "Library" (the notes folder tree, PDFs, typed notes) and "Review"
-/// (lecture pages by module and week, gaps, flashcards). The iPhone shows Review only.
+/// Notes. On the Mac: a Notability-style browser (subjects, notes, pages + typed notes).
+/// The iPhone shows the review list.
 struct NotesView: View {
-    #if os(macOS)
-    enum Tab: String { case library, review }
-    @AppStorage("notesTab") private var tab: Tab = .library
-    #endif
-
     var body: some View {
         #if os(macOS)
-        Group {
-            switch tab {
-            case .library: NotesLibraryView()
-            case .review: NotesReviewView()
-            }
-        }
-        .navigationTitle("Notes")
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                GlassSegmented(options: [(value: Tab.library, title: "Library"), (value: Tab.review, title: "Review")],
-                               selection: $tab)
-            }
-        }
+        // Notability-style Subjects │ Notes │ Pages (the old Library / Review tabs are gone).
+        NotesBrowserView()
+            .navigationTitle("Notes")
         #else
         NotesReviewView()
         #endif

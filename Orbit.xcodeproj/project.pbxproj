@@ -19,6 +19,7 @@
 		0EE44503582AEFCF085F709D /* FocusViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FE7BC90FC12EBAD73203D4 /* FocusViews.swift */; };
 		1564CC7CE5B99DCD13A8CCE4 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD4FB9EA79578991D116059 /* Controls.swift */; };
 		17D1948C0000EE89EDC7DD48 /* FeatureSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = E451B7ABD36EC234117AA11E /* FeatureSecrets.swift */; };
+		18230E319768DF7378253281 /* NotesBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDBC2F98C1CAE73B764E7A4C /* NotesBrowserView.swift */; };
 		1BC7CA2987A71A97148BEB3C /* OrbitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367D1E3D8E9FAE8BB55D57DF /* OrbitIntents.swift */; };
 		1CE9DE6E2931BB3ADEA330AC /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07B1A06AB69B823CBFDF93D6 /* ShareViewController.swift */; };
 		1D029A29E9EF8B66F2151262 /* Fmt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9754FC33E1FBF076358A9B /* Fmt.swift */; };
@@ -93,6 +94,7 @@
 		7F9A2D8A95FD596D6DDCF0DB /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCDDB8ECAA5080A37878F031 /* Helpers.swift */; };
 		807DFDA7886F58DA9358FB10 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63BB3124ED0C8CE330DE1B4 /* InboxView.swift */; };
 		810575E501153438672658F2 /* Origin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A122FCD6568F75F623516CA /* Origin.swift */; };
+		841AA48F52D3AD8B3BD44B31 /* RichNoteEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124D88564C4B62240284CB53 /* RichNoteEditor.swift */; };
 		85A594542E0DBFC958028154 /* LocalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FB6F9DEA2C69650C0AFAC0 /* LocalStore.swift */; };
 		86353F54399A05A94F2B432F /* FlashcardViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E6457D26BF981F625976AB2 /* FlashcardViews.swift */; };
 		8642825DFA49D26194638086 /* MoneyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074A6D141A6641C54FA7795F /* MoneyService.swift */; };
@@ -258,6 +260,7 @@
 		0BB54DCE7DE6CB2E9AA6F3E6 /* Orbit-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "Orbit-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0DE7674E2BED3AF8F6087B47 /* StudyHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyHub.swift; sourceTree = "<group>"; };
 		0F1FA03B8D3B4486A5BC8549 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
+		124D88564C4B62240284CB53 /* RichNoteEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichNoteEditor.swift; sourceTree = "<group>"; };
 		129617BC2BF2814F433D0541 /* Brain+Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Messages.swift"; sourceTree = "<group>"; };
 		13A6EBF54AED01206D4E4790 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -380,6 +383,7 @@
 		F8913482F683D3C72287B6D4 /* Brain+Calendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Calendar.swift"; sourceTree = "<group>"; };
 		F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
 		FD9EAA5BFCBCC35C729EF232 /* OrbitWidgets-macOS.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "OrbitWidgets-macOS.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDBC2F98C1CAE73B764E7A4C /* NotesBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesBrowserView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -442,8 +446,10 @@
 		10DC1AB7BDADDF928111AF52 /* Notes */ = {
 			isa = PBXGroup;
 			children = (
+				FDBC2F98C1CAE73B764E7A4C /* NotesBrowserView.swift */,
 				CF8760B0D5BE2094833E4CF1 /* NotesLibraryView.swift */,
 				CC6601A2B24F721AF8F7072B /* PDFKitView.swift */,
+				124D88564C4B62240284CB53 /* RichNoteEditor.swift */,
 				C2EEC129320CDAFAB5FBB7C4 /* TypedNoteEditor.swift */,
 			);
 			path = Notes;
@@ -1202,6 +1208,7 @@
 				31E057151BF272BCADE62561 /* MoneySettingsView.swift in Sources */,
 				C5C88747F909932A21F2CF75 /* MoneyViews.swift in Sources */,
 				357F8E3090855AF7968C85A6 /* MonzoLoopback.swift in Sources */,
+				18230E319768DF7378253281 /* NotesBrowserView.swift in Sources */,
 				0484AA025F794A236D5146A3 /* NotesLibraryView.swift in Sources */,
 				B0A15F16A3AE3B785488E11D /* NotesView.swift in Sources */,
 				363F09496EA926A0412A171F /* Notifier.swift in Sources */,
@@ -1225,6 +1232,7 @@
 				F61A0859EDFDD222E6110896 /* QuickAddField.swift in Sources */,
 				1F9447758869D71213672805 /* QuickCapture.swift in Sources */,
 				59A538A6A8AEBCDF72EC39BD /* QuickCaptureField.swift in Sources */,
+				841AA48F52D3AD8B3BD44B31 /* RichNoteEditor.swift in Sources */,
 				F99F47F270203AB177BD00F4 /* RootView.swift in Sources */,
 				2E2D5D6106870337AE710A74 /* RoutineService.swift in Sources */,
 				A64FC2A43CCE564FD54D001E /* RoutineSettingsViews.swift in Sources */,

@@ -355,7 +355,7 @@ struct NotesSourcePicker: View {
                 Spacer()
                 Button(folderPath.isEmpty ? "Pick your notes folder…" : "Change…") { choosing = true }
             }
-            Text("Any folder of PDFs works: GoodNotes or Notability auto-backup in iCloud Drive, or OneNote → File → Export → PDF. Orbit watches it, reads typed text and your handwriting, and notices new files by itself.")
+            Text("Your Notability auto-backup: Google Drive → My Drive → Notability (found automatically with Google Drive for Mac, or synced from Drive in Notes). Orbit reads typed text and your handwriting, and notices new files by itself.")
                 .font(Theme.caption).foregroundStyle(Theme.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
@@ -370,7 +370,7 @@ struct NotesSourcePicker: View {
                 }
                 Button("Change…") { choosingTyped = true }
             }
-            Text("Notes you type in Orbit are Markdown files here, one folder per module (Introduction to Statistics/Week 1.md). Drop PDFs on a module in Notes → Library to copy them in.")
+            Text("Notes you type in Orbit are rich-text notes here, one folder per subject (Introduction to Statistics/Week 1.rtfd), with pasted images kept inside each note.")
                 .font(Theme.caption).foregroundStyle(Theme.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
