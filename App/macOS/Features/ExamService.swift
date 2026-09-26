@@ -103,7 +103,7 @@ final class ExamService {
     func pastPapers() -> [ExamMode.PastPaper] {
         guard let brain = hub?.brain else { return [] }
         let modules = Set(countdowns().map(\.moduleCode))
-        let docs = brain.academic.knowledge.documents().map(\.info)
+        let docs = brain.academic.knowledge.documents(moduleCode: nil).map(\.info)
         return ExamMode.pastPapers(docs).filter { modules.isEmpty || ($0.moduleCode.map(modules.contains) ?? true) }
     }
 
