@@ -433,11 +433,11 @@ public enum ELEWebParser {
             ?? attr("data-id", in: head).flatMap(Int.init)
         let url = UniRegex.first("href=\"([^\"]*/mod/[a-z0-9_]+/view\\.php\\?id=\\d+[^\"]*)\"", in: body)?[1].map(UniHTML.decodeEntities)
         var name = ""
-        if let n = UniRegex.first("<span[^>]*class=\"[^\"]*instancename[^\"]*\"[^>]*>(.*?)</span>\\s*(?:</a>|</div>|<)", in: body, dotAll: true) {
+        if let n = UniRegex.first("<span[^>]*class=\"[^\"]*instancename[^\"]*\"[^>]*>(.*?)</a>", in: body, dotAll: true) {
             let inner = UniRegex.replace("<span[^>]*class=\"[^\"]*accesshide[^\"]*\"[^>]*>.*?</span>", in: n[1] ?? "", with: "", dotAll: true)
             name = UniHTML.text(inner)
         }
-        if name.isEmpty, let n = attr("data-activityname", in: body) { name = UniHTML.decodeEntities(n) }
+        if name.isEmpty, kind != .label, let n = attr("data-activityname", in: body) { name = UniHTML.decodeEntities(n) }
         // Description / label text.
         var text = ""
         for cls in ["activity-altcontent", "contentafterlink", "activity-description", "description", "no-overflow"] {
@@ -552,8 +552,8 @@ public enum ELEWebParser {
             guard let w = s.week else { continue }
             var week = byWeek[w] ?? ELEModuleWeek(week: w, title: s.title, weekCommencing: s.weekCommencing, url: s.url)
             let all = ([s.summary] + s.items.flatMap { [$0.name, $0.text] }).joined(separator: "\n")
-            week.readings += readingLines(in: all).map(\.text).filter { !week.readings.contains($0) }
-            week.tutorials += tutorialTopics(in: all).filter { !week.tutorials.contains($0) }
+            for r in readingLines(in: all).map(\.text) where !week.readings.contains(r) { week.readings.append(r) }
+            for t in tutorialTopics(in: all) where !week.tutorials.contains(t) { week.tutorials.append(t) }
             for item in s.items {
                 let link = ELEWebLink(name: item.name, url: item.url, kind: item.kind.rawValue)
                 switch item.role {
