@@ -57,6 +57,8 @@ public struct Scheduler: Sendable {
     /// Missed blocks older than this don't produce warnings any more.
     public var missedLookbackHours: Double
     public var improvementPasses: Int
+    /// Extra busy time (routine blocks, travel) that no block may overlap.
+    public var extraBusy: [DateInterval] = []
 
     public init(prefs: UserPrefs = UserPrefs(), scorer: TaskScorer = TaskScorer(), horizonDays: Int = 14,
                 dailyCapOverrides: [Date: Int] = [:], missedLookbackHours: Double = 48, improvementPasses: Int = 3) {
@@ -114,7 +116,7 @@ public struct Scheduler: Sendable {
 
         // 2. Free time per day.
         let finder = FreeSlotFinder(prefs: prefs, minimumSlotMinutes: 5)
-        let blocked = fixed.map { DateInterval(start: $0.start, end: max($0.start, $0.end)) }
+        let blocked = fixed.map { DateInterval(start: $0.start, end: max($0.start, $0.end)) } + extraBusy
         var days: [DayState] = finder.freeSlots(from: start, to: horizonEnd, events: events, blocked: blocked).map { ds in
             let used = fixed.filter { cal.isSameDay($0.start, ds.day) }.reduce(0) { $0 + $1.minutes }
             return DayState(day: ds.day, free: ds.slots, focusUsed: used,

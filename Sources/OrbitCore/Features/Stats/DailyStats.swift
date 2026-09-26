@@ -32,15 +32,29 @@ public struct DayStats: Codable, Hashable, Sendable, Identifiable {
     public var studyMinutes: Int
     public var tasksDone: Int
     public var reviews: Int
+    /// The evening shutdown ritual was completed (counts towards the streak).
+    public var shutdown: Bool
 
     public var id: String { day }
 
-    public init(day: String, studyMinutes: Int = 0, tasksDone: Int = 0, reviews: Int = 0) {
+    public init(day: String, studyMinutes: Int = 0, tasksDone: Int = 0, reviews: Int = 0, shutdown: Bool = false) {
         self.day = day; self.studyMinutes = studyMinutes; self.tasksDone = tasksDone; self.reviews = reviews
+        self.shutdown = shutdown
+    }
+
+    enum CodingKeys: String, CodingKey { case day, studyMinutes, tasksDone, reviews, shutdown }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        day = try c.decode(String.self, forKey: .day)
+        studyMinutes = (try? c.decode(Int.self, forKey: .studyMinutes)) ?? 0
+        tasksDone = (try? c.decode(Int.self, forKey: .tasksDone)) ?? 0
+        reviews = (try? c.decode(Int.self, forKey: .reviews)) ?? 0
+        shutdown = (try? c.decode(Bool.self, forKey: .shutdown)) ?? false
     }
 
     /// Anything done at all (keeps the streak alive).
-    public var isActive: Bool { studyMinutes >= 10 || tasksDone > 0 || reviews >= 5 }
+    public var isActive: Bool { studyMinutes >= 10 || tasksDone > 0 || reviews >= 5 || shutdown }
 
     public func studyProgress(_ goals: DailyGoals) -> Double { Double(studyMinutes) / Double(max(1, goals.studyMinutes)) }
     public func taskProgress(_ goals: DailyGoals) -> Double { Double(tasksDone) / Double(max(1, goals.tasks)) }
@@ -184,7 +198,7 @@ public enum DailyStatsBuilder {
     /// - completedTasks: completion times of to-dos.
     /// - reviews: day key → reviews, as recorded.
     public static func build(focus: [(Date, Int)], completedBlocks: [(Date, Int)], completedTasks: [Date],
-                             reviews: [String: Int], timeZone: TimeZone) -> [DayStats] {
+                             reviews: [String: Int], timeZone: TimeZone, shutdownDays: Set<String> = []) -> [DayStats] {
         let keys = DayKeys(timeZone: timeZone)
         var map: [String: DayStats] = [:]
         func touch(_ key: String, _ change: (inout DayStats) -> Void) {
@@ -196,6 +210,7 @@ public enum DailyStatsBuilder {
         for (date, minutes) in completedBlocks { touch(keys.key(date)) { $0.studyMinutes += max(0, minutes) } }
         for date in completedTasks { touch(keys.key(date)) { $0.tasksDone += 1 } }
         for (key, n) in reviews { touch(key) { $0.reviews += max(0, n) } }
+        for key in shutdownDays { touch(key) { $0.shutdown = true } }
         return map.values.sorted { $0.day < $1.day }
     }
 }
