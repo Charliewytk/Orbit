@@ -27,42 +27,41 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 6) {
-                ForEach(steps.indices, id: \.self) { i in
-                    Capsule()
-                        .fill(i <= index ? Theme.accent : Theme.border)
-                        .frame(height: 4)
-                }
-            }
-            .padding(.horizontal, 24).padding(.top, 20)
-
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: Theme.Space.l) {
+                    Text("\(index + 1) of \(steps.count)")
+                        .font(Theme.caption.monospacedDigit())
+                        .foregroundStyle(Theme.textTertiary)
+                        .contentTransition(.numericText())
                     content
                 }
-                .padding(28)
+                .padding(.horizontal, Theme.Space.xxxl)
+                .padding(.top, Theme.Space.xxxl)
+                .padding(.bottom, Theme.Space.xl)
                 .frame(maxWidth: 640, alignment: .leading)
                 .frame(maxWidth: .infinity)
                 .id(step)
-                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
-                                        removal: .move(edge: .leading).combined(with: .opacity)))
+                .transition(.opacity)
             }
 
-            HStack {
+            HStack(spacing: Theme.Space.m) {
                 if index > 0 {
-                    Button("Back") { withAnimation(Theme.spring) { index -= 1 } }
+                    Button("Back") { withAnimation(Motion.quick) { index -= 1 } }
                         .buttonStyle(SoftButtonStyle(color: Theme.textSecondary))
                 }
                 Spacer()
                 if step != .welcome && step != .done && step != .prefs {
-                    Button("Skip for now") { next() }.buttonStyle(.borderless).foregroundStyle(Theme.textSecondary)
+                    Button("Skip for now") { next() }
+                        .buttonStyle(SoftButtonStyle(color: Theme.textSecondary))
                 }
                 Button(step == .done ? "Start using Orbit" : "Continue") { next() }
-                    .buttonStyle(PillButtonStyle())
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
                     .keyboardShortcut(.defaultAction)
             }
-            .padding(20)
-            .background(.bar)
+            .padding(.horizontal, Theme.Space.xl)
+            .padding(.vertical, Theme.Space.l)
+            .overlay(alignment: .top) { Hairline() }
         }
         .orbitBackground()
         .onAppear {
@@ -81,20 +80,21 @@ struct OnboardingView: View {
             onFinish()
             return
         }
-        withAnimation(Theme.spring) { index = min(index + 1, steps.count - 1) }
+        withAnimation(Motion.quick) { index = min(index + 1, steps.count - 1) }
     }
 
     @ViewBuilder
     private var content: some View {
         switch step {
         case .welcome:
-            hero(symbol: "circle.hexagongrid.circle", title: "Hi, I'm Orbit",
-                 text: "Your calendar, to-dos, email, ELE deadlines and lecture notes in one calm place, planned around you so you can aim for a First without the stress.")
+            hero(symbol: "", title: "Welcome to Orbit",
+                 text: "Your calendar, tasks, email, ELE deadlines and lecture notes in one place, planned around you.")
             TextField("What should I call you?", text: $name)
                 .textFieldStyle(.roundedBorder)
-                .font(.title3)
-            Label("Everything runs on free tools: OpenCode and Ollama on your Mac, and your own iCloud.", systemImage: "lock.shield")
-                .font(Theme.callout).foregroundStyle(Theme.textSecondary)
+                .font(Theme.large)
+                .frame(maxWidth: 320)
+            Text("Everything runs on free tools: OpenCode and Ollama on your Mac, and your own iCloud.")
+                .font(Theme.caption).foregroundStyle(Theme.textTertiary)
 
         #if os(macOS)
         case .google:
@@ -117,21 +117,21 @@ struct OnboardingView: View {
                  text: "Export your OneNote notes as PDFs into one folder, then pick that folder here. Orbit reads your typed notes and your handwriting.")
             NotesSourcePicker()
         case .ai:
-            hero(symbol: "sparkles", title: "Check the AI",
-                 text: "OpenCode is the main brain; Ollama is the backup that runs fully offline. Both are free.")
+            hero(symbol: "", title: "Check the assistant",
+                 text: "OpenCode answers first; Ollama is the backup that runs fully offline. Both are free.")
             AIStatusPanel()
         #endif
 
         case .iphone:
             hero(symbol: "desktopcomputer", title: "Your Mac does the thinking",
                  text: "Install Orbit on your Mac too and connect your accounts there. This iPhone shows everything in sync through iCloud, lets you add to-dos, accept plans and review flashcards, and sends chat to your Mac.")
-            Label("Keep your Mac awake (or plugged in) for the quickest replies.", systemImage: "bolt.horizontal.circle")
-                .font(Theme.callout).foregroundStyle(Theme.textSecondary)
+            Text("Keep your Mac awake (or plugged in) for the quickest replies.")
+                .font(Theme.body).foregroundStyle(Theme.textSecondary)
         case .notifications:
             hero(symbol: "bell.badge", title: "Stay in the loop",
                  text: "Orbit tells you about urgent mail, new deadlines and your morning brief. Nothing else.")
             Button("Allow notifications") { Task { await Notifier.requestAuthorization() } }
-                .buttonStyle(PillButtonStyle())
+                .buttonStyle(.bordered)
         case .prefs:
             hero(symbol: "slider.horizontal.3", title: "How you like to work",
                  text: "Orbit plans study around these. You can change them any time in Settings.")
@@ -149,14 +149,19 @@ struct OnboardingView: View {
         }
     }
 
+    /// A big title and one short paragraph. (`symbol` is kept for call sites but not drawn.)
     private func hero(symbol: String, title: String, text: String) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Image(systemName: symbol)
-                .font(.system(size: 44, weight: .light))
-                .foregroundStyle(Theme.accent)
-                .symbolRenderingMode(.hierarchical)
-            Text(title).font(Theme.title(30)).foregroundStyle(Theme.textPrimary)
-            Text(text).font(Theme.body).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            Text(title)
+                .font(Theme.pageTitle)
+                .foregroundStyle(Theme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(text)
+                .font(Theme.large)
+                .foregroundStyle(Theme.textSecondary)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(.bottom, Theme.Space.s)
     }
 }

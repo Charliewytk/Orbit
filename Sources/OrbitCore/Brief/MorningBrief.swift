@@ -57,7 +57,13 @@ public struct MorningBrief: Codable, Hashable, Sendable {
                 "[\(e.category.rawValue)] \(e.subject) from \(e.from)" + (e.summary.isEmpty ? "" : ": \(e.summary)")
             }.joined(separator: "; ") + ".")
         }
-        if flashcardsDue > 0 { lines.append("Flashcards due: \(flashcardsDue).") }
+        if flashcardsDue > 0 {
+            // A short daily review beats a long one: ~30 s a card, capped at 10 minutes.
+            let session = min(flashcardsDue, 10 * 60 / FlashcardDeck.secondsPerCard)
+            let minutes = max(1, Int((Double(session * FlashcardDeck.secondsPerCard) / 60).rounded(.up)))
+            lines.append("Flashcards due: \(flashcardsDue). Suggest a \(minutes)-minute review of \(session) card\(session == 1 ? "" : "s")"
+                         + (flashcardsDue > session ? " (the rest can wait)." : "."))
+        }
         return lines.joined(separator: "\n")
     }
 

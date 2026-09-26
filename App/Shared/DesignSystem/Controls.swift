@@ -412,3 +412,18 @@ extension View {
     /// Shows `AppModel.toast` at the bottom of the view.
     func toastOverlay() -> some View { modifier(ToastOverlay()) }
 }
+
+// MARK: - Environment
+
+private struct DedicatedTaskIDsKey: EnvironmentKey {
+    static let defaultValue: Set<String> = []
+}
+
+extension EnvironmentValues {
+    /// Task ids shown in their own section elsewhere on the page (e.g. homework on
+    /// the Mac's Today), so generic lists can leave them out.
+    var dedicatedTaskIDs: Set<String> {
+        get { self[DedicatedTaskIDsKey.self] }
+        set { self[DedicatedTaskIDsKey.self] = newValue }
+    }
+}

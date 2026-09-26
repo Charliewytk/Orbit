@@ -424,3 +424,24 @@ final class AcademicToolsTests: XCTestCase {
         XCTAssertTrue(script.seen[1].messages.last!.text.contains("HW stats sheet"))
     }
 }
+
+final class ResourceCacheTests: XCTestCase {
+    func testFetchDecisions() {
+        var cache = ResourceCache()
+        let now = Date(timeIntervalSince1970: 1_790_000_000)
+        XCTAssertTrue(cache.needsCheck(1, now: now), "new items are fetched")
+        let head = ResourceCache.Head(finalURL: "https://ele.exeter.ac.uk/pluginfile.php/1/mod_resource/content/3/slides.pptx",
+                                      etag: "\"abc\"", bytes: 1000)
+        cache.record(1, head: head, characters: 500, now: now)
+        XCTAssertFalse(cache.needsCheck(1, now: now.addingTimeInterval(3600)))
+        XCTAssertTrue(cache.needsCheck(1, now: now.addingTimeInterval(90_000)), "re-checked daily")
+        XCTAssertTrue(cache.isUnchanged(1, head: head))
+        var changed = head; changed.etag = "\"def\""
+        XCTAssertFalse(cache.isUnchanged(1, head: changed))
+        cache.dirty.insert(1)
+        XCTAssertTrue(cache.needsCheck(1, now: now))
+        XCTAssertFalse(cache.isUnchanged(1, head: head), "ELE said it changed")
+        XCTAssertTrue(ResourceCache.tooLarge(41 * 1024 * 1024))
+        XCTAssertFalse(ResourceCache.tooLarge(nil))
+    }
+}

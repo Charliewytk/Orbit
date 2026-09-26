@@ -81,6 +81,7 @@ struct RootView: View {
 #if os(macOS)
 struct MacRootView: View {
     @Environment(AppModel.self) private var app
+    @Environment(OrbitBrain.self) private var brain
     @State private var selection: Destination? = .today
     @State private var showPalette = false
     @State private var showQuickAdd = false
@@ -97,6 +98,7 @@ struct MacRootView: View {
             }
             .id(selection ?? .today)
             .transition(.opacity)
+            .environment(\.dedicatedTaskIDs, homeworkTaskIDs)
             .frame(minWidth: 560, minHeight: 480)
             .toolbar { toolbarContent }
         }
@@ -111,6 +113,11 @@ struct MacRootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .orbitQuickAdd)) { _ in
             showQuickAdd = true
         }
+    }
+
+    /// Homework has its own section on Today, so Due soon leaves those tasks out.
+    private var homeworkTaskIDs: Set<String> {
+        Set(brain.academic.homework.map { $0.taskID.uuidString })
     }
 
     // MARK: Sidebar

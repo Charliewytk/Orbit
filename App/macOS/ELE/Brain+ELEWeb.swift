@@ -12,6 +12,7 @@ extension OrbitBrain {
         do {
             let snap = try await fetchELEWeb(web, previous: previous)
             applyELEWeb(snap, previous: previous)
+            await academicAfterELESync(snap, previous: previous)
             let warn = snap.warnings.isEmpty ? "" : " (\(snap.warnings.count) warnings)"
             record(.ele, detail: "\(snap.modules.count) modules, \(snap.assessments.count) assessments\(warn)")
             accounts.eleSyncSucceeded(modules: snap.modules.count, assessments: snap.assessments.count)
@@ -77,8 +78,10 @@ extension OrbitBrain {
 
             for section in content.assessmentSections {
                 let briefs = try await briefTexts(section, web: web, previous: previous, into: &snap)
+                let academic = prefs.academic
                 let context = ELEAssessmentExtractor.Context(moduleCode: code, academicYear: year,
-                                                             sectionURL: section.url ?? course.viewURL, timeZone: prefs.timeZone)
+                                                             sectionURL: section.url ?? course.viewURL, timeZone: prefs.timeZone,
+                                                             academic: academic, term: academic.inferTerm(for: sections))
                 var found = ELEAssessmentExtractor.extract(sectionHTML: section.html ?? "", briefs: briefs, context: context)
                 if found.isEmpty, !briefs.isEmpty || !section.summary.isEmpty {
                     let text = ([section.title, section.summary] + section.items.map { "\($0.name) \($0.text)" }).joined(separator: "\n")

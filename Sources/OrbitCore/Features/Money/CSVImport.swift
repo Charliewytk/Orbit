@@ -175,9 +175,10 @@ public enum GenericCSVImporter {
     /// A best guess at the mapping from header names (the UI lets the student fix it).
     public static func suggestMapping(_ headers: [String]) -> CSVColumnMapping? {
         let h = headers.map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
-        func find(_ names: [String]) -> Int? {
+        func find(_ names: [String], fuzzy: Bool = true) -> Int? {
             for n in names { if let i = h.firstIndex(of: n) { return i } }
-            for n in names { if let i = h.firstIndex(where: { $0.contains(n) }) { return i } }
+            guard fuzzy else { return nil }
+            for n in names where n.count > 3 { if let i = h.firstIndex(where: { $0.contains(n) }) { return i } }
             return nil
         }
         guard let date = find(["date", "transaction date", "posted date", "completed date", "value date"]) else { return nil }
@@ -189,7 +190,7 @@ public enum GenericCSVImporter {
             amount: find(["amount", "value", "amount (gbp)", "transaction amount"]),
             moneyOut: find(["money out", "paid out", "debit", "withdrawals", "out"]),
             moneyIn: find(["money in", "paid in", "credit", "deposits", "in"]),
-            category: find(["category", "type"]), id: find(["transaction id", "id", "reference number"]))
+            category: find(["category", "type"]), id: find(["transaction id", "id", "reference number"], fuzzy: false))
     }
 
     public static func parse(_ text: String, mapping: CSVColumnMapping, accountID: String, hasHeader: Bool = true,

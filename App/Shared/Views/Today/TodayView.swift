@@ -12,6 +12,7 @@ struct TodayView: View {
     @Query private var assessments: [StoredAssessment]
     @Query(sort: \StoredBrief.createdAt, order: .reverse) private var briefs: [StoredBrief]
     @AppStorage("todayScheduleMode") private var mode: ScheduleMode = .grid
+    @Environment(\.dedicatedTaskIDs) private var dedicatedTaskIDs
     @State private var showLighten = false
 
     enum ScheduleMode: String { case grid, list }
@@ -57,6 +58,7 @@ struct TodayView: View {
         let timed = items.filter { !$0.isAllDay }
         let next = Agenda.nextUp(events: events, blocks: blocks, now: now, calendar: cal)
         let due = Agenda.dueSoon(tasks: tasks, assessments: assessments, now: now, days: 7)
+            .filter { !($0.kind == .task && dedicatedTaskIDs.contains(String($0.id.dropFirst(2)))) }
         let morning = briefs.first { $0.id == StoredBrief.id(.morning, day: now, calendar: cal) }
         let evening = briefs.first { $0.id == StoredBrief.id(.evening, day: now, calendar: cal) }
 

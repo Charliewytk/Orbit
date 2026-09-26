@@ -19,6 +19,7 @@ extension OrbitBrain {
         }
         saveIndex()
         local.save(handwritingProfile, "handwriting-profile.json")
+        await academicAfterNotesSync()
     }
 
     // MARK: OneNote (Graph)

@@ -37,6 +37,10 @@ final class OrbitBrain: OrbitBackend {
     @ObservationIgnored var calendarClient: (session: OAuthSession, client: GoogleCalendarClient)?
     @ObservationIgnored var assistant: Assistant?
     @ObservationIgnored let dataSource: StoreDataSource
+    /// Courses, homework, lectures, reviews and ELE activity (see Brain+Academic.swift for the API).
+    let academic = AcademicModel()
+    @ObservationIgnored var academicLoaded = false
+    @ObservationIgnored var eleLiveRunning = false
 
     @ObservationIgnored private var started = false
     @ObservationIgnored private var startedAt = Date()
@@ -80,6 +84,7 @@ final class OrbitBrain: OrbitBackend {
         every(300, after: 3) { await $0.syncCalendar() }
         every(300, after: 10) { await $0.syncMail() }
         every(3600, after: 20) { await $0.syncELE() }
+        every(900, after: 150) { await $0.syncELELive() }
         every(1800, after: 40) { await $0.syncNotes() }
         every(900, after: 60) { await $0.syncIMessage() }
     }
@@ -90,6 +95,7 @@ final class OrbitBrain: OrbitBackend {
         launcher.stop()
         saveState()
         saveIndex()
+        if academicLoaded { saveAcademic() }
     }
 
     /// Runs `job` every `seconds`, starting after `delay`.
@@ -116,6 +122,7 @@ final class OrbitBrain: OrbitBackend {
         await writeAcceptedPlans()
         // Give the first calendar and mail syncs a head start before any brief.
         if Date().timeIntervalSince(startedAt) > 90 { await runScheduledBriefs(now: Date()) }
+        await academicTick()
         pruneOldRecords()
         refreshWidgetsIfChanged()
     }
@@ -304,6 +311,7 @@ final class OrbitBrain: OrbitBackend {
         await syncCalendar()
         await syncMail()
         await syncELE()
+        await syncELELive()
         await syncNotes()
         await syncIMessage()
         _ = await replanNow()

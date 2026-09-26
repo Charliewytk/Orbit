@@ -6,7 +6,7 @@ extension OrbitBrain {
     func makeAssistant() -> Assistant {
         if let assistant { return assistant }
         let prefs = self.prefs
-        let tools = StandardTools.make(dataSource, timeZone: prefs.timeZone) + dataSource.extraTools()
+        let tools = StandardTools.make(dataSource, timeZone: prefs.timeZone) + dataSource.extraTools() + academicTools()
         let made = Assistant(router: router, tools: tools, userName: firstName, timeZone: prefs.timeZone,
                              contextProvider: { [weak self] in await self?.assistantContext() ?? "" })
         assistant = made
@@ -29,6 +29,8 @@ extension OrbitBrain {
         }
         let modules = context.all(StoredModule.self).map(\.id).sorted()
         if !modules.isEmpty { lines.append("Modules: \(modules.joined(separator: ", ")). Target grade \(Int(prefs.targetGrade))%.") }
+        let academic = academicContext()
+        if !academic.isEmpty { lines.append(academic) }
         return lines.joined(separator: "\n")
     }
 

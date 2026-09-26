@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import OrbitCore
 
+/// Notes: lecture pages grouped by module and week on the left, the page on the right.
 struct NotesView: View {
     @Environment(AppModel.self) private var app
     @Query(sort: \StoredNote.created, order: .reverse) private var notes: [StoredNote]
@@ -14,99 +15,117 @@ struct NotesView: View {
     @State private var showReview = false
     @State private var moduleFilter: String?
 
-    private var dueCards: [StoredFlashcard] { cards.filter { $0.due <= Date() } }
-
-    private var gaps: [NoteGap] {
-        let lectures = events.map(\.value).filter(StudyCoach.isLecture)
-        return GapDetector.detect(notes: notes.map(\.stub), lectures: lectures, now: Date(), timeZone: app.prefs.timeZone)
-    }
+    private var dueCards: Int { cards.filter { $0.due <= Date() }.count }
 
     private var modules: [String] { Array(Set(notes.compactMap(\.moduleCode))).sorted() }
 
     var body: some View {
-        List {
-            Section {
-                HStack(spacing: 10) {
-                    Button { showAsk = true } label: { Label("Ask your notes", systemImage: "sparkle.magnifyingglass") }
-                        .buttonStyle(PillButtonStyle())
-                    Button { showReview = true } label: {
-                        Label(dueCards.isEmpty ? "Flashcards" : "Review \(dueCards.count)", systemImage: "rectangle.on.rectangle.angled")
-                    }
-                    .buttonStyle(SoftButtonStyle())
-                    .disabled(cards.isEmpty)
-                }
-                .listRowBackground(Color.clear)
-            }
-
-            if !query.isEmpty {
-                Section(searching ? "Searching…" : "Results") {
-                    if hits.isEmpty && !searching {
-                        Text("No matches in your notes.").foregroundStyle(Theme.textSecondary)
-                    }
-                    ForEach(hits) { hit in
-                        NavigationLink {
-                            if let note = notes.first(where: { $0.id == hit.noteID }) { NoteDetailView(note: note) }
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Text(hit.title).font(Theme.callout.weight(.semibold))
-                                    ModuleChip(code: hit.moduleCode)
-                                    if let w = hit.week { Tag(text: "Week \(w)") }
-                                    if hit.isTyped { Tag(text: "Key point", color: Theme.success) }
-                                }
-                                Text(hit.snippet).font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(3)
-                            }
-                        }
-                    }
-                }
+        let selection = Binding<String?>(get: { app.selectedNoteID }, set: { app.selectedNoteID = $0 })
+        TwoPane(selection: selection, listWidth: 300) {
+            listPane(selection: selection)
+        } detail: { id in
+            if let id, let note = notes.first(where: { $0.id == id }) {
+                NoteDetailView(note: note).id(note.id)
             } else {
-                if !gaps.isEmpty {
-                    Section("Gaps") {
-                        ForEach(Array(gaps.prefix(8).enumerated()), id: \.offset) { _, gap in
-                            Label(gap.message, systemImage: gapSymbol(gap.kind))
-                                .font(Theme.callout)
-                                .foregroundStyle(gap.kind == .missingNotes ? Theme.warning : Theme.textPrimary)
-                        }
-                    }
-                }
-
-                if notes.isEmpty {
-                    EmptyState(systemImage: "pencil.and.scribble", title: "No notes yet",
-                               message: "Your Mac reads your OneNote pages (typed and handwritten) and they appear here.")
-                        .listRowBackground(Color.clear)
-                }
-
-                ForEach(groupedNotes, id: \.key) { group in
-                    Section(group.key) {
-                        ForEach(group.notes) { note in
-                            NavigationLink { NoteDetailView(note: note) } label: { NoteRow(note: note) }
-                        }
-                    }
-                }
+                Text(notes.isEmpty ? "" : "No page selected")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.textTertiary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        #if os(iOS)
-        .listStyle(.insetGrouped)
-        #else
-        .listStyle(.inset)
-        #endif
-        .scrollContentBackground(.hidden)
-        .orbitBackground()
         .navigationTitle("Notes")
-        .searchable(text: $query, prompt: "Search lectures, typed and handwritten")
+        .searchable(text: $query, prompt: "Search lectures")
         .task(id: query) { await search() }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
                     Picker("Module", selection: $moduleFilter) {
                         Text("All modules").tag(String?.none)
                         ForEach(modules, id: \.self) { Text($0).tag(String?.some($0)) }
                     }
-                } label: { Label("Module", systemImage: "line.3.horizontal.decrease.circle") }
+                } label: {
+                    Label("Module", systemImage: "line.3.horizontal.decrease.circle")
+                }
+                .help("Filter by module")
+                Button { showReview = true } label: {
+                    Label(dueCards == 0 ? "Flashcards" : "Review \(dueCards)", systemImage: "rectangle.on.rectangle")
+                }
+                .disabled(cards.isEmpty)
+                .help("Review flashcards")
+                Button { showAsk = true } label: {
+                    Label("Ask your notes", systemImage: "questionmark.bubble")
+                }
+                .help("Ask a question about your notes")
             }
         }
         .sheet(isPresented: $showAsk) { AskNotesSheet(moduleCode: moduleFilter) }
         .sheet(isPresented: $showReview) { FlashcardReviewView(moduleCode: moduleFilter) }
+    }
+
+    // MARK: List
+
+    private func listPane(selection: Binding<String?>) -> some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                if !query.isEmpty {
+                    groupTitle(searching ? "Searching…" : "Results")
+                    if hits.isEmpty && !searching {
+                        EmptyState(title: "No matches in your notes.").padding(.horizontal, Theme.Space.s)
+                    }
+                    ForEach(hits) { hit in
+                        NoteHitRow(hit: hit, isSelected: selection.wrappedValue == hit.noteID)
+                            .onTapGesture { selection.wrappedValue = hit.noteID }
+                    }
+                } else {
+                    let gaps = self.gaps
+                    if !gaps.isEmpty {
+                        groupTitle("Gaps")
+                        ForEach(Array(gaps.prefix(6).enumerated()), id: \.offset) { _, gap in
+                            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
+                                Image(systemName: gapSymbol(gap.kind))
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(gap.kind == .missingNotes ? Theme.warning : Theme.textTertiary)
+                                    .frame(width: 14)
+                                Text(gap.message)
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.textSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .padding(.horizontal, Theme.Space.s)
+                            .padding(.vertical, 4)
+                        }
+                    }
+                    if notes.isEmpty {
+                        EmptyState(title: "No notes yet.",
+                                   message: "Your Mac reads your OneNote pages, typed and handwritten, and they appear here.")
+                            .padding(.horizontal, Theme.Space.s)
+                    }
+                    ForEach(groupedNotes, id: \.key) { group in
+                        groupTitle(group.key)
+                        ForEach(group.notes) { note in
+                            NoteRow(note: note, isSelected: selection.wrappedValue == note.id)
+                                .onTapGesture { selection.wrappedValue = note.id }
+                        }
+                    }
+                }
+            }
+            .padding(Theme.Space.xs)
+            .padding(.bottom, Theme.Space.l)
+        }
+    }
+
+    private func groupTitle(_ text: String) -> some View {
+        Text(text)
+            .font(Theme.caption.weight(.medium))
+            .foregroundStyle(Theme.textTertiary)
+            .padding(.horizontal, Theme.Space.s)
+            .padding(.top, Theme.Space.m)
+            .padding(.bottom, Theme.Space.xs)
+    }
+
+    private var gaps: [NoteGap] {
+        let lectures = events.map(\.value).filter(StudyCoach.isLecture)
+        return GapDetector.detect(notes: notes.map(\.stub), lectures: lectures, now: Date(), timeZone: app.prefs.timeZone)
     }
 
     private struct NoteGroup { var key: String; var notes: [StoredNote] }
@@ -124,7 +143,7 @@ struct NotesView: View {
     private func gapSymbol(_ kind: NoteGap.Kind) -> String {
         switch kind {
         case .missingTypedSummary: "keyboard"
-        case .missingNotes: "exclamationmark.triangle"
+        case .missingNotes: "exclamationmark.circle"
         case .lowConfidence: "questionmark.circle"
         }
     }
@@ -142,28 +161,60 @@ struct NotesView: View {
 
 struct NoteRow: View {
     var note: StoredNote
+    var isSelected: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(note.title.isEmpty ? "Untitled page" : note.title)
-                .font(Theme.body.weight(.medium))
-                .foregroundStyle(Theme.textPrimary)
-            HStack(spacing: 6) {
-                if note.hasTyped { Tag(text: "typed ✓", color: Theme.success) }
-                if note.hasHandwriting { Tag(text: "handwriting ✓", color: Theme.accent) }
-                if note.lowConfidence { Tag(text: "check ⚠︎", color: Theme.warning) }
-                Spacer()
-                Text(note.created.formatted(date: .abbreviated, time: .omitted))
-                    .font(Theme.caption).foregroundStyle(Theme.textTertiary)
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
+                Text(note.title.isEmpty ? "Untitled page" : note.title)
+                    .font(Theme.body.weight(.medium))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                Spacer(minLength: Theme.Space.s)
+                Text(note.created.formatted(.dateTime.day().month(.abbreviated)))
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textTertiary)
             }
             if let summary = note.summary, !summary.isEmpty {
-                Text(summary).font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(2)
+                Text(summary)
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(2)
+            }
+            if note.lowConfidence {
+                Text("Some handwriting to check")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.warning)
             }
         }
-        .padding(.vertical, 3)
+        .padding(.horizontal, Theme.Space.s)
+        .padding(.vertical, 7)
+        .hoverRow(selected: isSelected)
     }
 }
 
+private struct NoteHitRow: View {
+    var hit: NoteHit
+    var isSelected: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: Theme.Space.s) {
+                Text(hit.title).font(Theme.body.weight(.medium)).foregroundStyle(Theme.textPrimary).lineLimit(1)
+                Spacer(minLength: Theme.Space.s)
+                ModuleTag(code: hit.moduleCode)
+                if let w = hit.week { Text("Wk \(w)").font(Theme.caption).foregroundStyle(Theme.textTertiary) }
+            }
+            Text(hit.snippet).font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(3)
+        }
+        .padding(.horizontal, Theme.Space.s)
+        .padding(.vertical, 7)
+        .hoverRow(selected: isSelected)
+    }
+}
+
+/// A lecture page: key points (typed), then lecture detail (handwriting) with
+/// hard-to-read words subtly underlined.
 struct NoteDetailView: View {
     @Environment(AppModel.self) private var app
     @Query private var cards: [StoredFlashcard]
@@ -171,102 +222,115 @@ struct NoteDetailView: View {
     @State private var full: LectureNote?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 6) {
-                        ModuleChip(code: note.moduleCode)
-                        if let w = note.week { Tag(text: "Week \(w)") }
-                        if note.hasTyped { Tag(text: "typed ✓", color: Theme.success) }
-                        if note.hasHandwriting { Tag(text: "handwriting ✓", color: Theme.accent) }
-                        if note.lowConfidence { Tag(text: "low confidence ⚠︎", color: Theme.warning) }
-                    }
-                    Text(note.title).font(Theme.title(26)).foregroundStyle(Theme.textPrimary)
-                    Text([note.notebook, note.section].filter { !$0.isEmpty }.joined(separator: " › "))
-                        .font(Theme.caption).foregroundStyle(Theme.textTertiary)
+        Page(maxWidth: 720) {
+            VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                HStack(spacing: Theme.Space.s) {
+                    ModuleTag(code: note.moduleCode)
+                    if let w = note.week { Text("Week \(w)") }
+                    Text(note.created.formatted(date: .abbreviated, time: .omitted))
+                    let path = [note.notebook, note.section].filter { !$0.isEmpty }.joined(separator: " › ")
+                    if !path.isEmpty { Text(path).lineLimit(1) }
                 }
+                .font(Theme.caption)
+                .foregroundStyle(Theme.textTertiary)
+                Text(note.title.isEmpty ? "Untitled page" : note.title)
+                    .font(Theme.pageTitle)
+                    .foregroundStyle(Theme.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+            }
+            .padding(.top, Theme.Space.xxl)
 
-                if let summary = note.summary, !summary.isEmpty {
-                    Card {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("Summary", systemImage: "text.alignleft").font(Theme.headline).foregroundStyle(Theme.accent)
-                            Text(summary).font(Theme.body).textSelection(.enabled)
-                        }
-                    }
+            if let summary = note.summary, !summary.isEmpty {
+                Text(summary)
+                    .font(Theme.large)
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                    .padding(.top, Theme.Space.l)
+            }
+
+            let keyPoints = full?.keyPoints ?? note.keyPoints
+            PageSection(title: "Key points") {
+                if keyPoints.isEmpty {
+                    Text("No typed key points on this page.").font(Theme.body).foregroundStyle(Theme.textTertiary)
+                } else {
+                    Text(keyPoints)
+                        .font(Theme.large)
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineSpacing(5)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
                 }
+            }
 
-                let keyPoints = full?.keyPoints ?? note.keyPoints
-                if !keyPoints.isEmpty {
-                    Card {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("Key points (typed)", systemImage: "star").font(Theme.headline).foregroundStyle(Theme.success)
-                            Text(keyPoints).font(Theme.body).textSelection(.enabled)
-                        }
-                    }
-                }
+            PageSection(title: "Lecture detail") {
+                lectureDetail
+            }
 
-                Card {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("Full lecture detail (handwriting)", systemImage: "pencil.and.scribble")
-                            .font(Theme.headline).foregroundStyle(Theme.accent)
-                        if let full {
-                            let segments = full.segments.filter { $0.kind != .typed }
-                            if segments.isEmpty {
-                                Text("No handwriting on this page.").foregroundStyle(Theme.textSecondary)
-                            }
-                            ForEach(Array(segments.enumerated()), id: \.offset) { _, seg in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    if seg.kind == .diagram { Tag(text: "Diagram", systemImage: "scribble.variable") }
-                                    if seg.kind == .math { Tag(text: "Maths", systemImage: "function") }
-                                    Text(highlighted(seg))
-                                        .font(seg.kind == .math ? Theme.mono : Theme.body)
-                                        .textSelection(.enabled)
-                                }
-                            }
-                            if !full.segments.flatMap(\.uncertainWords).isEmpty {
-                                Text("Highlighted words were hard to read.")
-                                    .font(Theme.caption).foregroundStyle(Theme.warning)
-                            }
-                        } else if note.hasHandwriting {
-                            Text(app.backend.isBrain ? "The full transcription isn't on this Mac yet."
-                                 : "The full handwriting transcription stays on your Mac. Open this note there to read it.")
-                                .font(Theme.callout).foregroundStyle(Theme.textSecondary)
-                        } else {
-                            Text("No handwriting on this page.").foregroundStyle(Theme.textSecondary)
-                        }
-                    }
-                }
-
-                let noteCards = cards.filter { $0.noteID == note.id }
-                if !noteCards.isEmpty {
-                    Card {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("\(noteCards.count) flashcards", systemImage: "rectangle.on.rectangle.angled")
-                                .font(Theme.headline).foregroundStyle(Theme.accent)
-                            ForEach(noteCards.prefix(5)) { c in
-                                Text("• \(c.front)").font(Theme.callout).foregroundStyle(Theme.textSecondary)
-                            }
+            let noteCards = cards.filter { $0.noteID == note.id }
+            if !noteCards.isEmpty {
+                PageSection(title: "Flashcards", count: noteCards.count) {
+                    VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                        ForEach(noteCards.prefix(6)) { c in
+                            Text(c.front).font(Theme.body).foregroundStyle(Theme.textSecondary)
                         }
                     }
                 }
             }
-            .padding(Theme.padding)
-            .frame(maxWidth: 820, alignment: .leading)
-            .frame(maxWidth: .infinity)
         }
-        .orbitBackground()
         .navigationTitle(note.title)
         .onAppear { full = app.backend.fullNote(id: note.id) }
     }
 
-    /// Handwriting text with uncertain words highlighted.
+    @ViewBuilder
+    private var lectureDetail: some View {
+        if let full {
+            let segments = full.segments.filter { $0.kind != .typed }
+            if segments.isEmpty {
+                Text("No handwriting on this page.").font(Theme.body).foregroundStyle(Theme.textTertiary)
+            }
+            VStack(alignment: .leading, spacing: Theme.Space.m) {
+                ForEach(Array(segments.enumerated()), id: \.offset) { _, seg in
+                    VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                        if seg.kind == .diagram || seg.kind == .math {
+                            Text(seg.kind == .diagram ? "Diagram" : "Maths")
+                                .font(Theme.caption.weight(.medium))
+                                .foregroundStyle(Theme.textTertiary)
+                        }
+                        Text(highlighted(seg))
+                            .font(seg.kind == .math ? .system(size: Theme.Size.body, design: .monospaced) : Theme.large)
+                            .foregroundStyle(Theme.textPrimary)
+                            .lineSpacing(5)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                    }
+                }
+            }
+            if !full.segments.flatMap(\.uncertainWords).isEmpty {
+                Text("Dotted words were hard to read.")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textTertiary)
+                    .padding(.top, Theme.Space.s)
+            }
+        } else if note.hasHandwriting {
+            Text(app.backend.isBrain ? "The full transcription isn't on this Mac yet."
+                 : "The full handwriting transcription stays on your Mac. Open this page there to read it.")
+                .font(Theme.body)
+                .foregroundStyle(Theme.textTertiary)
+        } else {
+            Text("No handwriting on this page.").font(Theme.body).foregroundStyle(Theme.textTertiary)
+        }
+    }
+
+    /// Handwriting text with uncertain words underlined with a dotted line.
     private func highlighted(_ seg: NoteSegment) -> AttributedString {
         var s = AttributedString(seg.text)
         for word in Set(seg.uncertainWords) where !word.isEmpty && word != "?" {
             var searchRange = s.startIndex..<s.endIndex
             while let r = s[searchRange].range(of: word) {
-                let color: Color = Theme.warning.opacity(0.28)
-                s[r].backgroundColor = color
+                s[r].underlineStyle = Text.LineStyle(pattern: .dot, color: Theme.warning)
                 searchRange = r.upperBound..<s.endIndex
             }
         }
@@ -292,27 +356,27 @@ struct AskNotesSheet: View {
                     TextField("What did the lecture say about…", text: $question)
                         .textFieldStyle(.roundedBorder)
                         .onSubmit(ask)
-                    Button("Ask", action: ask).buttonStyle(PillButtonStyle()).disabled(question.isEmpty || asking)
+                    Button("Ask", action: ask).buttonStyle(.borderedProminent).disabled(question.isEmpty || asking)
                 }
                 if let moduleCode { Text("Searching \(moduleCode) only").font(Theme.caption).foregroundStyle(Theme.textSecondary) }
-                if asking { HStack { ProgressView(); Text("Reading your notes…").foregroundStyle(Theme.textSecondary) } }
+                if asking { HStack { ProgressView().controlSize(.small); Text("Reading your notes…").foregroundStyle(Theme.textSecondary) } }
                 if sentToChat {
-                    EmptyState(systemImage: "bubble.left.and.bubble.right", title: "Sent to your Mac",
-                               message: "The answer will appear in Chat once your Mac has read your notes.")
+                    EmptyState(title: "Sent to your Mac.",
+                               message: "The answer appears in Ask Orbit once your Mac has read your notes.")
                 }
                 if let error { Text(error).foregroundStyle(Theme.danger).font(Theme.caption) }
                 if let answer {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(answer.text).font(Theme.body).textSelection(.enabled)
+                            Text(answer.text).font(Theme.large).lineSpacing(4).textSelection(.enabled)
                             if !answer.citations.isEmpty {
                                 Text("Sources").font(Theme.caption).foregroundStyle(Theme.textSecondary)
                                 ForEach(answer.citations) { c in
                                     HStack {
-                                        Text("[\(c.index)]").font(Theme.mono)
-                                        Text(c.title).font(Theme.callout)
-                                        ModuleChip(code: c.moduleCode)
-                                        if let w = c.week { Tag(text: "Week \(w)") }
+                                        Text("[\(c.index)]").font(Theme.mono).foregroundStyle(Theme.textTertiary)
+                                        Text(c.title).font(Theme.body)
+                                        ModuleTag(code: c.moduleCode)
+                                        if let w = c.week { Text("Week \(w)").font(Theme.caption).foregroundStyle(Theme.textTertiary) }
                                     }
                                 }
                             }
@@ -360,40 +424,40 @@ struct FlashcardReviewView: View {
         NavigationStack {
             VStack(spacing: 20) {
                 if let card = current {
-                    Text("\(queue.count) to go · \(reviewed) done").font(Theme.caption).foregroundStyle(Theme.textSecondary)
-                    VStack(alignment: .leading, spacing: 16) {
-                        ModuleChip(code: card.moduleCode)
-                        Text(card.front).font(Theme.title(22)).foregroundStyle(Theme.textPrimary)
+                    Text("\(queue.count) to go · \(reviewed) done").font(Theme.caption.monospacedDigit()).foregroundStyle(Theme.textTertiary)
+                    VStack(alignment: .leading, spacing: Theme.Space.l) {
+                        ModuleTag(code: card.moduleCode)
+                        Text(card.front).font(.system(size: Theme.Size.title2, weight: .semibold)).foregroundStyle(Theme.textPrimary)
                         if revealed {
-                            Divider()
-                            Text(card.back).font(Theme.body).foregroundStyle(Theme.textPrimary)
-                                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                            Hairline()
+                            Text(card.back).font(Theme.large).lineSpacing(4).foregroundStyle(Theme.textPrimary)
+                                .transition(.opacity)
                         }
                         Spacer(minLength: 0)
                     }
-                    .padding(24)
+                    .padding(Theme.Space.xl)
                     .frame(maxWidth: .infinity, minHeight: 260, alignment: .topLeading)
-                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Theme.border, lineWidth: 0.5))
-                    .shadow(color: .black.opacity(0.06), radius: 16, y: 8)
-                    .onTapGesture { withAnimation(Theme.spring) { revealed = true } }
+                    .background(Theme.background, in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous).strokeBorder(Theme.border, lineWidth: Theme.hairline))
+                    .onTapGesture { withAnimation(Motion.quick) { revealed = true } }
 
                     if revealed {
-                        HStack(spacing: 10) {
-                            grade("Again", 1, Theme.danger)
-                            grade("Hard", 3, Theme.warning)
-                            grade("Good", 4, Theme.success)
-                            grade("Easy", 5, Theme.accent)
+                        HStack(spacing: Theme.Space.s) {
+                            grade("Again", 1, key: "1")
+                            grade("Hard", 3, key: "2")
+                            grade("Good", 4, key: "3")
+                            grade("Easy", 5, key: "4")
                         }
                     } else {
-                        Button("Show answer") { withAnimation(Theme.spring) { revealed = true } }
-                            .buttonStyle(PillButtonStyle())
+                        Button("Show answer") { withAnimation(Motion.quick) { revealed = true } }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
                             .keyboardShortcut(.space, modifiers: [])
                     }
                 } else {
-                    EmptyState(systemImage: "checkmark.seal", title: reviewed > 0 ? "Session done" : "Nothing due",
-                               message: reviewed > 0 ? "You reviewed \(reviewed) card\(reviewed == 1 ? "" : "s"). They'll come back when they're due."
-                                                     : "No cards are due right now. Come back later.")
+                    EmptyState(title: reviewed > 0 ? "Session done." : "Nothing due.",
+                               message: reviewed > 0 ? "You reviewed \(reviewed) card\(reviewed == 1 ? "" : "s"). They come back when they're due."
+                                                     : "No cards are due right now.")
                 }
                 Spacer()
             }
@@ -417,18 +481,20 @@ struct FlashcardReviewView: View {
         }
     }
 
-    private func grade(_ title: String, _ value: Int, _ color: Color) -> some View {
+    private func grade(_ title: String, _ value: Int, key: Character) -> some View {
         Button(title) {
             guard let card = current else { return }
             app.review(card, grade: value)
             reviewed += 1
-            withAnimation(Theme.spring) {
+            withAnimation(Motion.quick) {
                 queue.removeFirst()
                 // "Again" comes back later in this session (10-minute learning step).
                 if value < 3 { queue.append(card.id) }
                 revealed = false
             }
         }
-        .buttonStyle(PillButtonStyle(color: color))
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+        .keyboardShortcut(KeyEquivalent(key), modifiers: [])
     }
 }

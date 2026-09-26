@@ -137,6 +137,13 @@ public struct MoneyTransaction: Codable, Hashable, Sendable, Identifiable {
 }
 
 public enum MerchantKey {
+    /// Words that say nothing about the merchant: places, company suffixes and bank
+    /// statement boilerplate ("CARD PAYMENT TO …", "POS …").
+    static let noise: Set<String> = ["gbr", "gb", "uk", "ltd", "limited", "plc", "www", "com", "co", "the", "exeter", "london",
+                                     "card", "payment", "payments", "to", "at", "purchase", "pos", "contactless", "visa",
+                                     "debit", "dd", "fpo", "fpi", "bgc", "so", "tfr", "via", "ref", "on", "clearpay", "sumup",
+                                     "zettle", "izettle", "sq", "paypal", "pp"]
+
     /// "TESCO STORES 3456 EXETER GBR" → "tesco stores". Lower-case words,
     /// store numbers and trailing location noise dropped, at most three words.
     public static func make(_ raw: String) -> String {
@@ -147,7 +154,7 @@ public enum MerchantKey {
         let words = cleaned.components(separatedBy: CharacterSet.alphanumerics.inverted.subtracting(CharacterSet(charactersIn: ".")))
             .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ".")) }
             .filter { w in !w.isEmpty && !w.allSatisfy { $0.isNumber } && w.filter(\.isNumber).count < 3 }
-            .filter { !["gbr", "gb", "uk", "ltd", "limited", "plc", "www", "com", "co", "the", "exeter", "london"].contains($0) }
+            .filter { !noise.contains($0) }
         return words.prefix(3).joined(separator: " ")
     }
 }

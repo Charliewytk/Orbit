@@ -20,51 +20,55 @@ struct PlansView: View {
     private var accepted: [StoredPlan] { plans.filter { $0.status == .accepted && $0.start > Date().addingTimeInterval(-86400) } }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                importCard
+        Page {
+            PageHeader(title: "Plans", subtitle: pending.isEmpty ? "Nothing waiting" : "\(pending.count) suggestion\(pending.count == 1 ? "" : "s") from your messages")
 
-                VStack(alignment: .leading, spacing: 10) {
-                    SectionHeader(title: "Suggested plans", subtitle: "Found in your messages. Nothing's added until you tap.")
-                    if pending.isEmpty {
-                        Card {
-                            EmptyState(systemImage: "person.2", title: "No plans waiting",
-                                       message: "Import a chat or share a message to Orbit and any plans in it show up here.")
-                        }
-                    }
+            importRow
+
+            PageSection(title: "Suggested", count: pending.isEmpty ? nil : pending.count) {
+                if pending.isEmpty {
+                    EmptyState(title: "No plans waiting.",
+                               message: "Import a chat or share a message to Orbit and any plans in it show up here.")
+                }
+                VStack(spacing: 0) {
                     ForEach(pending) { plan in
                         PlanCard(plan: plan, onAccept: {
                             tick += 1
                             Task { await app.accept(plan) }
                         }, onDismiss: {
-                            withAnimation(Theme.spring) { app.dismiss(plan) }
+                            withAnimation(Motion.smooth) { app.dismiss(plan) }
                         })
-                        .transition(.asymmetric(insertion: .opacity, removal: .move(edge: .trailing).combined(with: .opacity)))
+                        .transition(.asymmetric(insertion: .opacity, removal: .opacity.combined(with: .move(edge: .leading))))
+                        if plan.id != pending.last?.id { Hairline() }
                     }
                 }
+            }
 
-                if !accepted.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        SectionHeader(title: "Added")
+            if !accepted.isEmpty {
+                PageSection(title: "Added", count: accepted.count) {
+                    VStack(spacing: 0) {
                         ForEach(accepted) { plan in
-                            HStack {
-                                Image(systemName: plan.calendarEventID == nil ? "clock" : "checkmark.circle.fill")
-                                    .foregroundStyle(plan.calendarEventID == nil ? Theme.warning : Theme.success)
-                                Text(plan.title).font(Theme.callout)
+                            HStack(spacing: Theme.Space.s) {
+                                Image(systemName: plan.calendarEventID == nil ? "clock" : "checkmark")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Theme.textTertiary)
+                                    .frame(width: 16)
+                                Text(plan.title).font(Theme.body).foregroundStyle(Theme.textPrimary).lineLimit(1)
                                 Spacer()
-                                Text(Fmt.dayTime(plan.start, app.calendar)).font(Theme.caption).foregroundStyle(Theme.textSecondary)
+                                Text(Fmt.dayTime(plan.start, app.calendar))
+                                    .font(Theme.caption.monospacedDigit())
+                                    .foregroundStyle(Theme.textSecondary)
                             }
-                            .padding(.horizontal, 4)
+                            .padding(.horizontal, Theme.Space.s)
+                            .frame(height: 32)
+                            .hoverRow()
+                            .help(plan.calendarEventID == nil ? "Waiting to be added to your calendar" : "On your calendar")
                         }
                     }
                 }
             }
-            .padding(Theme.padding)
-            .frame(maxWidth: 820)
-            .frame(maxWidth: .infinity)
-            .animation(Theme.spring, value: pending.map(\.id))
         }
-        .orbitBackground()
+        .animation(Motion.smooth, value: pending.map(\.id))
         .navigationTitle("Plans")
         .successHaptic(tick)
         .fileImporter(isPresented: $importing,
@@ -88,29 +92,25 @@ struct PlansView: View {
         }
     }
 
-    private var importCard: some View {
-        Card {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Label("Find plans in your messages", systemImage: "text.magnifyingglass")
-                        .font(Theme.headline).foregroundStyle(Theme.textPrimary)
-                    Spacer()
-                    if busy { ProgressView().controlSize(.small) }
-                }
-                Text("Orbit never logs in to WhatsApp or Instagram. Export a chat, share a message, or drop in a screenshot.")
-                    .font(Theme.caption).foregroundStyle(Theme.textSecondary)
-                Flow(spacing: 8) {
-                    Button { importKind = .whatsApp; importing = true } label: { Label("WhatsApp export", systemImage: "phone.bubble") }
-                    Button { importKind = .instagram; importing = true } label: { Label("Instagram folder", systemImage: "camera") }
-                    Button { showPaste = true } label: { Label("Paste text", systemImage: "doc.on.clipboard") }
-                    PhotosPicker(selection: $photo, matching: .images) { Label("Screenshot", systemImage: "photo") }
-                }
-                .buttonStyle(SoftButtonStyle())
-                .disabled(busy)
-                #if os(macOS)
-                IMessageToggle()
-                #endif
+    private var importRow: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            Text("Orbit never logs in to WhatsApp or Instagram. Export a chat, share a message, or drop in a screenshot.")
+                .font(Theme.body)
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: Theme.Space.xs) {
+                Button("WhatsApp export…") { importKind = .whatsApp; importing = true }
+                Button("Instagram folder…") { importKind = .instagram; importing = true }
+                Button("Paste text…") { showPaste = true }
+                PhotosPicker(selection: $photo, matching: .images) { Text("Screenshot…") }
+                if busy { ProgressView().controlSize(.small).padding(.leading, Theme.Space.s) }
             }
+            .buttonStyle(SoftButtonStyle(color: Theme.accent))
+            .padding(.leading, -Theme.Space.s)
+            .disabled(busy)
+            #if os(macOS)
+            IMessageToggle()
+            #endif
         }
     }
 
@@ -135,46 +135,54 @@ struct PlanCard: View {
     var onDismiss: () -> Void
 
     var body: some View {
-        Card {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Label(plan.sourceLabel, systemImage: plan.sourceSymbol)
-                        .font(Theme.caption).foregroundStyle(Theme.textSecondary)
-                    if let kind = plan.kindLabel { Tag(text: kind, color: Theme.accent) }
-                    Spacer()
-                    Text("\(Int((plan.confidence * 100).rounded()))% sure")
-                        .font(Theme.caption).foregroundStyle(Theme.textTertiary)
-                }
-                Text(plan.title).font(Theme.title(20)).foregroundStyle(Theme.textPrimary)
-                HStack(spacing: 10) {
-                    Label(Fmt.dayTime(plan.start, app.calendar), systemImage: "clock")
-                    if let loc = plan.location, !loc.isEmpty { Label(loc, systemImage: "mappin") }
-                }
-                .font(Theme.callout).foregroundStyle(Theme.textSecondary)
-                if !plan.people.isEmpty {
-                    Label(plan.people.joined(separator: ", "), systemImage: "person.2")
-                        .font(Theme.callout).foregroundStyle(Theme.textSecondary)
-                }
-                if !plan.quote.isEmpty {
-                    Text("“\(plan.quote)”")
-                        .font(Theme.callout.italic())
-                        .foregroundStyle(Theme.textSecondary)
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.smallRadius))
-                }
-                ForEach(plan.conflicts, id: \.self) { c in
-                    Label("Clashes with \(c)", systemImage: "exclamationmark.triangle.fill")
-                        .font(Theme.caption).foregroundStyle(Theme.warning)
-                }
-                HStack(spacing: 10) {
-                    Button(action: onAccept) { Label("Add to calendar", systemImage: "calendar.badge.plus") }
-                        .buttonStyle(PillButtonStyle())
-                    Button(action: onDismiss) { Label("Dismiss", systemImage: "xmark") }
-                        .buttonStyle(SoftButtonStyle(color: Theme.textSecondary))
-                }
+        VStack(alignment: .leading, spacing: Theme.Space.xs) {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
+                Text(plan.title)
+                    .font(Theme.large.weight(.medium))
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer(minLength: Theme.Space.s)
+                Text("\(plan.sourceLabel) · \(Int((plan.confidence * 100).rounded()))% sure")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textTertiary)
             }
+            Text(details)
+                .font(Theme.body.monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
+            if !plan.quote.isEmpty {
+                HStack(spacing: Theme.Space.s) {
+                    Rectangle().fill(Theme.border).frame(width: 2)
+                    Text(plan.quote)
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, Theme.Space.xs)
+            }
+            ForEach(plan.conflicts, id: \.self) { c in
+                Text("Clashes with \(c)")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.warning)
+            }
+            HStack(spacing: Theme.Space.s) {
+                Button("Add to calendar", action: onAccept)
+                    .buttonStyle(.borderedProminent)
+                Button("Dismiss", action: onDismiss)
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .controlSize(.small)
+            .padding(.top, Theme.Space.xs)
         }
+        .padding(.vertical, Theme.Space.m)
+    }
+
+    private var details: String {
+        var parts = [Fmt.dayTime(plan.start, app.calendar)]
+        if let kind = plan.kindLabel { parts.insert(kind, at: 0) }
+        if let loc = plan.location, !loc.isEmpty { parts.append(loc) }
+        if !plan.people.isEmpty { parts.append(plan.people.joined(separator: ", ")) }
+        return parts.joined(separator: " · ")
     }
 }
 
@@ -187,12 +195,12 @@ struct PasteTextSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Paste a message or a few lines of chat. Orbit looks for plans like “dinner Sat 7pm?”.")
-                    .font(Theme.caption).foregroundStyle(Theme.textSecondary)
+                    .font(Theme.body).foregroundStyle(Theme.textSecondary)
                 TextEditor(text: $text)
                     .font(Theme.body)
                     .scrollContentBackground(.hidden)
-                    .padding(8)
-                    .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.smallRadius))
+                    .padding(Theme.Space.s)
+                    .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.Radius.s))
             }
             .padding()
             .navigationTitle("Paste text")
