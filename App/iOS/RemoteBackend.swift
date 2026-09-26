@@ -157,6 +157,12 @@ final class RemoteBackend: OrbitBackend {
         enqueue(.saveDraft(digestID: digestID, body: body))
     }
 
+    func mailAction(_ action: MailboxAction, digestIDs: [String]) async throws {
+        enqueue(.mailAction(action: action, digestIDs: digestIDs))
+    }
+
+    func plannerLectures() -> (lectures: [TrackedLecture], links: [String: [URL]]) { ([], [:]) }
+
     func askNotes(_ question: String, moduleCode: String?) async throws -> NotesAnswer? {
         guard let router = directRouterIfConfigured() else {
             await sendChat("From my lecture notes\(moduleCode.map { " for \($0)" } ?? ""): \(question)")

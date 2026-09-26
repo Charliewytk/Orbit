@@ -163,8 +163,8 @@ private struct UniSettingsTab: View {
                     Stepper(value: Binding(get: { m.credits }, set: { app.setCredits(m, $0) }), in: 0...60, step: 15) {
                         HStack(spacing: Theme.Space.s) {
                             ModuleDot(code: m.id)
-                            Text(m.id).monospacedDigit()
-                            Text(m.name).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                            Text(ModuleLabel.title(m.id)).lineLimit(1)
+                            Text(m.id).foregroundStyle(Theme.textTertiary).monospacedDigit()
                             Spacer()
                             Text("\(m.credits) credits").foregroundStyle(Theme.textSecondary).monospacedDigit()
                         }

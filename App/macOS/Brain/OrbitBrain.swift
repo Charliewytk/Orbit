@@ -303,6 +303,17 @@ final class OrbitBrain: OrbitBackend {
     var isBrain: Bool { true }
     var planRouter: LLMRouter? { router }
 
+    /// ELE-matched lectures (notes status) and their slide links, for the conversational planner.
+    func plannerLectures() -> (lectures: [TrackedLecture], links: [String: [URL]]) {
+        let docs = academic.knowledge.documents
+        var links: [String: [URL]] = [:]
+        for l in academic.lectures {
+            let urls = l.slideDocumentIDs.compactMap { docs[$0]?.url }.compactMap(URL.init(string:))
+            if !urls.isEmpty { links[l.id] = urls }
+        }
+        return (academic.lectures, links)
+    }
+
     func tasksChanged() {
         taskFingerprint = currentTaskFingerprint()
         scheduleReplan(after: 2)

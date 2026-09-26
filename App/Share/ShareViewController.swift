@@ -12,6 +12,8 @@ final class ShareViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        ModuleLabel.resolve = { ModuleNames.title(for: $0) }
+        ModuleLabel.symbol = { ModuleNames.symbol(for: $0) }
         let model = ShareModel(extensionContext: extensionContext)
         self.model = model
         let host = UIHostingController(rootView: ShareView(model: model))

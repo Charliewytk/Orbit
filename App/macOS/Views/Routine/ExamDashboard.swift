@@ -135,7 +135,7 @@ struct PastPapersCard: View {
                         VStack(alignment: .leading, spacing: 1) {
                             Text(p.title).font(Theme.body.weight(.medium)).lineLimit(1)
                                 .strikethrough(exam.isDone(p))
-                            Text([p.moduleCode, Fmt.duration(p.minutes)].compactMap { $0 }.joined(separator: " · "))
+                            Text([p.moduleCode.map { ModuleLabel.title($0) }, Fmt.duration(p.minutes)].compactMap { $0 }.joined(separator: " · "))
                                 .font(Theme.caption).foregroundStyle(Theme.textTertiary)
                         }
                         Spacer(minLength: 0)
@@ -169,7 +169,7 @@ struct WeakTopicsCard: View {
                         }
                         VStack(alignment: .leading, spacing: 1) {
                             Text(t.topic).font(Theme.body.weight(.medium)).lineLimit(1)
-                            Text(([t.moduleCode].compactMap { $0 } + t.reasons).joined(separator: " · "))
+                            Text(([t.moduleCode.map { ModuleLabel.title($0) }].compactMap { $0 } + t.reasons).joined(separator: " · "))
                                 .font(Theme.caption).foregroundStyle(Theme.textTertiary).lineLimit(1)
                         }
                     }

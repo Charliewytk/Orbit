@@ -104,7 +104,7 @@ struct ModuleGradeCard: View {
     private var header: some View {
         HStack {
             ModuleDot(code: result.code, size: 9)
-            Text("\(result.code) · \(result.name)").font(Theme.headline).foregroundStyle(Theme.textPrimary)
+            Text(ModuleNames.knownTitle(for: result.code) ?? result.name).font(Theme.headline).foregroundStyle(Theme.textPrimary)
             Spacer()
             Text(result.average.map { String(format: "avg %.1f", $0) } ?? "no marks yet")
                 .font(Theme.caption.monospacedDigit()).foregroundStyle(Theme.textSecondary)
@@ -222,7 +222,7 @@ struct ExamCountdownRow: View {
     var body: some View {
         HStack {
             ModuleDot(code: exam.moduleCode, size: 9)
-            Text("\(exam.moduleCode) · \(exam.title)").font(Theme.headline)
+            Text("\(ModuleLabel.title(exam.moduleCode)) · \(exam.title)").font(Theme.headline)
             Spacer()
             Text(calendar.shortDay(exam.date)).font(Theme.caption).foregroundStyle(Theme.textSecondary)
             Text("\(exam.daysLeft) days").font(Theme.number(16)).foregroundStyle(exam.inWindow ? Theme.warning : Theme.textSecondary)

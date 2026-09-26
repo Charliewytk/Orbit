@@ -89,9 +89,7 @@ public enum ModuleNames {
     /// Replaces every module code in a sentence with its title
     /// ("Revise BEE1022 week 2" → "Revise Introduction to Statistics week 2").
     public static func humanise(_ text: String) -> String {
-        guard let regex = try? NSRegularExpression(pattern: "(?<![A-Za-z0-9])([A-Z]{3}[0-9]{4}|[A-Z]{4}[0-9]{3})(?![0-9])") else {
-            return text
-        }
+        guard let regex = codeRegex, text.count >= 7 else { return text }
         let ns = text as NSString
         var out = text
         for m in regex.matches(in: text, range: NSRange(location: 0, length: ns.length)).reversed() {
@@ -103,6 +101,9 @@ public enum ModuleNames {
     }
 
     // MARK: Helpers
+
+    /// Compiled once (humanise runs in list rows).
+    private static let codeRegex = try? NSRegularExpression(pattern: "(?<![A-Za-z0-9])([A-Z]{3}[0-9]{4}|[A-Z]{4}[0-9]{3})(?![0-9])")
 
     /// "bee1032_a_1_202627" → "BEE1032".
     static func normalise(_ code: String) -> String {

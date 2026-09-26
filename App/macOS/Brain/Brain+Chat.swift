@@ -152,6 +152,10 @@ extension OrbitBrain {
             do { try await saveDraft(digestID: digestID, body: body) } catch {
                 record(.gmail, error: "Couldn't save a draft: \(error.localizedDescription)")
             }
+        case .mailAction(let action, let ids):
+            do { try await mailAction(action, digestIDs: ids) } catch {
+                record(.gmail, error: "Couldn't \(action.rawValue) mail: \(error.localizedDescription)")
+            }
         case .syncNow:
             await syncNow()
         }

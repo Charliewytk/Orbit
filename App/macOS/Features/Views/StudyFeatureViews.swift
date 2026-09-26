@@ -52,7 +52,7 @@ struct WeeklyReportView: View {
                     } header: {
                         HStack(spacing: 6) {
                             Circle().fill(m.status.color).frame(width: 8, height: 8)
-                            Text("\(m.moduleCode) \(m.moduleName)")
+                            Text(m.moduleName.isEmpty ? ModuleLabel.title(m.moduleCode) : m.moduleName)
                         }
                     }
                 }
@@ -146,7 +146,7 @@ struct ReadingPlanView: View {
                     ForEach(items) { c in
                         VStack(alignment: .leading, spacing: 2) {
                             Text(c.title)
-                            Text("\(c.moduleCode) · \(c.minutes) min · finish by \(hub.cal.shortDay(c.deadline)) \(hub.cal.time(c.deadline))")
+                            Text("\(ModuleLabel.title(c.moduleCode)) · \(c.minutes) min · finish by \(hub.cal.shortDay(c.deadline)) \(hub.cal.time(c.deadline))")
                                 .font(.system(size: 11)).foregroundStyle(.secondary)
                         }
                     }
@@ -177,7 +177,7 @@ struct DeadlinesView: View {
                 let next = planner.schedule([item]).first { $0.fireAt > now && hub.state.sentDeadlineAlerts[$0.id] == nil }
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
-                        Text((item.moduleCode.map { "\($0) " } ?? "") + item.title)
+                        Text((item.moduleCode.map { ModuleLabel.title($0) + " · " } ?? "") + item.title)
                         Spacer()
                         Text("\(hub.cal.shortDay(item.due)) \(hub.cal.time(item.due))").monospacedDigit().foregroundStyle(.secondary)
                     }

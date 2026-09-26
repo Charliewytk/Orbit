@@ -525,7 +525,7 @@ struct ActivitiesSection: View {
                 ScrollView(.horizontal) {
                     LazyHStack(spacing: 14) {
                         ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
-                            ActivityCard(item: item, index: i, ctx: ctx)
+                            TodayActivityCard(item: item, index: i, ctx: ctx)
                         }
                     }
                     .padding(.vertical, 2)
@@ -537,7 +537,7 @@ struct ActivitiesSection: View {
 }
 
 /// One pastel activity: a white circle icon, the time, the title and the module.
-struct ActivityCard: View {
+struct TodayActivityCard: View {
     var item: AgendaItem
     var index: Int
     var ctx: HomeContext
@@ -915,7 +915,7 @@ struct HomeCard<Content: View, Accessory: View>: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .softCard(fill: tint.map { _ in Theme.surface } ?? Theme.surface)
+        .softCard()
         .overlay {
             if let tint {
                 RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous).fill(tint.opacity(0.08)).allowsHitTesting(false)

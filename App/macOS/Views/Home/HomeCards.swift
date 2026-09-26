@@ -112,7 +112,7 @@ struct TimelineRow: View {
                 .fill(color.gradient)
                 .frame(width: 4, height: 26)
             VStack(alignment: .leading, spacing: 1) {
-                Text(item.title)
+                Text(ModuleNames.humanise(item.title))
                     .font(Theme.body.weight(.medium))
                     .foregroundStyle(past ? Theme.textTertiary : Theme.textPrimary)
                     .strikethrough(item.completed)
@@ -173,7 +173,7 @@ struct TodosCard: View {
                     .contentTransition(.numericText())
             }
         } content: {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 6) {
                 if todos.isEmpty {
                     Text("Nothing due today. Add something below.")
                         .font(Theme.body)
@@ -235,10 +235,11 @@ struct TodoRow: View {
     var body: some View {
         let done = task.isDone
         HStack(spacing: Theme.Space.s) {
-            CircleCheckbox(isOn: done, size: 20) {
+            CircleCheckbox(isOn: done, size: 22) {
                 withAnimation(Motion.bouncy) { app.toggleComplete(task) }
             }
-            .frame(width: 22)
+            .frame(width: 30, height: 30)
+            .background(Circle().fill(Theme.surface))
             VStack(alignment: .leading, spacing: 1) {
                 Text(task.title)
                     .font(Theme.body.weight(.medium))
@@ -248,7 +249,7 @@ struct TodoRow: View {
                 HStack(spacing: 5) {
                     OriginDot(origin: task.origin, size: 6)
                     Text(task.origin.shortLabel).foregroundStyle(task.origin.color)
-                    if let code = task.moduleCode { Text("· \(code)") }
+                    if let code = task.moduleCode { Text("· \(ModuleLabel.title(code))") }
                     if let d = task.deadline, !done { Text("· \(Fmt.shortDue(d, app.calendar, now: now)) \(app.calendar.time(d))") }
                 }
                 .font(Theme.caption)
@@ -259,9 +260,9 @@ struct TodoRow: View {
                 Tag(text: "Overdue", color: Theme.danger)
             }
         }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 4)
-        .hoverRow()
+        .padding(.vertical, 8)
+        .padding(.horizontal, 10)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(done ? Theme.hover : task.origin.pastel))
         .opacity(done ? 0.7 : 1)
         .contextMenu {
             Button("Open in Tasks") {
@@ -575,7 +576,7 @@ struct UniWeekCard: View {
                                         .foregroundStyle(Theme.textPrimary)
                                         .lineLimit(2)
                                         .multilineTextAlignment(.leading)
-                                    Text("\(review.moduleCode)\(review.week.map { " · week \($0)" } ?? "")"
+                                    Text("\(ModuleLabel.title(review.moduleCode))\(review.week.map { " · week \($0)" } ?? "")"
                                          + (review.coverage.map { " · \(Int($0 * 100))% covered" } ?? ""))
                                         .font(Theme.caption)
                                         .foregroundStyle(Theme.textTertiary)
@@ -832,7 +833,7 @@ struct ActivityCard: View {
 
     var body: some View {
         let entries = merged()
-        HomeCard(title: "ELE and Ed", symbol: "bell.badge.fill", color: Color(hex: 0xFF6B3D), destination: .uni) {
+        HomeCard(title: "ELE and Ed", symbol: "bell.badge.fill", color: Theme.peachInk, destination: .uni) {
             VStack(alignment: .leading, spacing: 6) {
                 if entries.isEmpty {
                     Text("New files, announcements, grades and Ed posts show up here.")
@@ -870,7 +871,7 @@ struct ActivityCard: View {
                   detail: a.detail, date: a.date, url: a.url)
         }
         let edItems = ed.state.items.sorted { $0.date > $1.date }.prefix(6).map { i in
-            Entry(id: "ed-" + i.id, symbol: "bubble.left.and.bubble.right.fill", color: Color(hex: 0x7C5CFF),
+            Entry(id: "ed-" + i.id, symbol: "bubble.left.and.bubble.right.fill", color: Theme.lavenderInk,
                   module: i.moduleCode ?? i.courseCode, title: i.title, detail: i.snippet, date: i.date, url: i.url)
         }
         return Array((ele + edItems).sorted { $0.date > $1.date }.prefix(5))
@@ -926,9 +927,9 @@ struct AskCard: View {
                     Button { send(draft) } label: {
                         Image(systemName: "arrow.up")
                             .font(.system(size: 12, weight: .heavy))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.onAccent)
                             .frame(width: 26, height: 26)
-                            .background(Theme.accentGradient, in: Circle())
+                            .background(Theme.accent, in: Circle())
                     }
                     .buttonStyle(.plain)
                     .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)

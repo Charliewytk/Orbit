@@ -54,7 +54,7 @@ struct EdView: View {
             ToolbarItemGroup {
                 Picker("Course", selection: $course) {
                     Text("All courses").tag(String?.none)
-                    ForEach(ed.state.courses) { c in Text(c.moduleCode ?? c.code).tag(String?.some(c.code)) }
+                    ForEach(ed.state.courses) { c in Text(c.moduleCode.map { ModuleLabel.title($0) } ?? c.code).tag(String?.some(c.code)) }
                 }
                 Toggle(isOn: $importantOnly) { Label("Important", systemImage: "exclamationmark.circle") }
                     .toggleStyle(.button)

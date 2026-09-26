@@ -226,6 +226,8 @@ struct NextUpRow: View {
                         }
                         Button("Done") { act { app.done(block) } }
                             .buttonStyle(.quiet)
+                        MoveLaterButton(target: .block(block))
+                            .buttonStyle(.quiet)
                         Button("Skip") { act { app.skip(block) } }
                             .buttonStyle(SoftButtonStyle(color: Theme.textSecondary))
                     }

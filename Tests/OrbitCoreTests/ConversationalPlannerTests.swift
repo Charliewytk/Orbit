@@ -112,4 +112,11 @@ final class ConversationalPlannerTests: XCTestCase {
         XCTAssertEqual(tasks.count, 3)
         XCTAssertTrue(tasks.allSatisfy { $0.origin == .recommended && $0.earliestStart != nil })
     }
+
+    func testQuickAddRoutesConversationalTextToPlanner() {
+        XCTAssertTrue(ConversationalPlanner.looksConversational(Self.input))
+        XCTAssertTrue(ConversationalPlanner.looksConversational("I missed my lecture on friday at 9"))
+        XCTAssertFalse(ConversationalPlanner.looksConversational("essay plan BEM2031 2h by Fri"))
+        XCTAssertFalse(ConversationalPlanner.looksConversational("call mum tomorrow 6pm"))
+    }
 }

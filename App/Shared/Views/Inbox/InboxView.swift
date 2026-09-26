@@ -1,6 +1,9 @@
 import SwiftUI
 import SwiftData
 import OrbitCore
+#if os(macOS)
+import AppKit
+#endif
 
 /// Mail-client layout: the sorted list on the left, a reading pane on the right.
 struct InboxView: View {
@@ -10,6 +13,8 @@ struct InboxView: View {
     @State private var categoryFilter: EmailCategory?
     @State private var showHandled = false
     @State private var selectedID: String?
+    /// Batch selection (⌘-click / ⇧-click). Empty = act on `selectedID`.
+    @State private var checked: Set<String> = []
     @FocusState private var listFocused: Bool
 
     private var visible: [StoredEmailDigest] {
@@ -37,6 +42,10 @@ struct InboxView: View {
         }
         .navigationTitle("Inbox")
         .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                MailActionButtons(count: targets(in: list).count,
+                                  archive: { archive(in: list) }, trash: { trash(in: list) })
+            }
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Picker("Account", selection: $accountFilter) {
@@ -80,9 +89,9 @@ struct InboxView: View {
                             .padding(.top, Theme.Space.m)
                             .padding(.bottom, Theme.Space.xs)
                         ForEach(group.items) { digest in
-                            DigestRow(digest: digest, isSelected: selectedID == digest.id)
+                            DigestRow(digest: digest, isSelected: selectedID == digest.id || checked.contains(digest.id))
                                 .id(digest.id)
-                                .onTapGesture { selectedID = digest.id; listFocused = true }
+                                .onTapGesture { tap(digest, in: list) }
                                 .contextMenu { contextMenu(digest) }
                                 .transition(.opacity)
                         }
@@ -99,9 +108,12 @@ struct InboxView: View {
             .onKeyPress(.upArrow) { move(-1, in: list, proxy: proxy); return .handled }
             .onKeyPress("j") { move(1, in: list, proxy: proxy); return .handled }
             .onKeyPress("k") { move(-1, in: list, proxy: proxy); return .handled }
-            .onKeyPress("e") {
-                guard let id = selectedID, let d = list.first(where: { $0.id == id }) else { return .ignored }
-                done(d, in: list)
+            .onKeyPress("e") { archive(in: list) ? .handled : .ignored }
+            .onKeyPress("#") { trash(in: list) ? .handled : .ignored }
+            .onKeyPress(.delete) { trash(in: list) ? .handled : .ignored }
+            .onKeyPress(.escape) {
+                guard !checked.isEmpty else { return .ignored }
+                checked = []
                 return .handled
             }
         }
@@ -116,6 +128,11 @@ struct InboxView: View {
     private func contextMenu(_ digest: StoredEmailDigest) -> some View {
         Button(digest.handled ? "Move back to inbox" : "Mark as done") {
             if digest.handled { app.markHandled(digest, false) } else { done(digest, in: visible) }
+        }
+        if !digest.handled {
+            let group = checked.contains(digest.id) ? targets(in: visible) : [digest]
+            Button(group.count > 1 ? "Archive \(group.count)" : "Archive") { act(group, in: visible, app.archive) }
+            Button(group.count > 1 ? "Delete \(group.count)" : "Delete", role: .destructive) { act(group, in: visible, app.trash) }
         }
         if let url = digest.webURL { Button("Open in browser") { openExternal(url) } }
     }
@@ -146,6 +163,57 @@ struct InboxView: View {
         proxy.scrollTo(ordered[next].id)
     }
 
+    // MARK: Selection and actions
+
+    private func tap(_ digest: StoredEmailDigest, in list: [StoredEmailDigest]) {
+        listFocused = true
+        #if os(macOS)
+        let flags = NSEvent.modifierFlags
+        if flags.contains(.command) {
+            if checked.isEmpty, let current = selectedID { checked.insert(current) }
+            if checked.contains(digest.id) { checked.remove(digest.id) } else { checked.insert(digest.id) }
+            selectedID = digest.id
+            return
+        }
+        if flags.contains(.shift), let anchor = selectedID {
+            let ordered = groups(list).flatMap(\.items).map(\.id)
+            if let a = ordered.firstIndex(of: anchor), let b = ordered.firstIndex(of: digest.id) {
+                checked.formUnion(ordered[min(a, b)...max(a, b)])
+            }
+            return
+        }
+        #endif
+        checked = []
+        selectedID = digest.id
+    }
+
+    /// The checked messages, or the open one.
+    private func targets(in list: [StoredEmailDigest]) -> [StoredEmailDigest] {
+        if !checked.isEmpty { return list.filter { checked.contains($0.id) } }
+        return list.filter { $0.id == selectedID }
+    }
+
+    @discardableResult
+    private func archive(in list: [StoredEmailDigest]) -> Bool { act(targets(in: list), in: list, app.archive) }
+
+    @discardableResult
+    private func trash(in list: [StoredEmailDigest]) -> Bool { act(targets(in: list), in: list, app.trash) }
+
+    @discardableResult
+    private func act(_ group: [StoredEmailDigest], in list: [StoredEmailDigest],
+                     _ action: @escaping ([StoredEmailDigest]) -> Void) -> Bool {
+        guard !group.isEmpty else { return false }
+        let ids = Set(group.map(\.id))
+        let ordered = groups(list).flatMap(\.items)
+        if let current = selectedID, ids.contains(current) {
+            let i = ordered.firstIndex { $0.id == current } ?? 0
+            selectedID = ordered[i...].first { !ids.contains($0.id) }?.id ?? ordered[..<i].last { !ids.contains($0.id) }?.id
+        }
+        checked = []
+        withAnimation(Motion.smooth) { action(group) }
+        return true
+    }
+
     private func done(_ digest: StoredEmailDigest, in list: [StoredEmailDigest]) {
         let ordered = groups(list).flatMap(\.items)
         if selectedID == digest.id, let i = ordered.firstIndex(where: { $0.id == digest.id }) {
@@ -153,6 +221,26 @@ struct InboxView: View {
             selectedID = after
         }
         withAnimation(Motion.smooth) { app.markHandledWithUndo(digest) }
+    }
+}
+
+/// Archive (E) and Delete (#) for the open or checked messages.
+struct MailActionButtons: View {
+    var count: Int
+    var archive: () -> Void
+    var trash: () -> Void
+
+    var body: some View {
+        Button(action: archive) {
+            Label(count > 1 ? "Archive \(count)" : "Archive", systemImage: "archivebox")
+        }
+        .help("Archive (E)")
+        .disabled(count == 0)
+        Button(action: trash) {
+            Label(count > 1 ? "Delete \(count)" : "Delete", systemImage: "trash")
+        }
+        .help("Move to Trash (#). Orbit never deletes for good.")
+        .disabled(count == 0)
     }
 }
 

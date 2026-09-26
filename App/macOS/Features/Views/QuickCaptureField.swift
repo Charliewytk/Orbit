@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 import OrbitCore
 
 /// The one-line field inside the quick-capture panel.
@@ -11,7 +12,7 @@ struct QuickCaptureField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            TextField("Add a to-do   ·   e: event   ·   n: note", text: $text)
+            TextField("Ask or tell Orbit…   ·   e: event   ·   n: note", text: $text)
                 .textFieldStyle(.plain)
                 .font(.system(size: 17))
                 .focused($focused)
@@ -37,6 +38,17 @@ struct QuickCaptureField: View {
     private func submit() {
         let line = text
         guard !line.trimmingCharacters(in: .whitespaces).isEmpty, !working else { return }
+        // Questions go to Home's Ask Orbit conversation (the same box as ⌘N).
+        if AskOrTell.classify(line) == .ask, !line.hasPrefix("e:"), !line.hasPrefix("n:") {
+            text = ""
+            controller.close()
+            NSApp.activate(ignoringOtherApps: true)
+            NotificationCenter.default.post(name: .orbitNavigate, object: Destination.home)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                NotificationCenter.default.post(name: .orbitOpenAsk, object: line)
+            }
+            return
+        }
         working = true
         Task { @MainActor in
             let message = await controller.submit(line)

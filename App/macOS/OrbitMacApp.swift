@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import AppKit
 import UserNotifications
+import OrbitCore
 
 @main
 struct OrbitMacApp: App {
@@ -10,6 +11,9 @@ struct OrbitMacApp: App {
     @State private var brain: OrbitBrain
 
     init() {
+        // Plain-English module names and icons everywhere (ModuleChip, ModuleTag…).
+        ModuleLabel.resolve = { ModuleNames.title(for: $0) }
+        ModuleLabel.symbol = { ModuleNames.symbol(for: $0) }
         let container = OrbitStore.shared
         let brain = OrbitBrain(container: container)
         let app = AppModel(container: container, backend: brain)
@@ -25,7 +29,7 @@ struct OrbitMacApp: App {
                 .modifier(ShutdownPresenter())
                 .environment(app)
                 .environment(brain)
-                .frame(minWidth: 900, minHeight: 600)
+                .frame(minWidth: 720, minHeight: 560)
                 .task {
                     brain.start()
                     await Notifier.requestAuthorization()

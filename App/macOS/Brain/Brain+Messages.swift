@@ -25,8 +25,10 @@ extension OrbitBrain {
             state.iMessageCursor = fresh.map(\.date).max()
             saveState()
             let extractor = PlanExtractor(router: router, purpose: .privateData, timeZone: prefs.timeZone)
-            let plans = await extractor.extract(from: messages, since: since)
-            let added = app?.ingest(plans: plans, source: "imessage") ?? 0
+            let result = await extractor.analyze(messages, since: since)
+            // Promos ("NEW EVENT ON SALE… fixr.co/event/…") become Tickets on sale cards, not plans.
+            app?.ingest(ticketDrops: result.ticketDrops, source: "imessage")
+            let added = app?.ingest(plans: result.plans, source: "imessage") ?? 0
             if added > 0 {
                 notify(id: "imessage-\(Int(Date().timeIntervalSince1970))", title: "💬 Plans spotted in Messages",
                        body: "\(added) new plan\(added == 1 ? "" : "s") to review in Orbit.", category: "plan")

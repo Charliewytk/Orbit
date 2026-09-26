@@ -257,7 +257,7 @@ struct MacRootView: View {
         let cal = app.calendar
         let dueToday = openTasks.filter { t in t.deadline.map { cal.days(from: now, to: $0) <= 0 } ?? false }.count
         let recentMail = unhandledMail.filter { $0.date > now.addingTimeInterval(-7 * 86400) && $0.category != .ignore }.count
-        let pendingPlans = plans.filter { $0.status == .pending && $0.start > now }.count
+        let pendingPlans = plans.filter { !$0.isTicketDrop && $0.status == .pending && $0.start > now }.count
         return [.inbox: recentMail, .tasks: dueToday, .plans: pendingPlans]
     }
 

@@ -88,10 +88,9 @@ struct ChatView: View {
             Button { send(draft) } label: {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 13, weight: .heavy))
-                    .foregroundStyle(empty ? Theme.textTertiary : Color.white)
+                    .foregroundStyle(empty ? Theme.textTertiary : Theme.onAccent)
                     .frame(width: 30, height: 30)
-                    .background(empty ? AnyShapeStyle(Theme.hover) : AnyShapeStyle(Theme.accentGradient), in: Circle())
-                    .shadow(color: empty ? .clear : Theme.violet.opacity(0.4), radius: 6, y: 2)
+                    .background(empty ? Theme.hover : Theme.accent, in: Circle())
             }
             .buttonStyle(.plain)
             .disabled(empty)
@@ -135,12 +134,11 @@ struct ChatMessageView: View {
             VStack(alignment: .trailing, spacing: Theme.Space.xs) {
                 Text(message.text)
                     .font(Theme.body.weight(.medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.textPrimary)
                     .textSelection(.enabled)
                     .padding(.horizontal, Theme.Space.l)
                     .padding(.vertical, 10)
-                    .background(Theme.accentGradient, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .shadow(color: Theme.violet.opacity(0.3), radius: 10, y: 4)
+                    .background(Theme.lavender, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .frame(maxWidth: 520, alignment: .trailing)
                 status
             }

@@ -25,6 +25,10 @@ protocol OrbitBackend: AnyObject {
     /// The reply text, or nil if the request was sent to the Mac.
     func draftReply(digestID: String) async throws -> String?
     func saveDraft(digestID: String, body: String) async throws
+    /// Archive / Trash (or undo) on the mail server. Gmail only; never sends, never deletes for good.
+    func mailAction(_ action: MailboxAction, digestIDs: [String]) async throws
+    /// Timetabled sessions with notes status, for the conversational planner (Mac only; empty elsewhere).
+    func plannerLectures() -> (lectures: [TrackedLecture], links: [String: [URL]])
 
     /// Nil when the question was handed to the Mac through chat.
     func askNotes(_ question: String, moduleCode: String?) async throws -> NotesAnswer?
@@ -67,6 +71,7 @@ enum RemoteCommand: Codable, Hashable {
     case lighten(day: Date, fraction: Double)
     case draftReply(digestID: String)
     case saveDraft(digestID: String, body: String)
+    case mailAction(action: MailboxAction, digestIDs: [String])
     case syncNow
 
     var encoded: String {

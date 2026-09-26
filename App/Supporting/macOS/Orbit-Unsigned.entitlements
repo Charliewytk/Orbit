@@ -4,5 +4,8 @@
      no iCloud, push, app-group or keychain-group entitlements, which would
      stop an unsigned app from launching. -->
 <plist version="1.0">
-<dict/>
+<dict>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+</dict>
 </plist>

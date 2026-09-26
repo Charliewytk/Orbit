@@ -381,7 +381,7 @@ private struct TaskEditor: View {
                     Text("None").tag(String?.none)
                     ForEach(modules) { m in Text(m.name.isEmpty ? m.id : "\(m.id) \(m.name)").tag(String?.some(m.id)) }
                     if let code = task.moduleCode, !modules.contains(where: { $0.id == code }) {
-                        Text(code).tag(String?.some(code))
+                        Text(ModuleLabel.title(code)).tag(String?.some(code))
                     }
                 }
             }
@@ -419,6 +419,9 @@ private struct TaskEditor: View {
             Section {
                 Button(task.isDone ? "Mark not done" : "Complete") {
                     withAnimation(Motion.smooth) { app.toggleComplete(task) }
+                }
+                if !task.isDone {
+                    MoveLaterButton(target: .task(task), label: "Move to later…")
                 }
                 Button("Delete", role: .destructive) {
                     let t = task

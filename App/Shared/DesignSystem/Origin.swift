@@ -8,9 +8,18 @@ import OrbitCore
 extension TaskOrigin {
     var color: Color {
         switch self {
-        case .yours: Color.dynamic(light: 0x2F7BF6, dark: 0x5B9BFF)
-        case .recommended: Color.dynamic(light: 0x8B5CF6, dark: 0xB195FF)
-        case .required: Color.dynamic(light: 0xF06A00, dark: 0xFF9B42)
+        case .yours: Color.dynamic(light: 0x4A7FC8, dark: 0x9CC3EE)
+        case .recommended: Color.dynamic(light: 0x7E6AC9, dark: 0xC0B2F5)
+        case .required: Color.dynamic(light: 0xD07A2E, dark: 0xF3B98E)
+        }
+    }
+
+    /// The soft pastel fill for cards and icon circles (sky, lavender, peach).
+    var pastel: Color {
+        switch self {
+        case .yours: Theme.sky
+        case .recommended: Theme.lavender
+        case .required: Theme.peach
         }
     }
 
@@ -24,7 +33,7 @@ extension TaskOrigin {
 }
 
 enum DoNow {
-    static let color = Color.dynamic(light: 0xFF2D55, dark: 0xFF4F70)
+    static let color = Color.dynamic(light: 0xE0667F, dark: 0xF2A1B3)
     static let label = "Do now"
 }
 

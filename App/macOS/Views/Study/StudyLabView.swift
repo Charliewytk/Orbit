@@ -81,7 +81,7 @@ struct TopicHintsRow: View {
     var body: some View {
         let hints = StudyHub.shared.hints(for: topic)
         VStack(alignment: .leading, spacing: 3) {
-            Text("\(topic.moduleCode) · \(topic.topic)").font(.body.weight(.medium))
+            Text("\(ModuleLabel.title(topic.moduleCode)) · \(topic.topic)").font(.body.weight(.medium))
             ForEach(hints, id: \.self) { h in
                 Text(h.line).font(.caption).foregroundStyle(.secondary)
             }
@@ -208,7 +208,7 @@ struct ReadingLibraryView: View {
             Section("All readings") {
                 ForEach(hub.library.items(), id: \.id) { e in
                     Toggle(isOn: Binding(get: { e.read }, set: { hub.setRead(e.id, $0); refresh += 1 })) {
-                        Text("\(e.moduleCode) · \(e.title)\(e.week.map { " (wk \($0))" } ?? "") · \(e.importance.rawValue)")
+                        Text("\(ModuleLabel.title(e.moduleCode)) · \(e.title)\(e.week.map { " (wk \($0))" } ?? "") · \(e.importance.rawValue)")
                     }
                 }
             }
@@ -227,7 +227,7 @@ struct ReadingDayRow: View {
             if day.items.isEmpty { Text("Nothing planned — pick something from Reading around.").font(.caption).foregroundStyle(.secondary) }
             ForEach(day.items, id: \.self) { item in
                 HStack {
-                    Text("\(item.moduleCode) · \(item.title)\(item.parts > 1 ? " (part \(item.part)/\(item.parts))" : "") · \(item.minutes) min")
+                    Text("\(ModuleLabel.title(item.moduleCode)) · \(item.title)\(item.parts > 1 ? " (part \(item.part)/\(item.parts))" : "") · \(item.minutes) min")
                         .font(.callout)
                     Spacer()
                     Button("Done") { setRead(item.entryID, true) }.controlSize(.small)
@@ -253,7 +253,7 @@ struct TeachBackView: View {
                     ForEach(topics) { t in
                         VStack(alignment: .leading) {
                             Text(t.topic)
-                            Text("\(t.moduleCode) · \(t.reason)").font(.caption).foregroundStyle(.secondary)
+                            Text("\(ModuleLabel.title(t.moduleCode)) · \(t.reason)").font(.caption).foregroundStyle(.secondary)
                         }
                         .tag(t.id)
                     }

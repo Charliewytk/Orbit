@@ -16,7 +16,8 @@ struct PlansView: View {
     @State private var busy = false
     @State private var tick = 0
 
-    private var pending: [StoredPlan] { plans.filter { $0.status == .pending && $0.start > Date().addingTimeInterval(-3600) } }
+    private var pending: [StoredPlan] { plans.filter { !$0.isTicketDrop && $0.status == .pending && $0.start > Date().addingTimeInterval(-3600) } }
+    private var drops: [StoredPlan] { plans.filter { $0.isTicketDrop && $0.status == .pending && $0.start > Date().addingTimeInterval(-3600) } }
     private var accepted: [StoredPlan] { plans.filter { $0.status == .accepted && $0.start > Date().addingTimeInterval(-86400) } }
 
     var body: some View {
@@ -40,6 +41,17 @@ struct PlansView: View {
                         })
                         .transition(.asymmetric(insertion: .opacity, removal: .opacity.combined(with: .move(edge: .leading))))
                         if plan.id != pending.last?.id { Hairline() }
+                    }
+                }
+            }
+
+            if !drops.isEmpty {
+                PageSection(title: "Tickets on sale", count: drops.count) {
+                    VStack(spacing: 0) {
+                        ForEach(drops) { drop in
+                            TicketDropCard(drop: drop)
+                            if drop.id != drops.last?.id { Hairline() }
+                        }
                     }
                 }
             }
@@ -183,6 +195,53 @@ struct PlanCard: View {
         if let loc = plan.location, !loc.isEmpty { parts.append(loc) }
         if !plan.people.isEmpty { parts.append(plan.people.joined(separator: ", ")) }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// A promo / ticket drop from messages: info with a Buy link, not a plan.
+struct TicketDropCard: View {
+    @Environment(AppModel.self) private var app
+    var drop: StoredPlan
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.xs) {
+            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
+                Label(drop.title, systemImage: "ticket")
+                    .font(Theme.large.weight(.medium))
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer(minLength: Theme.Space.s)
+                Text("\(drop.kindLabel ?? "Tickets on sale") · \(drop.sourceLabel)")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            Text([Fmt.dayTime(drop.start, app.calendar), drop.location].compactMap { $0 }.joined(separator: " · "))
+                .font(Theme.body.monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
+            Text("A promo, not a plan. Orbit won't add it unless you get a ticket.")
+                .font(Theme.caption)
+                .foregroundStyle(Theme.textTertiary)
+            actions
+        }
+        .padding(.vertical, Theme.Space.m)
+    }
+
+    private var actions: some View {
+        HStack(spacing: Theme.Space.s) {
+            if let url = drop.buyURL.flatMap(URL.init(string:)) {
+                Button("Buy") { openExternal(url) }.buttonStyle(.borderedProminent)
+            }
+            Button("Remind me before it sells out") { app.remindToBuy(drop) }.buttonStyle(.bordered)
+            Menu("Add if I buy") {
+                Button("Add when my ticket email arrives") { app.addIfBought(drop) }
+                Button("I've got a ticket, add it now") { Task { await app.boughtTicket(drop) } }
+            }
+            .fixedSize()
+            Button("Dismiss") { withAnimation(Motion.smooth) { app.dismiss(drop) } }
+                .buttonStyle(.borderless)
+                .foregroundStyle(Theme.textSecondary)
+        }
+        .controlSize(.small)
+        .padding(.top, Theme.Space.xs)
     }
 }
 

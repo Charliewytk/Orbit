@@ -105,10 +105,10 @@ private struct ModuleColumn: View {
                     let next = assessments.first { $0.moduleCode == m.id && !$0.submitted && $0.mark == nil && ($0.due ?? .distantPast) > now }
                     VStack(alignment: .leading, spacing: 1) {
                         HStack(spacing: Theme.Space.s) {
-                            ModuleDot(code: m.id)
-                                .frame(width: 16)
-                            Text(m.id)
+                            IconTile(symbol: ModuleLabel.symbol(m.id), color: Theme.moduleColor(m.id), size: 22)
+                            Text(ModuleLabel.title(m.id))
                                 .font(Theme.body.weight(.medium))
+                                .lineLimit(1)
                                 .foregroundStyle(Theme.textPrimary)
                             Spacer(minLength: 0)
                             if let due = next?.due {
@@ -254,9 +254,8 @@ private struct ModuleStandingRow: View {
 
     var body: some View {
         HStack(spacing: Theme.Space.s) {
-            ModuleDot(code: module.id)
-            Text(module.id).font(Theme.body.weight(.medium)).foregroundStyle(Theme.textPrimary)
-            Text(module.name).font(Theme.body).foregroundStyle(Theme.textSecondary).lineLimit(1)
+            IconTile(symbol: ModuleLabel.symbol(module.id), color: Theme.moduleColor(module.id), size: 24)
+            Text(ModuleLabel.title(module.id)).font(Theme.body.weight(.medium)).foregroundStyle(Theme.textPrimary).lineLimit(1)
             Spacer(minLength: Theme.Space.m)
             ThinProgressBar(value: (standing?.currentAverage ?? 0) / 100, target: target / 100,
                             color: standingColor(standing?.currentAverage, target: target))
@@ -410,7 +409,7 @@ struct ModulePage: View {
                         .buttonStyle(.quiet)
                 }
             }
-            Text(module.name.isEmpty ? module.id : module.name)
+            Text(ModuleNames.knownTitle(for: module.id) ?? (module.name.isEmpty ? module.id : module.name))
                 .font(Theme.pageTitle)
                 .foregroundStyle(Theme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)

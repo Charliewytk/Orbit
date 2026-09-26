@@ -118,9 +118,9 @@ struct TimeGrid<Detail: View>: View {
                         Text(calendar.format(day, "d"))
                             .font(Theme.large.weight(isToday ? .semibold : .regular))
                             .monospacedDigit()
-                            .foregroundStyle(isToday ? Color.white : Theme.textPrimary)
-                            .frame(minWidth: 24, minHeight: 24)
-                            .background { if isToday { Circle().fill(Theme.now) } }
+                            .foregroundStyle(isToday ? Theme.onAccent : Theme.textPrimary)
+                            .frame(minWidth: 26, minHeight: 26)
+                            .background { if isToday { Circle().fill(Theme.accent) } }
                     }
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
@@ -445,7 +445,7 @@ struct TimeGridBlock: View {
         .frame(maxHeight: .infinity, alignment: .top)
         .background(LinearGradient(colors: [item.color.opacity(fillOpacity + 0.06), item.color.opacity(fillOpacity)],
                                    startPoint: .top, endPoint: .bottom))
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.xs, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay {
             if isSelected || doNow {
                 RoundedRectangle(cornerRadius: Theme.Radius.xs, style: .continuous)
@@ -457,7 +457,6 @@ struct TimeGridBlock: View {
                 DoNowBadge().scaleEffect(0.85).padding(3)
             }
         }
-        .shadow(color: doNow ? DoNow.color.opacity(0.35) : .clear, radius: 8)
         .opacity(past && !item.contains(Date()) ? 0.55 : 1)
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
@@ -471,7 +470,7 @@ struct TimeGridBlock: View {
     }
 
     private var title: some View {
-        Text(item.title)
+        Text(ModuleNames.humanise(item.title))
             .font(Theme.caption.weight(.semibold))
             .foregroundStyle(Theme.textPrimary)
             .strikethrough(item.completed)
@@ -479,66 +478,114 @@ struct TimeGridBlock: View {
     }
 }
 
-/// The popover shown when an event or block is clicked.
+/// The popover shown when an event or block is clicked: a pastel header with
+/// a white icon circle, the details as icon rows, and round action buttons.
 struct TimeGridItemDetail: View {
     @Environment(AppModel.self) private var app
+    /// Only this item's block (not every block in the store).
     @Query private var blocks: [StoredBlock]
     var item: TimeGridItem
 
-    private var block: StoredBlock? { item.blockID.flatMap { id in blocks.first { $0.id == id } } }
+    init(item: TimeGridItem) {
+        self.item = item
+        let id = item.blockID ?? "-"
+        _blocks = Query(filter: #Predicate<StoredBlock> { $0.id == id })
+    }
+
+    private var block: StoredBlock? { item.blockID == nil ? nil : blocks.first }
+
+    private var symbol: String {
+        switch item.kind {
+        case .block: return ModuleLabel.symbol(item.moduleCode)
+        case .routine: return "sparkles"
+        case .event:
+            let t = item.title.lowercased()
+            if t.contains("lecture") { return "person.wave.2.fill" }
+            if t.contains("tutorial") || t.contains("seminar") { return "person.3.fill" }
+            return item.moduleCode == nil ? "calendar" : ModuleLabel.symbol(item.moduleCode)
+        }
+    }
 
     var body: some View {
-        let cal = app.calendar
-        VStack(alignment: .leading, spacing: Theme.Space.s) {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
-                RoundedRectangle(cornerRadius: 1.5).fill(item.color).frame(width: 3, height: 14)
-                Text(item.title)
-                    .font(Theme.large.weight(.semibold))
-                    .foregroundStyle(Theme.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .textSelection(.enabled)
+        VStack(alignment: .leading, spacing: 0) {
+            header
+            VStack(alignment: .leading, spacing: Theme.Space.s) {
+                details
+                notes
+                actions
             }
-            VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                Text(item.isAllDay ? "\(Fmt.day(item.start, cal)) · all day"
-                     : "\(Fmt.day(item.start, cal)) · \(Fmt.range(item.start, item.end, cal))")
-                    .monospacedDigit()
-                if let location = item.location, !location.isEmpty {
-                    Label(location, systemImage: "mappin").labelStyle(DetailLabelStyle())
-                }
-                if let name = item.calendarName {
-                    Label(name, systemImage: "calendar").labelStyle(DetailLabelStyle())
-                }
-                if let code = item.moduleCode { ModuleTag(code: code) }
-            }
-            .font(Theme.body)
-            .foregroundStyle(Theme.textSecondary)
+            .padding(Theme.Space.l)
+        }
+        .frame(width: 300, alignment: .leading)
+        .background(Theme.surface)
+    }
 
-            if let notes = item.notes?.trimmingCharacters(in: .whitespacesAndNewlines), !notes.isEmpty {
-                Hairline()
-                Text(notes)
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.textSecondary)
-                    .lineLimit(8)
-                    .textSelection(.enabled)
-            }
-
-            if let block, !block.completed {
-                Hairline()
-                HStack(spacing: Theme.Space.s) {
-                    if block.startedAt == nil {
-                        Button("Start") { withAnimation(Motion.snappy) { app.start(block) } }
-                            .buttonStyle(.borderedProminent)
-                    }
-                    Button("Done") { withAnimation(Motion.snappy) { app.done(block) } }
-                        .buttonStyle(.bordered)
-                    Button("Skip") { withAnimation(Motion.snappy) { app.skip(block) } }
-                        .buttonStyle(.borderless)
-                }
-                .controlSize(.small)
-            }
+    private var header: some View {
+        HStack(alignment: .top, spacing: Theme.Space.m) {
+            IconCircle(symbol: symbol, size: 36)
+            Text(item.title)
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+                .textSelection(.enabled)
         }
         .padding(Theme.Space.l)
-        .frame(width: 280, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(item.color.opacity(0.16))
+    }
+
+    private var details: some View {
+        let cal = app.calendar
+        return VStack(alignment: .leading, spacing: 6) {
+            Label(item.isAllDay ? "\(Fmt.day(item.start, cal)) · all day"
+                  : "\(Fmt.day(item.start, cal)) · \(Fmt.range(item.start, item.end, cal))", systemImage: "clock")
+                .labelStyle(DetailLabelStyle())
+                .monospacedDigit()
+            if let location = item.location, !location.isEmpty {
+                Label(location, systemImage: "mappin").labelStyle(DetailLabelStyle())
+            }
+            if let name = item.calendarName {
+                Label(name, systemImage: "calendar").labelStyle(DetailLabelStyle())
+            }
+            if let code = item.moduleCode { ModuleChip(code: code) }
+        }
+        .font(Theme.body)
+        .foregroundStyle(Theme.textSecondary)
+    }
+
+    @ViewBuilder
+    private var notes: some View {
+        if let notes = item.notes?.trimmingCharacters(in: .whitespacesAndNewlines), !notes.isEmpty {
+            Hairline()
+            Text(notes)
+                .font(Theme.body)
+                .foregroundStyle(Theme.textSecondary)
+                .lineLimit(8)
+                .textSelection(.enabled)
+        }
+    }
+
+    @ViewBuilder
+    private var actions: some View {
+        if let block, !block.completed {
+            Hairline()
+            HStack(spacing: Theme.Space.s) {
+                if block.startedAt == nil {
+                    Button("Start") { withAnimation(Motion.snappy) { app.start(block) } }
+                        .buttonStyle(PillButtonStyle())
+                }
+                Button("Done") {
+                    OrbitSound.tick()
+                    withAnimation(Motion.snappy) { app.done(block) }
+                }
+                .buttonStyle(GlassCapsuleButtonStyle())
+                MoveLaterButton(target: .block(block))
+                    .buttonStyle(GlassCapsuleButtonStyle())
+                Button("Skip") { withAnimation(Motion.snappy) { app.skip(block) } }
+                    .buttonStyle(SoftButtonStyle(color: Theme.textSecondary))
+            }
+            .controlSize(.small)
+        }
     }
 }
 

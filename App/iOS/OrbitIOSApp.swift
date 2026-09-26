@@ -3,6 +3,7 @@ import SwiftData
 import UIKit
 import BackgroundTasks
 import UserNotifications
+import OrbitCore
 
 @main
 struct OrbitIOSApp: App {
@@ -11,6 +12,8 @@ struct OrbitIOSApp: App {
     @State private var app: AppModel
 
     init() {
+        ModuleLabel.resolve = { ModuleNames.title(for: $0) }
+        ModuleLabel.symbol = { ModuleNames.symbol(for: $0) }
         let container = OrbitStore.shared
         let model = AppModel(container: container, backend: RemoteBackend(container: container))
         PhoneAppDelegate.app = model

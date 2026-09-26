@@ -176,8 +176,8 @@ struct PageHeader<Accessory: View>: View {
                     .foregroundStyle(Theme.textPrimary)
                     .textSelection(.enabled)
                 Capsule()
-                    .fill(Theme.accentGradient)
-                    .frame(width: 44, height: 4)
+                    .fill(Theme.pastelGradient)
+                    .frame(width: 44, height: 5)
                 if let subtitle, !subtitle.isEmpty {
                     Text(subtitle)
                         .font(Theme.body.weight(.medium))

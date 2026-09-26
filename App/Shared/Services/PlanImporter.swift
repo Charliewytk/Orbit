@@ -20,8 +20,9 @@ extension AppModel {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         let messages = try WhatsAppExportParser(myNames: myNames, timeZone: prefs.timeZone).parse(fileAt: url)
-        let plans = await extractor.extract(from: messages)
-        return ingest(plans: plans, source: "whatsapp")
+        let result = await extractor.analyze(messages)
+        ingest(ticketDrops: result.ticketDrops, source: "whatsapp")
+        return ingest(plans: result.plans, source: "whatsapp")
     }
 
     /// An unzipped Instagram "Download your information" folder.
@@ -29,16 +30,19 @@ extension AppModel {
         let scoped = folder.startAccessingSecurityScopedResource()
         defer { if scoped { folder.stopAccessingSecurityScopedResource() } }
         let threads = try InstagramExportParser(myNames: myNames).parse(exportFolder: folder)
-        let plans = await extractor.extract(from: threads.flatMap(\.messages))
-        return ingest(plans: plans, source: "instagram")
+        let result = await extractor.analyze(threads.flatMap(\.messages))
+        ingest(ticketDrops: result.ticketDrops, source: "instagram")
+        return ingest(plans: result.plans, source: "instagram")
     }
 
     /// Pasted or shared text.
     func importText(_ text: String) async -> Int {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return 0 }
-        let plans = await extractor.extract(fromSharedText: trimmed, myNames: myNames)
-        return ingest(plans: plans, source: "shared")
+        let result = await extractor.analyze(sharedText: trimmed, myNames: myNames)
+        let drops = ingest(ticketDrops: result.ticketDrops, source: "shared")
+        if drops > 0, result.plans.isEmpty { show("That's a ticket drop, not a plan: it's under Tickets on sale") }
+        return ingest(plans: result.plans, source: "shared")
     }
 
     /// A chat screenshot: read on-device with Apple Vision, then extract.

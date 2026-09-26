@@ -95,6 +95,17 @@ final class AccountManager {
         return ok && googleConnected
     }
 
+    /// Incremental auth: if the saved Google sign-in lacks any of `scopes`, asks for just
+    /// those (Google merges them with what was already granted). True when all are granted.
+    func ensureGoogleScopes(_ scopes: [String]) async -> Bool {
+        guard let session = google, let tokens = try? await session.currentTokens() else { return false }
+        let missing = tokens.missingScopes(scopes)
+        guard !missing.isEmpty else { return true }
+        guard let config = googleConfig?.incremental(adding: missing) else { return false }
+        OrbitLog.log("google", "Asking for extra permission: \(missing.joined(separator: " "))")
+        return await signIn(config: config, account: "google", label: "Google") { self.google = $0 }
+    }
+
     /// Asks Google who is signed in (used when the ID token has no email).
     private func fetchGoogleEmail(_ session: OAuthSession) async -> String? {
         struct UserInfo: Decodable { let email: String? }

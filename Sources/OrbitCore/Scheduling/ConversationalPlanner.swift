@@ -154,6 +154,17 @@ public struct ConversationalPlanner: Sendable {
         self.router = router; self.purpose = purpose; self.maxToolSteps = maxToolSteps
     }
 
+    /// True when quick-add text is really several requests or a constraint/catch-up
+    /// ("no work today… type up last week… missed my 8:35") and should open the planner
+    /// instead of becoming one task.
+    public static func looksConversational(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        let words = lower.split { $0.isWhitespace }.count
+        let clauses = PlannerRules.splitter.matches(in: lower).count
+        let special = [PlannerRules.rest, PlannerRules.missed, PlannerRules.typeUp].contains { $0.contains(lower) }
+        return (special && words >= 5) || (clauses >= 2 && words >= 14) || words >= 30
+    }
+
     public func propose(_ input: String, context: PlannerContext) async -> PlanProposal {
         var intents: [PlannerIntent] = []
         var usedAI = false

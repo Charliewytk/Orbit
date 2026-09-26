@@ -109,6 +109,11 @@ extension OrbitBrain {
             context.insert(plan)
             added.append(t)
             OrbitLog.log("mail", "ticket email → calendar: \(t.provider.label) \(t.title)")
+            // A "Tickets on sale" card for the same event is done with now.
+            for drop in context.all(StoredPlan.self) where drop.isTicketDrop && drop.status != .accepted
+                && abs(drop.start.timeIntervalSince(t.start)) < 6 * 3600 && PlanTitleMatch.similar(drop.title, t.title) {
+                drop.status = .dismissed
+            }
         }
         guard !added.isEmpty else { return }
         context.saveQuietly()
@@ -186,5 +191,23 @@ extension OrbitBrain {
             digest.draftSavedAt = Date()
             context.saveQuietly()
         }
+    }
+
+    // MARK: Archive / Trash (never send, never delete for good)
+
+    /// Applies an archive/trash (or its undo) on the server. Gmail needs `gmail.modify`;
+    /// older sign-ins without it get an incremental consent prompt first.
+    func mailAction(_ action: MailboxAction, digestIDs: [String]) async throws {
+        let digests = digestIDs.compactMap { context.record(StoredEmailDigest.self, id: $0) }
+        let gmailIDs = digests.filter { $0.account == .gmail }.map(\.id)
+        guard !gmailIDs.isEmpty else { return }   // Exeter mail: done locally only.
+        guard accounts.googleConnected, let google = accounts.google else {
+            throw BrainError("Connect Google in Settings to archive or delete Gmail from Orbit.")
+        }
+        guard await accounts.ensureGoogleScopes([GmailClient.modifyScope]) else {
+            throw BrainError("Orbit needs permission to organise your Gmail (it still never sends email).")
+        }
+        try await GmailClient(tokens: google).apply(action, ids: gmailIDs)
+        OrbitLog.log("mail", "\(action.rawValue) \(gmailIDs.count) Gmail message(s)")
     }
 }

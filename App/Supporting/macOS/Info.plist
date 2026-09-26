@@ -59,8 +59,10 @@
 	<string>Orbit reads the calendars on your Mac (like your Exeter timetable) so it can plan study time around your lectures and events.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Personal use.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Orbit listens only while you hold dictation on, to turn what you say into plans.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Orbit transcribes lecture recordings on your Mac (on-device) when no captions are provided, so it can summarise them and compare them with your notes.</string>
+	<string>Orbit transcribes lecture recordings on your Mac (on-device) when no captions are provided, and turns what you dictate into plans.</string>
 	<key>OrbitAppGroup</key>
 	<string>group.$(ORBIT_BUNDLE_PREFIX).orbit</string>
 	<key>OrbitBuildSHA</key>
