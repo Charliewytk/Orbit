@@ -165,10 +165,12 @@ final class CompanionHub {
         }
         let groupDue = state.groups.myDue(now: now, days: 3).map { "\($0.task.title) (\($0.project.name))" }
         let saturday = cal.weekday(now) == 7
-        var briefing = DailyBriefing(day: cal.startOfDay(now), generatedAt: now, weather: await fetchWeather(), brief: brief,
+        let weather = await fetchWeather()
+        let recap: WeekRecap? = saturday ? buildRecap(now: now) : nil
+        var briefing = DailyBriefing(day: cal.startOfDay(now), generatedAt: now, weather: weather, brief: brief,
                                      newOnELE: Array(newItems), keyEmail: DailyBriefing.keyEmail(emails, now: now),
                                      streakDays: momentum.streak(now: now), flashcardStreak: 0, news: state.todaysNews,
-                                     weeklyReview: saturday ? buildRecap(now: now) : nil, groupTasksDue: groupDue, examLine: examLine)
+                                     weeklyReview: recap, groupTasksDue: groupDue, examLine: examLine)
         briefing.brief = await brief.narrated(using: brain.router)
         state.briefing = briefing
         state.lastBriefingDay = now
@@ -180,8 +182,8 @@ final class CompanionHub {
     }
 
     private func fetchWeather() async -> WeatherToday? {
-        guard let (data, _) = try? await URLSession.shared.data(from: OpenMeteo.forecastURL()) else { return nil }
-        return OpenMeteo.parse(data)
+        guard let result = try? await URLSession.shared.data(from: OpenMeteo.forecastURL()) else { return nil }
+        return OpenMeteo.parse(result.0)
     }
 
     // MARK: 6. Weekend review (Saturday and Sunday evening)
@@ -238,8 +240,8 @@ final class CompanionHub {
         await withTaskGroup(of: [NewsStory].self) { group in
             for feed in NewsFeeds.defaults {
                 group.addTask {
-                    guard let url = URL(string: feed.url), let (data, _) = try? await URLSession.shared.data(from: url) else { return [] }
-                    return RSSParser.parse(data, source: feed.name)
+                    guard let url = URL(string: feed.url), let result = try? await URLSession.shared.data(from: url) else { return [] }
+                    return RSSParser.parse(result.0, source: feed.name)
                 }
             }
             for await list in group { stories += list }
@@ -267,8 +269,8 @@ final class CompanionHub {
     /// Full text using the student's own ft.com / economist.com login cookies (kept in the app's website data store).
     func fullText(for story: LinkedStory) async -> String? {
         guard FeatureHub.bool(Keys.newsFullText, default: false), let raw = story.story.url, let url = URL(string: raw),
-              let (data, _) = try? await CookieFetcher.data(url) else { return nil }
-        let text = ArticleText.extract(html: String(decoding: data, as: UTF8.self))
+              let result = try? await CookieFetcher.data(url) else { return nil }
+        let text = ArticleText.extract(html: String(decoding: result.0, as: UTF8.self))
         return text.isEmpty ? nil : text
     }
 
@@ -318,8 +320,8 @@ final class CompanionHub {
         var transcript = ""
         var source = TranscriptSource.unavailable
         for raw in r.captionURLs + [r.panoptoCaptionURL].compactMap({ $0 }) {
-            guard let url = URL(string: raw), let (data, _) = try? await CookieFetcher.data(url) else { continue }
-            let text = CaptionParser.transcript(String(decoding: data, as: UTF8.self))
+            guard let url = URL(string: raw), let result = try? await CookieFetcher.data(url) else { continue }
+            let text = CaptionParser.transcript(String(decoding: result.0, as: UTF8.self))
             if text.count > 200 { transcript = text; source = .captions; break }
         }
         if transcript.isEmpty {
@@ -380,7 +382,7 @@ final class CompanionHub {
 
     func assistantTools() -> [AssistantTool] {
         [UniversalSearch.tool(calendar: cal) { await MainActor.run { CompanionHub.shared.searchDocuments() } },
-         AssistantTool(name: "grades", description: "Module marks so far, the mark needed on remaining work for 70 and 80, and the year projection.") { _ in
+         AssistantTool(name: "grade_predictor", description: "Module marks so far, the mark needed on remaining work for 70 and 80, and the year projection.") { _ in
              await MainActor.run { GradePredictor.summary(CompanionHub.shared.projection) }
          },
          AssistantTool(name: "daily_briefing", description: "Today's briefing: weather, schedule, due items, new on ELE/Ed, key email, news.") { _ in

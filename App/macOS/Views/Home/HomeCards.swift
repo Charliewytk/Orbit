@@ -799,7 +799,7 @@ struct MoneyCard: View {
                 }
             } else {
                 VStack(alignment: .leading, spacing: Theme.Space.s) {
-                    Text("See what's safe to spend until your next loan payment.")
+                    Text("See your spending by week and term, and what's safe to spend until your next top-up.")
                         .font(Theme.body)
                         .foregroundStyle(Theme.textSecondary)
                     Button("Connect Monzo or import a CSV") {

@@ -4,7 +4,7 @@ import OrbitCore
 
 /// The Mac's native Settings window (⌘,): tabs of grouped forms.
 struct MacSettingsView: View {
-    enum Tab: String, Hashable { case general, accounts, ai, uni, routine, extras, money, health, backups, advanced }
+    enum Tab: String, Hashable { case general, accounts, ai, uni, routine, extras, money, health, backups, advanced, companion }
     /// UserDefaults key for the selected tab (other screens set it to open Settings on a tab).
     static let tabKey = "settings.tab"
     @AppStorage(MacSettingsView.tabKey) private var tab: Tab = .general
@@ -38,6 +38,9 @@ struct MacSettingsView: View {
             BackupSettingsTab()
                 .tabItem { Label("Backups", systemImage: "externaldrive.badge.timemachine") }
                 .tag(Tab.backups)
+            CompanionSettingsView()
+                .tabItem { Label("Briefing", systemImage: "sunrise") }
+                .tag(Tab.companion)
             AdvancedSettingsTab()
                 .tabItem { Label("Advanced", systemImage: "wrench.and.screwdriver") }
                 .tag(Tab.advanced)

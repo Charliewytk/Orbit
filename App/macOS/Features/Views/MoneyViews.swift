@@ -6,7 +6,7 @@ import OrbitCore
 /// Money: overview, transactions, budgets and investments. Local only.
 struct MoneyView: View {
     enum Tab: String, CaseIterable, Identifiable {
-        case overview = "Overview", transactions = "Transactions", budgets = "Budgets", investments = "Investments"
+        case overview = "Overview", spending = "Spending", transactions = "Transactions", budgets = "Budgets", investments = "Investments"
         var id: String { rawValue }
     }
 
@@ -27,6 +27,7 @@ struct MoneyView: View {
             } else {
                 switch tab {
                 case .overview: MoneyOverviewView()
+                case .spending: SpendingInsightsView()
                 case .transactions: TransactionsView()
                 case .budgets: BudgetsView()
                 case .investments: InvestmentsView()
@@ -112,7 +113,7 @@ struct MoneyOverviewView: View {
                     Text("· \(MoneyFormat.pounds(safe.perDayPence)) a day for \(safe.days) day\(safe.days == 1 ? "" : "s")")
                         .foregroundStyle(.secondary)
                 }
-                Text("Until \(safe.nextIncome.map { "\($0.label), \(cal.shortDay($0.date))" } ?? "the end of the month (add loan or pay dates in settings)"). After \(MoneyFormat.pounds(safe.committedPence)) of subscriptions due and a \(MoneyFormat.pounds(safe.bufferPence)) buffer.")
+                Text("Until \(safe.nextIncome.map { "\($0.label), \(cal.shortDay($0.date))" } ?? "the end of the month (add top-up dates in settings)"). After \(MoneyFormat.pounds(safe.committedPence)) of subscriptions due and a \(MoneyFormat.pounds(safe.bufferPence)) buffer.")
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Section("This month") {

@@ -7,6 +7,8 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
     case home, today, calendar, inbox, tasks, uni, notes, plans, chat, settings
     // Mac-only feature screens (App/macOS/Features).
     case review, progress, focus, money, careers, study
+    // Companion screens (App/macOS/Companion).
+    case grades, lectures, groups, briefing
 
     var id: String { rawValue }
 
@@ -28,6 +30,10 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .money: "Money"
         case .careers: "Careers"
         case .study: "Study Lab"
+        case .grades: "Grades"
+        case .lectures: "Lectures"
+        case .groups: "Group work"
+        case .briefing: "Briefing"
         }
     }
 
@@ -49,6 +55,10 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .money: "sterlingsign"
         case .careers: "briefcase.fill"
         case .study: "point.3.connected.trianglepath.dotted"
+        case .grades: "chart.line.uptrend.xyaxis"
+        case .lectures: "play.rectangle.on.rectangle.fill"
+        case .groups: "person.3.fill"
+        case .briefing: "sunrise.fill"
         }
     }
 
@@ -71,6 +81,10 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .money: Color(hex: 0x22C55E)
         case .careers: Color(hex: 0xB7791F)
         case .study: Color(hex: 0x6366F1)
+        case .grades: Color(hex: 0x0EA5E9)
+        case .lectures: Color(hex: 0xE11D48)
+        case .groups: Color(hex: 0xD97706)
+        case .briefing: Color(hex: 0xF59E0B)
         }
     }
 
@@ -103,8 +117,12 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .money: MoneyView()
         case .careers: CareersView()
         case .study: StudyLabView()
+        case .grades: GradesView()
+        case .lectures: LecturesView()
+        case .groups: GroupsView()
+        case .briefing: BriefingView()
         #else
-        case .review, .progress, .focus, .money, .careers, .study: EmptyState(systemImage: "desktopcomputer", title: "On your Mac", message: "Open Orbit on your Mac for this.")
+        case .review, .progress, .focus, .money, .careers, .study, .grades, .lectures, .groups, .briefing: EmptyState(systemImage: "desktopcomputer", title: "On your Mac", message: "Open Orbit on your Mac for this.")
         #endif
         }
     }
@@ -250,8 +268,8 @@ struct GlassSidebar: View {
 
     static let sections: [(title: String?, items: [Destination])] = [
         (nil, [.home, .calendar, .inbox, .tasks]),
-        ("University", [.uni, .notes, .review, .progress]),
-        ("Focus and life", [.focus, .plans, .money, .careers]),
+        ("University", [.uni, .notes, .review, .progress, .grades, .lectures, .groups]),
+        ("Focus and life", [.briefing, .focus, .plans, .money, .careers]),
         ("Assistant", [.chat]),
     ]
 

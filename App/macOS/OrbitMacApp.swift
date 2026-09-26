@@ -83,6 +83,7 @@ final class MacAppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationC
         MainActor.assumeIsolated {
             // Start syncing even if the window isn't opened (e.g. launched at login).
             MacAppDelegate.brain?.start()
+            if let brain = MacAppDelegate.brain { CompanionHub.shared.start(brain: brain) }
         }
     }
 

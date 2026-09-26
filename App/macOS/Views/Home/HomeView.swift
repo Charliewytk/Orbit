@@ -91,7 +91,7 @@ struct HomeView: View {
 
     /// The bento order. Spans shrink to fit when there are fewer columns.
     private var tiles: [HomeTile] {
-        var t: [HomeTile] = [.days, .momentum, .todos, .nextUp, .deadlines, .uni, .flashcards, .inbox, .careers, .money, .activity, .ask]
+        var t: [HomeTile] = [.briefing, .days, .momentum, .todos, .nextUp, .deadlines, .grades, .uni, .flashcards, .inbox, .careers, .money, .activity, .ask]
         // To-dos found in lecture notes, only while there are some to look at.
         if !brain.notesLibrary.suggestions.isEmpty, let i = t.firstIndex(of: .flashcards) { t.insert(.noteSuggestions, at: i) }
         return t
@@ -191,6 +191,7 @@ struct HomeContext {
 
 enum HomeTile: String, Identifiable {
     case days, momentum, todos, nextUp, deadlines, uni, noteSuggestions, flashcards, inbox, careers, money, activity, ask
+    case briefing, grades
     var id: String { rawValue }
 
     /// Columns wanted on a wide window.
@@ -272,6 +273,8 @@ struct HomeTileView: View {
         case .activity: ActivityCard(ctx: ctx)
         case .ask: AskCard()
         case .noteSuggestions: NoteSuggestionsCard()
+        case .briefing: BriefingCard()
+        case .grades: GradesCard()
         }
     }
 }

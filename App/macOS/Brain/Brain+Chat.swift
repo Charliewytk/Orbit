@@ -6,7 +6,9 @@ extension OrbitBrain {
     func makeAssistant() -> Assistant {
         if let assistant { return assistant }
         let prefs = self.prefs
-        let tools = withFeatureTools(StandardTools.make(dataSource, timeZone: prefs.timeZone) + dataSource.extraTools() + academicTools())
+        let baseTools = withFeatureTools(StandardTools.make(dataSource, timeZone: prefs.timeZone) + dataSource.extraTools() + academicTools())
+        // Search across everything with citations, grades and the daily briefing (App/macOS/Companion).
+        let tools = FeatureTools.merge(baseTools, CompanionHub.shared.assistantTools())
         let made = Assistant(router: router, tools: tools, userName: firstName, timeZone: prefs.timeZone,
                              contextProvider: { [weak self] in await self?.assistantContext() ?? "" })
         assistant = made

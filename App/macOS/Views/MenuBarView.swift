@@ -112,6 +112,8 @@ struct MenuBarView: View {
                 .padding(.horizontal, Theme.Space.xs)
             }
 
+            MenuBarTodos()
+                .padding(.horizontal, Theme.Space.xs)
             FocusMenuBarSection()
                 .padding(.horizontal, Theme.Space.xs)
             QuickAddField(placeholder: "Quick add a to-do")
