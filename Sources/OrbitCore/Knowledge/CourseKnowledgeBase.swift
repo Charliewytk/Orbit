@@ -8,7 +8,7 @@ import Foundation
 
 public enum CourseDocKind: String, Codable, CaseIterable, Sendable {
     case elePage, slides, handout, homework, assessmentBrief, readingGuide, reading, readingList, pastPaper,
-         exemplar, lectureNotes, recording, other
+         exemplar, lectureNotes, recording, announcement, feedback, other
 
     public var label: String {
         switch self {
@@ -24,6 +24,8 @@ public enum CourseDocKind: String, Codable, CaseIterable, Sendable {
         case .exemplar: "exemplar"
         case .lectureNotes: "your notes"
         case .recording: "recording"
+        case .announcement: "announcement"
+        case .feedback: "marker feedback"
         case .other: "resource"
         }
     }
@@ -279,12 +281,75 @@ public struct CourseKnowledgeBase: Codable, Sendable {
     public var readings: [ReadingItem] = []
     /// Timetable / calendar events (lectures, tutorials…) near the present.
     public var timetable: [CalendarEvent] = []
+    /// What's been happening on ELE (new files, announcements, grades, feedback, messages), newest first.
+    public var activity = ELEActivityFeed()
+    /// Recurring marker feedback across modules (see `FeedbackLedger`).
+    public var feedback = FeedbackLedger()
+    /// Exeter's "My Assessments" dashboard block.
+    public var myAssessments: [ELEMyAssessmentRow] = []
     public private(set) var index: NoteIndex
     public var updatedAt: Date = .distantPast
 
     public init(calendar: AcademicCalendarConfig = .exeter2026, index: NoteIndex = NoteIndex(chunkSize: 900, overlap: 120, typedBoost: 1)) {
         calendarConfig = calendar
         self.index = index
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case calendarConfig, modules, documents, assessments, homework, readings, timetable, activity, feedback,
+             myAssessments, index, updatedAt
+    }
+
+    /// Tolerant decoding: fields added later default to empty instead of failing the whole file.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        calendarConfig = try c.decodeIfPresent(AcademicCalendarConfig.self, forKey: .calendarConfig) ?? .exeter2026
+        modules = try c.decodeIfPresent([String: CourseModuleInfo].self, forKey: .modules) ?? [:]
+        documents = try c.decodeIfPresent([String: CourseDocument].self, forKey: .documents) ?? [:]
+        assessments = (try? c.decodeIfPresent([Assessment].self, forKey: .assessments)) ?? []
+        homework = (try? c.decodeIfPresent([HomeworkItem].self, forKey: .homework)) ?? []
+        readings = (try? c.decodeIfPresent([ReadingItem].self, forKey: .readings)) ?? []
+        timetable = (try? c.decodeIfPresent([CalendarEvent].self, forKey: .timetable)) ?? []
+        activity = (try? c.decodeIfPresent(ELEActivityFeed.self, forKey: .activity)) ?? ELEActivityFeed()
+        feedback = (try? c.decodeIfPresent(FeedbackLedger.self, forKey: .feedback)) ?? FeedbackLedger()
+        myAssessments = (try? c.decodeIfPresent([ELEMyAssessmentRow].self, forKey: .myAssessments)) ?? []
+        index = try c.decodeIfPresent(NoteIndex.self, forKey: .index) ?? NoteIndex(chunkSize: 900, overlap: 120, typedBoost: 1)
+        updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? .distantPast
+    }
+
+    // MARK: Activity
+
+    /// Records ELE activity; announcements, forum posts and feedback also become searchable documents.
+    /// Returns the items not seen before.
+    @discardableResult
+    public mutating func recordActivity(_ items: [ELEActivityItem]) -> [ELEActivityItem] {
+        let fresh = activity.add(items)
+        for item in fresh where [.announcement, .forumPost, .feedback].contains(item.kind) && item.detail.count > 40 {
+            let week = item.moduleCode.flatMap { code in calendar.week(for: item.date).flatMap { w in
+                (modules[code]?.term ?? w.term) == w.term ? w.week : nil } }
+            upsert(CourseDocument(id: "activity-\(item.id)", moduleCode: item.moduleCode, week: week,
+                                  kind: item.kind == .feedback ? .feedback : .announcement, title: item.title,
+                                  url: item.url, text: item.title + "\n" + item.detail, modified: item.date))
+        }
+        return fresh
+    }
+
+    /// Marker feedback as a searchable document (so answers and plans can use it).
+    public mutating func addFeedback(_ f: AssessmentFeedback) {
+        upsert(CourseDocument(id: "feedback-\(f.id)", moduleCode: f.moduleCode, week: nil, kind: .feedback,
+                              title: "Feedback: \(f.assessmentTitle)",
+                              text: [f.mark.map { "Mark: \(Int($0.rounded()))%" }, f.comments].compactMap { $0 }.joined(separator: "\n"),
+                              modified: f.receivedAt ?? Date()))
+    }
+
+    /// Feedback themes to remember for a module ("Last time: needed more critical analysis — …").
+    public func feedbackReminders(moduleCode: String, limit: Int = 3) -> [String] {
+        feedback.reminders(for: Assessment(id: "next-\(moduleCode)", moduleCode: moduleCode, title: "next assessment"), limit: limit)
+    }
+
+    /// The course id → module code map.
+    public var moduleCodesByCourseID: [Int: String] {
+        Dictionary(modules.values.compactMap { m in m.courseID.map { ($0, m.code) } }, uniquingKeysWith: { a, _ in a })
     }
 
     public var calendar: AcademicCalendar { AcademicCalendar(config: calendarConfig) }

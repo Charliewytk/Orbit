@@ -48,7 +48,10 @@ public struct SlideDeckText: Codable, Hashable, Sendable {
             guard !line.isEmpty else { continue }
             if current == nil { current = SlideText(number: 1, title: "") }
             if line.hasPrefix("Notes: ") {
-                current?.notes += (current!.notes.isEmpty ? "" : " ") + String(line.dropFirst(7))
+                if var c = current {
+                    c.notes += (c.notes.isEmpty ? "" : " ") + String(line.dropFirst(7))
+                    current = c
+                }
             } else {
                 current?.lines.append(line)
             }

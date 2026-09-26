@@ -26,8 +26,8 @@ final class AppModel {
     var selectedTaskID: String?
     /// The module open in Uni (nil = the year overview).
     var selectedModuleID: String?
-    /// Text handed to Ask Orbit by the command palette.
-    var pendingQuestion: String?
+    /// The note open in Notes.
+    var selectedNoteID: String?
 
     var context: ModelContext { container.mainContext }
     var calendar: DayCalendar { DayCalendar(timeZone: prefs.timeZone) }

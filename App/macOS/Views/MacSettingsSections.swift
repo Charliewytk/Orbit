@@ -16,14 +16,16 @@ private struct AccountRow<Actions: View>: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
-                .font(.title3)
-                .frame(width: 28)
-                .foregroundStyle(connected ? Theme.success : Theme.textSecondary)
+                .frame(width: 20)
+                .foregroundStyle(Theme.textSecondary)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(Theme.body.weight(.medium))
-                Text(detail ?? (connected ? "Connected" : "Not connected"))
-                    .font(Theme.caption)
-                    .foregroundStyle(connected ? Theme.success : Theme.textSecondary)
+                Text(title).font(Theme.body)
+                HStack(spacing: 5) {
+                    if connected { StatusDot(color: Theme.success) }
+                    Text(detail ?? (connected ? "Connected" : "Not connected"))
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                }
             }
             Spacer()
             if busy { ProgressView().controlSize(.small) }
@@ -70,7 +72,7 @@ struct GoogleConnectRow: View {
                     Button(accounts.busy == "google" ? "Connecting…" : "Connect") {
                         Task { await brain.connectGoogleAndSync() }
                     }
-                    .buttonStyle(PillButtonStyle())
+                    .buttonStyle(.borderedProminent)
                     .disabled(accounts.busy != nil)
                 }
             }
@@ -157,25 +159,25 @@ struct ExeterSetupPanel: View {
             step(1, "Add your Exeter account to your Mac",
                  "Open Internet Accounts, click Add Account → Microsoft Exchange, and sign in with your @exeter.ac.uk email and password. When it asks which apps to use, tick Mail and Calendars.") {
                 Button("Open Internet Accounts") { MacCalendarAccess.openInternetAccounts() }
-                    .buttonStyle(PillButtonStyle())
+                    .buttonStyle(.bordered)
             }
             step(2, "Let Orbit read your mail",
                  "Orbit reads Exeter email from the Mail app on this Mac. Click the button, switch Orbit on in the list (use + to add it if it isn't there), then come back. Open the Mail app once so it downloads your mail.") {
                 Button("Grant Full Disk Access") { OrbitBrain.openFullDiskAccessSettings() }
-                    .buttonStyle(PillButtonStyle())
+                    .buttonStyle(.bordered)
             }
             step(3, "Let Orbit see your calendars",
                  "This brings in your Exeter timetable and any other calendars on this Mac.") {
                 if calendars.denied {
                     Button("Open Calendar privacy settings") { MacCalendarAccess.openCalendarPrivacySettings() }
-                        .buttonStyle(PillButtonStyle())
+                        .buttonStyle(.bordered)
                 } else if !calendars.granted {
                     Button("Allow calendar access") {
                         Task {
                             if await calendars.requestAccess() { await brain.syncCalendar() }
                         }
                     }
-                    .buttonStyle(PillButtonStyle())
+                    .buttonStyle(.bordered)
                 }
             }
 
@@ -190,8 +192,7 @@ struct ExeterSetupPanel: View {
                     Text(error).font(Theme.caption).foregroundStyle(Theme.danger)
                 }
             }
-            .padding(12)
-            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.border.opacity(0.25)))
+            .padding(.leading, 34)
 
             HStack {
                 Button("Check again") { Task { await recheck(sync: true) } }
@@ -216,12 +217,11 @@ struct ExeterSetupPanel: View {
                                      @ViewBuilder actions: () -> Actions) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Text("\(number)")
-                .font(Theme.body.weight(.bold))
-                .foregroundStyle(.white)
-                .frame(width: 26, height: 26)
-                .background(Circle().fill(Theme.accent))
+                .font(Theme.body.weight(.medium).monospacedDigit())
+                .foregroundStyle(Theme.textTertiary)
+                .frame(width: 22, alignment: .trailing)
             VStack(alignment: .leading, spacing: 6) {
-                Text(title).font(Theme.body.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                Text(title).font(Theme.body.weight(.medium)).foregroundStyle(Theme.textPrimary)
                 Text(text).font(Theme.callout).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 actions()
@@ -233,7 +233,7 @@ struct ExeterSetupPanel: View {
         Label {
             Text(ok ? done : missing)
         } icon: {
-            Image(systemName: ok ? "checkmark.circle.fill" : "circle")
+            Image(systemName: ok ? "checkmark.circle" : "circle")
                 .foregroundStyle(ok ? Theme.success : Theme.textTertiary)
         }
         .font(Theme.callout)
@@ -250,7 +250,7 @@ struct MacCalendarsRow: View {
         VStack(alignment: .leading, spacing: 6) {
             AccountRow(title: "Calendars on this Mac", symbol: "calendar", connected: calendars.granted,
                        detail: calendars.granted
-                           ? "\(calendars.calendarNames.count) calendars\(calendars.exeterCalendarFound ? " · Exeter found ✓" : "")"
+                           ? "\(calendars.calendarNames.count) calendars\(calendars.exeterCalendarFound ? " · Exeter found" : "")"
                            : (calendars.denied ? "Not allowed (turn on in System Settings)" : "Not allowed yet"),
                        busy: false) {
                 if calendars.denied {
@@ -259,7 +259,7 @@ struct MacCalendarsRow: View {
                     Button("Allow") {
                         Task { if await calendars.requestAccess() { await brain.syncCalendar() } }
                     }
-                    .buttonStyle(PillButtonStyle())
+                    .buttonStyle(.borderedProminent)
                 }
             }
             if let error = calendars.lastError {
@@ -293,21 +293,18 @@ struct ELEConnectRow: View {
                 Button {
                     Task { if await accounts.connectELE() { await brain.syncELE() } }
                 } label: {
-                    Label(accounts.eleNeedsSignIn ? "Sign in to ELE again" : "Sign in to ELE", systemImage: "graduationcap.fill")
-                        .font(.title3.weight(.semibold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
+                    Text(accounts.eleNeedsSignIn ? "Sign in to ELE again" : "Sign in to ELE")
                 }
-                .buttonStyle(PillButtonStyle())
+                .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 Text("Opens ele.exeter.ac.uk in a window. Sign in as usual; Orbit stays signed in and reads your modules, weeks, readings and assessments like your browser does.")
                     .font(Theme.caption).foregroundStyle(Theme.textTertiary)
             } else {
                 HStack(spacing: 10) {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.success).font(.title3)
+                    Image(systemName: "graduationcap").frame(width: 20).foregroundStyle(Theme.textSecondary)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(syncing ? "Reading ELE…" : (accounts.eleSummary.map { "✓ \($0)" } ?? "✓ Signed in to ELE"))
-                            .font(Theme.callout.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                        Text(syncing ? "Reading ELE…" : (accounts.eleSummary ?? "Signed in to ELE"))
+                            .font(Theme.body).foregroundStyle(Theme.textPrimary)
                         Text(accounts.eleWebSignedIn ? "ele.exeter.ac.uk · syncs every hour" : "Signed in with the Moodle app method")
                             .font(Theme.caption).foregroundStyle(Theme.textSecondary)
                     }
@@ -445,11 +442,11 @@ struct AIStatusPanel: View {
             }
             ForEach(OllamaManager.recommended) { item in
                 HStack {
-                    Image(systemName: brain.ollama.isInstalled(item.model) ? "checkmark.circle.fill" : "arrow.down.circle")
+                    Image(systemName: brain.ollama.isInstalled(item.model) ? "checkmark.circle" : "arrow.down.circle")
                         .foregroundStyle(brain.ollama.isInstalled(item.model) ? Theme.success : Theme.textSecondary)
                     VStack(alignment: .leading, spacing: 0) {
                         Text(item.model).font(Theme.mono)
-                        Text(item.why).font(.caption2).foregroundStyle(Theme.textTertiary)
+                        Text(item.why).font(Theme.caption).foregroundStyle(Theme.textTertiary)
                     }
                     Spacer()
                     if brain.ollama.pulling.contains(item.model) {
@@ -584,7 +581,7 @@ struct MacDiagnosticsSection: View {
                         NSWorkspace.shared.open(url.deletingLastPathComponent())
                     }
                 }
-                Button(copied ? "Copied ✓" : "Copy log") {
+                Button(copied ? "Copied" : "Copy log") {
                     let text = OrbitLog.contents()
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text.isEmpty ? "(The Orbit log is empty.)" : text, forType: .string)

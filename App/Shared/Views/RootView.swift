@@ -1,37 +1,43 @@
 import SwiftUI
 import SwiftData
+import OrbitCore
 
 /// Sidebar / tab destinations.
 enum Destination: String, CaseIterable, Identifiable, Hashable {
-    case today, inbox, tasks, uni, notes, plans, chat, settings
+    case today, calendar, inbox, tasks, uni, notes, plans, chat, settings
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .today: "Today"
+        case .calendar: "Calendar"
         case .inbox: "Inbox"
         case .tasks: "Tasks"
         case .uni: "Uni"
         case .notes: "Notes"
         case .plans: "Plans"
-        case .chat: "Chat"
+        case .chat: "Ask Orbit"
         case .settings: "Settings"
         }
     }
 
     var symbol: String {
         switch self {
-        case .today: "sun.horizon"
+        case .today: "sun.max"
+        case .calendar: "calendar"
         case .inbox: "tray"
         case .tasks: "checklist"
         case .uni: "graduationcap"
-        case .notes: "pencil.and.scribble"
-        case .plans: "person.2"
-        case .chat: "bubble.left.and.bubble.right"
+        case .notes: "note.text"
+        case .plans: "map"
+        case .chat: "bubble.left.and.text.bubble.right"
         case .settings: "gearshape"
         }
     }
+
+    /// The Mac sidebar order; ⌘1…⌘8 follow it.
+    static let macSidebar: [Destination] = [.today, .calendar, .inbox, .tasks, .uni, .notes, .plans, .chat]
 
     /// The screen's content. Callers wrap it in a `NavigationStack`
     /// (or push it onto an existing one), so screens never nest stacks.
@@ -39,6 +45,7 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
     var screen: some View {
         switch self {
         case .today: TodayView()
+        case .calendar: CalendarView()
         case .inbox: InboxView()
         case .tasks: TasksView()
         case .uni: UniView()
@@ -63,11 +70,11 @@ struct RootView: View {
                 PhoneRootView()
                 #endif
             } else {
-                OnboardingView { withAnimation(Theme.spring) { onboardingDone = true } }
+                OnboardingView { withAnimation(Motion.quick) { onboardingDone = true } }
             }
         }
         .tint(Theme.accent)
-        .banner(app.banner)
+        .toastOverlay()
     }
 }
 
@@ -75,36 +82,120 @@ struct RootView: View {
 struct MacRootView: View {
     @Environment(AppModel.self) private var app
     @State private var selection: Destination? = .today
+    @State private var showPalette = false
+    @State private var showQuickAdd = false
     @Query private var plans: [StoredPlan]
-
-    private var pendingPlans: Int { plans.filter { $0.status == .pending }.count }
+    @Query(filter: #Predicate<StoredTask> { $0.completedAt == nil }) private var openTasks: [StoredTask]
+    @Query(filter: #Predicate<StoredEmailDigest> { !$0.handled }) private var unhandledMail: [StoredEmailDigest]
 
     var body: some View {
         NavigationSplitView {
-            List(selection: $selection) {
-                Section {
-                    ForEach([Destination.today, .inbox, .tasks, .uni, .notes, .plans, .chat]) { d in
-                        Label(d.title, systemImage: d.symbol)
-                            .badge(d == .plans ? pendingPlans : 0)
-                            .tag(d)
-                    }
-                }
-                Section {
-                    Label(Destination.settings.title, systemImage: Destination.settings.symbol).tag(Destination.settings)
-                }
-            }
-            .listStyle(.sidebar)
-            .navigationSplitViewColumnWidth(min: 190, ideal: 210)
-            .safeAreaInset(edge: .bottom) { BrainStatusFooter().padding(10) }
+            sidebar
         } detail: {
             NavigationStack {
                 (selection ?? .today).screen
             }
             .id(selection ?? .today)
-            .frame(minWidth: 520, minHeight: 480)
+            .transition(.opacity)
+            .frame(minWidth: 560, minHeight: 480)
+            .toolbar { toolbarContent }
         }
+        .animation(Motion.fade, value: selection)
+        .overlay { paletteOverlay }
         .onReceive(NotificationCenter.default.publisher(for: .orbitNavigate)) { note in
-            if let d = note.object as? Destination { selection = d }
+            if let d = note.object as? Destination, d != .settings { selection = d }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .orbitCommandPalette)) { _ in
+            withAnimation(Motion.quick) { showPalette.toggle() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .orbitQuickAdd)) { _ in
+            showQuickAdd = true
+        }
+    }
+
+    // MARK: Sidebar
+
+    private var sidebar: some View {
+        let now = Date()
+        let cal = app.calendar
+        let dueToday = openTasks.filter { t in t.deadline.map { cal.days(from: now, to: $0) <= 0 } ?? false }.count
+        let recentMail = unhandledMail.filter { $0.date > now.addingTimeInterval(-7 * 86400) && $0.category != .ignore }.count
+        let pendingPlans = plans.filter { $0.status == .pending && $0.start > now }.count
+
+        return List(selection: $selection) {
+            Section {
+                item(.today)
+                item(.calendar)
+                item(.inbox, count: recentMail)
+                item(.tasks, count: dueToday)
+            }
+            Section("University") {
+                item(.uni)
+                item(.notes)
+            }
+            Section("Personal") {
+                item(.plans, count: pendingPlans)
+                item(.chat)
+            }
+            // TODO(features): "Money" and "Review" (flashcards) screens from App/macOS/Features/
+            // slot in here as their own section once those files exist.
+        }
+        .listStyle(.sidebar)
+        .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            BrainStatusFooter()
+                .padding(.horizontal, Theme.Space.l)
+                .padding(.vertical, Theme.Space.m)
+        }
+    }
+
+    private func item(_ d: Destination, count: Int = 0) -> some View {
+        SidebarItem(title: d.title, systemImage: d.symbol, count: count)
+            .tag(d)
+    }
+
+    // MARK: Toolbar
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItemGroup(placement: .primaryAction) {
+            Button {
+                withAnimation(Motion.quick) { showPalette = true }
+            } label: {
+                Label("Search", systemImage: "magnifyingglass")
+            }
+            .help("Search and commands (⌘K)")
+
+            Button {
+                showQuickAdd = true
+            } label: {
+                Label("Add task", systemImage: "plus")
+            }
+            .help("Add a task (⌘N)")
+            .popover(isPresented: $showQuickAdd, arrowEdge: .bottom) {
+                QuickAddField(placeholder: "Add a task, e.g. “essay plan BEM2031 2h by Fri”", autofocus: true) { _ in
+                    showQuickAdd = false
+                }
+                .frame(width: 420)
+                .padding(Theme.Space.s)
+            }
+        }
+    }
+
+    // MARK: Command palette
+
+    @ViewBuilder
+    private var paletteOverlay: some View {
+        if showPalette {
+            ZStack(alignment: .top) {
+                Color.black.opacity(0.08)
+                    .ignoresSafeArea()
+                    .onTapGesture { withAnimation(Motion.quick) { showPalette = false } }
+                CommandPalette(isPresented: $showPalette)
+                    .padding(.top, 88)
+                    .transition(.scale(scale: 0.98, anchor: .top).combined(with: .opacity))
+            }
+            .transition(.opacity)
         }
     }
 }
@@ -136,25 +227,25 @@ extension Notification.Name {
 /// Shared "More" links used on the iPhone's Today screen.
 struct MoreLinks: View {
     var body: some View {
-        Card {
-            VStack(spacing: 0) {
-                ForEach([Destination.notes, .plans, .settings]) { d in
-                    NavigationLink {
-                        d.screen
-                    } label: {
-                        HStack {
-                            Image(systemName: d.symbol).frame(width: 26).foregroundStyle(Theme.accent)
-                            Text(d.title).foregroundStyle(Theme.textPrimary)
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.textTertiary)
-                        }
-                        .padding(.vertical, 10)
-                        .contentShape(Rectangle())
+        VStack(spacing: 0) {
+            ForEach([Destination.calendar, .notes, .plans, .settings]) { d in
+                NavigationLink {
+                    d.screen
+                } label: {
+                    HStack(spacing: Theme.Space.m) {
+                        Image(systemName: d.symbol).frame(width: 24).foregroundStyle(Theme.textSecondary)
+                        Text(d.title).foregroundStyle(Theme.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.textTertiary)
                     }
-                    .buttonStyle(.plain)
-                    if d != .settings { Divider() }
+                    .font(Theme.body)
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                if d != .settings { Hairline() }
             }
         }
+        .padding(.top, Theme.Space.xl)
     }
 }

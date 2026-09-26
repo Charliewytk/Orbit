@@ -24,18 +24,30 @@ struct OrbitMacApp: App {
             RootView()
                 .environment(app)
                 .environment(brain)
-                .frame(minWidth: 820, minHeight: 560)
+                .frame(minWidth: 900, minHeight: 600)
                 .task {
                     brain.start()
                     await Notifier.requestAuthorization()
                 }
         }
         .modelContainer(app.container)
-        .defaultSize(width: 1100, height: 760)
+        .defaultSize(width: 1180, height: 780)
+        .windowToolbarStyle(.unified(showsTitle: false))
         .commands {
             CommandGroup(after: .newItem) {
+                Button("New Task…") { post(.orbitQuickAdd) }
+                    .keyboardShortcut("n", modifiers: [.command])
+                Button("Search and Commands…") { post(.orbitCommandPalette) }
+                    .keyboardShortcut("k", modifiers: [.command])
+                Divider()
                 Button("Sync Now") { Task { await brain.syncNow() } }
                     .keyboardShortcut("r", modifiers: [.command])
+            }
+            CommandMenu("Go") {
+                ForEach(Array(Destination.macSidebar.enumerated()), id: \.element) { index, d in
+                    Button(d.title) { NotificationCenter.default.post(name: .orbitNavigate, object: d) }
+                        .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: [.command])
+                }
             }
         }
 
@@ -50,14 +62,15 @@ struct OrbitMacApp: App {
         .menuBarExtraStyle(.window)
 
         Settings {
-            NavigationStack {
-                SettingsView()
-            }
-            .environment(app)
-            .environment(brain)
-            .modelContainer(app.container)
-            .frame(minWidth: 560, minHeight: 640)
+            MacSettingsView()
+                .environment(app)
+                .environment(brain)
+                .modelContainer(app.container)
         }
+    }
+
+    private func post(_ name: Notification.Name) {
+        NotificationCenter.default.post(name: name, object: nil)
     }
 }
 
