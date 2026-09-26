@@ -153,6 +153,8 @@ targets:
         OrbitMicrosoftClientID: $(MICROSOFT_CLIENT_ID)
         OrbitAppGroup: group.$(ORBIT_BUNDLE_PREFIX).orbit
         OrbitICloudContainer: $(ORBIT_ICLOUD_CONTAINER)
+        # Commit the build came from (the release workflow passes ORBIT_BUILD_SHA); empty for local builds.
+        OrbitBuildSHA: $(ORBIT_BUILD_SHA)
     entitlements:
       path: App/Supporting/macOS/Orbit.entitlements
       properties:

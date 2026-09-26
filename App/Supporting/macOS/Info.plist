@@ -61,6 +61,8 @@
 	<string>Personal use.</string>
 	<key>OrbitAppGroup</key>
 	<string>group.$(ORBIT_BUNDLE_PREFIX).orbit</string>
+	<key>OrbitBuildSHA</key>
+	<string>$(ORBIT_BUILD_SHA)</string>
 	<key>OrbitGoogleClientID</key>
 	<string>$(GOOGLE_CLIENT_ID)</string>
 	<key>OrbitGoogleReversedClientID</key>

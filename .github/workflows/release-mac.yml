@@ -48,6 +48,7 @@ jobs:
             CODE_SIGN_ENTITLEMENTS="$PWD/App/Supporting/macOS/Orbit-Unsigned.entitlements" \
             ENABLE_HARDENED_RUNTIME=NO \
             ORBIT_ICLOUD_CONTAINER="" \
+            ORBIT_BUILD_SHA="${{ github.sha }}" \
             | tee build.log | grep -E "error:|BUILD" || true
           grep -q "BUILD SUCCEEDED" build.log
 
@@ -78,9 +79,13 @@ jobs:
           body: |
             Latest Mac build from commit ${{ steps.pkg.outputs.sha }}.
 
+            sha: ${{ github.sha }}
+
             **Install:** download `Orbit-mac.dmg`, open it and drag **Orbit** into **Applications**.
             **First launch:** right-click Orbit in Applications → **Open** → **Open**
             (macOS warns because it isn't notarised by Apple). After that, open it normally.
+            **Updates:** Orbit checks this release on launch and every 6 hours and can install it for you
+            (Settings → Extras → Updates). The `sha:` line above is how it tells builds apart.
           files: |
             dist/Orbit-mac.dmg
             dist/Orbit-mac.zip

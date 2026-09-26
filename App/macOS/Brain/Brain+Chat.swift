@@ -6,7 +6,7 @@ extension OrbitBrain {
     func makeAssistant() -> Assistant {
         if let assistant { return assistant }
         let prefs = self.prefs
-        let tools = StandardTools.make(dataSource, timeZone: prefs.timeZone) + dataSource.extraTools() + academicTools()
+        let tools = withFeatureTools(StandardTools.make(dataSource, timeZone: prefs.timeZone) + dataSource.extraTools() + academicTools())
         let made = Assistant(router: router, tools: tools, userName: firstName, timeZone: prefs.timeZone,
                              contextProvider: { [weak self] in await self?.assistantContext() ?? "" })
         assistant = made

@@ -28,11 +28,13 @@ extension FeatureHub {
         }
 
         // Reading-list items (Talis / ELE "Reading for week N").
-        for r in context.all(StoredReading.self) where !r.done {
+        let readings = context.all(StoredReading.self)
+        let modulesWithEssentials = Set(readings.filter(\.essential).map(\.moduleCode))
+        for r in readings where !r.done {
             guard let week = r.week, let due = neededBy(module: r.moduleCode, week: week) else { continue }
             guard due <= horizon, due > now.addingTimeInterval(-3 * 86400) else { continue }
             // Essential readings always; others only if the list doesn't mark importance at all.
-            guard r.essential || !context.all(StoredReading.self).contains(where: { $0.moduleCode == r.moduleCode && $0.essential }) else { continue }
+            guard r.essential || !modulesWithEssentials.contains(r.moduleCode) else { continue }
             seenTitles.insert(FlashcardDeck.normalise(r.title))
             out.append(adjusted(ReadingAssignment(id: r.id, moduleCode: r.moduleCode, title: r.title, week: week,
                                                   essential: r.essential, neededBy: due)))
@@ -99,13 +101,19 @@ extension FeatureHub {
                 added += 1
             }
         }
-        for t in stored where !keep.contains(t.id) && t.completedAt == nil && t.minutesDone == 0 {
-            context.delete(t)
+        for t in stored where !keep.contains(t.id) && t.completedAt == nil {
+            if t.minutesDone == 0 {
+                context.delete(t)
+            } else {
+                // Part-read chunk: close it at what was read; the rest is in the new chunks.
+                t.estimateMinutes = t.minutesDone
+                t.completedAt = now
+                t.updatedAt = now
+            }
             removed += 1
         }
         // A reading whose chunks are all done is ticked off.
-        let finished = Set(stored.filter { $0.completedAt != nil }.map(readingID))
-            .subtracting(chunks.map(\.readingID))
+        let finished = Set(assignments.filter { (done[$0.id] ?? 0) >= ReadingEstimator.estimate($0).minutes - 5 }.map(\.id))
         for r in context.all(StoredReading.self) where !r.done && finished.contains(r.id) { r.done = true }
         state.readingChunks = chunks
         context.saveQuietly()

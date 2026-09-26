@@ -217,6 +217,45 @@ or *Due this week*.
 
 ---
 
+### Focus mode and Do Not Disturb
+
+macOS only lets apps change Focus through Shortcuts, so make two tiny shortcuts once:
+
+1. Open **Shortcuts** → **File → New Shortcut**, name it exactly **Orbit Focus On**, add the action
+   **Set Focus** → **Do Not Disturb** → **Turn On** (until turned off).
+2. Make a second one named exactly **Orbit Focus Off** with **Set Focus** → **Do Not Disturb** → **Turn Off**.
+
+Orbit runs them with `shortcuts run "Orbit Focus On"` when a focus session starts and "Off" when it pauses or
+ends (Settings → Extras → Focus shows whether it found them). Without them focus sessions still work.
+
+### Quick capture
+
+Press **⌥Space** anywhere (change it in Settings → Extras). Type a to-do and press Return; start with `e:` for a
+calendar event (`e: dinner with Sam Fri 7pm @ Côte`) or `n:` for a note. Esc closes. No Accessibility
+permission is needed.
+
+### Money (stays on your Mac)
+
+- **Monzo:** go to [developers.monzo.com](https://developers.monzo.com), sign in → **Clients → New OAuth Client**.
+  Name: Orbit. Redirect URL: `http://127.0.0.1:53682/monzo/callback`. Confidentiality: **Confidential**.
+  Paste the Client ID and secret into Orbit → Money → settings, **Save client**, then **Connect Monzo**, sign in
+  in the browser and approve Orbit in the Monzo app. Orbit imports your full history straight away (Monzo only
+  allows that for 5 minutes after approval), then syncs every 30 minutes. Monzo asks you to reconnect every 90 days.
+  Monzo Flex may not be available through the developer API; add what you owe as a manual account.
+- **Or import a CSV:** Monzo app → your account → Statements / Export transactions → CSV, then **Import CSV…**.
+  Re-importing skips transactions already there. Other banks' CSVs work with a column-mapping step.
+- **Trading 212:** in the Trading 212 app, Settings → API → Generate API key (read-only is enough), then paste the
+  key (and secret, if shown) into Money settings.
+
+Keys and tokens are stored in your Keychain (or an owner-only file if the Keychain refuses) and never leave the
+Mac. Money data is never synced to iCloud and is only ever shown to the AI running on your Mac, when you ask.
+
+### Updates
+
+Orbit checks the "Orbit for Mac (latest)" release on GitHub when it starts and every 6 hours. When a newer build
+is out, Settings → Extras → Updates (or the menu bar) offers **Install update and restart**: Orbit downloads
+`Orbit-mac.zip`, replaces the app, clears the quarantine flag and reopens. Local Xcode builds don't update themselves.
+
 ## Troubleshooting
 
 **First: get the log.** **Settings → Diagnostics → Copy log** copies Orbit's log (what it tried and
@@ -261,5 +300,7 @@ Open Orbit once; widgets show the snapshot the app writes after each sync.
 **Where does Orbit keep things?**
 - Mac only (`~/Library/Application Support/Orbit`): full email text, note transcriptions, the search
   index, sync cursors and logs.
-- Keychain: your Google and ELE sign-ins.
+- Keychain: your Google and ELE sign-ins, Monzo and Trading 212 keys.
+- Mac only (`~/Library/Application Support/Orbit/Features` and `/Money`): flashcard metadata, focus log,
+  weekly reports and all money data.
 - Log: `~/Library/Logs/Orbit/orbit.log`.

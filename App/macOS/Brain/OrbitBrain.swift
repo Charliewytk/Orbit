@@ -76,6 +76,7 @@ final class OrbitBrain: OrbitBackend {
         configureLoginItemOnce()
         configureAISharing()
         rebuildRouter()
+        FeatureHub.shared.start(brain: self)
         Task { await accounts.refreshStatus() }
 
         every(120, after: 0) { await $0.checkAI() }
