@@ -312,30 +312,39 @@ struct NotesSourcePicker: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Picker("Read notes from", selection: $source) {
-                Text("Automatic").tag("")
-                Text("OneNote (Exeter account)").tag("graph")
-                Text("Exported PDF / Markdown folder").tag("folder")
-                Text("Don't read notes").tag("none")
-            }
-            if source == "folder" {
-                HStack {
-                    Text(folderPath.isEmpty ? "No folder chosen" : folderPath)
-                        .font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
-                    Spacer()
-                    Button("Choose folder…") { choosing = true }
+            if brain.accounts.microsoftAvailable {
+                Picker("Read notes from", selection: $source) {
+                    Text("Automatic").tag("")
+                    Text("OneNote (Microsoft sign-in)").tag("graph")
+                    Text("My OneNote export folder").tag("folder")
+                    Text("Don't read notes").tag("none")
                 }
-                Text("In OneNote: File → Export → Section → PDF, into this folder. Orbit picks up new files automatically.")
-                    .font(Theme.caption).foregroundStyle(Theme.textTertiary)
             }
             HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("OneNote export folder").font(Theme.body.weight(.medium))
+                    Text(folderPath.isEmpty ? "No folder picked yet" : folderPath)
+                        .font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
+                }
+                Spacer()
+                Button(folderPath.isEmpty ? "Pick your OneNote export folder…" : "Change…") { choosing = true }
+            }
+            Text("In OneNote, choose File → Export, pick PDF, and save into this folder. Do it again whenever you add notes; Orbit notices new files by itself.")
+                .font(Theme.caption).foregroundStyle(Theme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
                 Button("Read notes now") { Task { await brain.syncNotes() } }
-                    .disabled(brain.running.contains(.notes))
+                    .disabled(brain.running.contains(.notes) || (folderPath.isEmpty && source != "graph"))
                 if brain.running.contains(.notes) { ProgressView().controlSize(.small); Text("Reading…").font(Theme.caption) }
             }
         }
         .fileImporter(isPresented: $choosing, allowedContentTypes: [.folder]) { result in
-            if case .success(let url) = result { folderPath = url.path }
+            if case .success(let url) = result {
+                folderPath = url.path
+                if source.isEmpty || !brain.accounts.microsoftAvailable { source = "folder" }
+                OrbitLog.log("notes", "Notes folder picked: \(url.path)")
+                Task { await brain.syncNotes() }
+            }
         }
     }
 }
@@ -452,9 +461,7 @@ struct MacAccountsSection: View {
     var body: some View {
         Section {
             GoogleConnectRow()
-            MicrosoftConnectRow()
-            ExeterMailSourcePicker()
-            Toggle("Include my Exeter (Outlook) calendar", isOn: $useExeterCalendar)
+            MacCalendarsRow()
             ELEConnectRow()
             NotesSourcePicker()
             TextField("Timetable calendar link (optional .ics)", text: $timetableURL)
@@ -465,6 +472,18 @@ struct MacAccountsSection: View {
             Text("Orbit writes only to its own “Orbit” calendar and saves email replies as drafts. It never sends email or edits your own events.")
         }
         .task { await brain.accounts.refreshStatus() }
+
+        Section {
+            DisclosureGroup("Set up Exeter email and calendar") {
+                ExeterSetupPanel().padding(.vertical, 6)
+            }
+            ExeterAdvancedOptions()
+            if brain.accounts.microsoftConnected {
+                Toggle("Use the Microsoft sign-in for my Exeter calendar", isOn: $useExeterCalendar)
+            }
+        } header: {
+            Text("University of Exeter")
+        }
     }
 }
 
@@ -524,8 +543,34 @@ struct MacSystemSection: View {
 
 struct MacDiagnosticsSection: View {
     @Environment(OrbitBrain.self) private var brain
+    @State private var copied = false
 
     var body: some View {
+        Section {
+            HStack {
+                Button("Reveal log in Finder") {
+                    OrbitLog.log("diagnostics", "Log revealed in Finder")
+                    let url = OrbitLog.fileURL
+                    if FileManager.default.fileExists(atPath: url.path) {
+                        NSWorkspace.shared.activateFileViewerSelecting([url])
+                    } else {
+                        NSWorkspace.shared.open(url.deletingLastPathComponent())
+                    }
+                }
+                Button(copied ? "Copied ✓" : "Copy log") {
+                    let text = OrbitLog.contents()
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text.isEmpty ? "(The Orbit log is empty.)" : text, forType: .string)
+                    copied = true
+                    Task { try? await Task.sleep(for: .seconds(2)); copied = false }
+                }
+            }
+            Text("If something doesn't work, click Copy log and paste it to us. It lists what Orbit tried and any errors; it never contains passwords.")
+                .font(Theme.caption).foregroundStyle(Theme.textSecondary)
+        } header: {
+            Text("Orbit log")
+        }
+
         Section("AI on this Mac") {
             LabeledContent("OpenCode", value: brain.launcher.status.label)
             LabeledContent("Ollama", value: brain.ollama.available ? "Running" : "Not running")
