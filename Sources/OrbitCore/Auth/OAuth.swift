@@ -200,7 +200,7 @@ public struct OAuthClient: Sendable {
             ("client_id", config.clientID),
             ("code_verifier", pkce.verifier),
         ]
-        if let secret = config.clientSecret { fields.append(("client_secret", secret)) }
+        if let secret = config.clientSecret, !secret.isEmpty { fields.append(("client_secret", secret)) }
         let res = try await tokenRequest(fields)
         return OAuthTokens(accessToken: res.access_token, refreshToken: res.refresh_token,
                            expiry: res.expires_in.map { now.addingTimeInterval($0) }, scope: res.scope,
@@ -216,7 +216,7 @@ public struct OAuthClient: Sendable {
             ("refresh_token", refreshToken),
             ("client_id", config.clientID),
         ]
-        if let secret = config.clientSecret { fields.append(("client_secret", secret)) }
+        if let secret = config.clientSecret, !secret.isEmpty { fields.append(("client_secret", secret)) }
         if config.provider == .microsoft { fields.append(("scope", config.scopes.joined(separator: " "))) }
         let res = try await tokenRequest(fields)
         return OAuthTokens(accessToken: res.access_token, refreshToken: res.refresh_token ?? refreshToken,
