@@ -44,13 +44,13 @@ final class CompanionHub {
     }
 
     var briefingSchedule: BriefingSchedule {
-        BriefingSchedule(enabled: FeatureHub.bool(Keys.briefingEnabled, default: true),
-                         minute: FeatureHub.int(Keys.briefingMinute, default: 7 * 60 + 35))
+        BriefingSchedule(enabled: FeatureSettings.bool(Keys.briefingEnabled, default: true),
+                         minute: FeatureSettings.int(Keys.briefingMinute, default: 7 * 60 + 35))
     }
 
     var recapSchedule: WeekRecapSchedule {
-        WeekRecapSchedule(enabled: FeatureHub.bool(Keys.recapEnabled, default: true),
-                          minute: FeatureHub.int(Keys.recapMinute, default: 19 * 60))
+        WeekRecapSchedule(enabled: FeatureSettings.bool(Keys.recapEnabled, default: true),
+                          minute: FeatureSettings.int(Keys.recapMinute, default: 19 * 60))
     }
 
     // MARK: Lifecycle
@@ -79,12 +79,12 @@ final class CompanionHub {
         if state.lastNewsFetch.map({ now.timeIntervalSince($0) > 3 * 3600 }) ?? true {
             await refreshNews(now: now)
         }
-        if FeatureHub.bool(Keys.recordingsAuto, default: true),
+        if FeatureSettings.bool(Keys.recordingsAuto, default: true),
            state.lastRecordingScan.map({ now.timeIntervalSince($0) > 2 * 3600 }) ?? true {
             await scanRecordings(now: now)
             await processPendingRecordings(limit: 2)
         }
-        if FeatureHub.bool(Keys.moneyAlerts, default: true) { moneyAlerts(now: now) }
+        if FeatureSettings.bool(Keys.moneyAlerts, default: true) { moneyAlerts(now: now) }
         if state.lastChatExport.map({ now.timeIntervalSince($0) > 600 }) ?? true { exportChatArchive(now: now) }
     }
 
@@ -268,7 +268,7 @@ final class CompanionHub {
 
     /// Full text using the student's own ft.com / economist.com login cookies (kept in the app's website data store).
     func fullText(for story: LinkedStory) async -> String? {
-        guard FeatureHub.bool(Keys.newsFullText, default: false), let raw = story.story.url, let url = URL(string: raw),
+        guard FeatureSettings.bool(Keys.newsFullText, default: false), let raw = story.story.url, let url = URL(string: raw),
               let result = try? await CookieFetcher.data(url) else { return nil }
         let text = ArticleText.extract(html: String(decoding: result.0, as: UTF8.self))
         return text.isEmpty ? nil : text

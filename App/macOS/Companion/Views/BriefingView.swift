@@ -241,7 +241,7 @@ struct NewsRow: View {
             Text(item.angle).font(Theme.caption).foregroundStyle(Theme.textPrimary)
             if let text {
                 Text(text).font(Theme.body).textSelection(.enabled)
-            } else if FeatureHub.bool(CompanionHub.Keys.newsFullText, default: false) {
+            } else if FeatureSettings.bool(CompanionHub.Keys.newsFullText, default: false) {
                 Button(loading ? "Loading…" : "Read full article") {
                     loading = true
                     Task { text = await companion.fullText(for: item); loading = false }

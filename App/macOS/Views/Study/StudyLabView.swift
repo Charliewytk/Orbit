@@ -35,7 +35,7 @@ struct StudyLabView: View {
         switch tab {
         case .web: ConceptWebView()
         case .practice: PracticeView()
-        case .reading: ReadingPlanView()
+        case .reading: ReadingLibraryView()
         case .teach: TeachBackView()
         case .explore: ExploreView()
         }
@@ -178,7 +178,7 @@ struct PracticeSetRow: View {
 
 // MARK: - Reading
 
-struct ReadingPlanView: View {
+struct ReadingLibraryView: View {
     @State private var refresh = 0
     private var hub: StudyHub { .shared }
 

@@ -114,6 +114,15 @@ public struct DailyBriefing: Codable, Hashable, Sendable {
     public var groupTasksDue: [String]
     public var examLine: String?
 
+    public init(day: Date, generatedAt: Date, weather: WeatherToday?, brief: MorningBrief, newOnELE: [NewItem],
+                keyEmail: EmailDigest?, streakDays: Int, flashcardStreak: Int, news: [LinkedStory],
+                weeklyReview: WeekRecap?, groupTasksDue: [String], examLine: String?) {
+        self.day = day; self.generatedAt = generatedAt; self.weather = weather; self.brief = brief
+        self.newOnELE = newOnELE; self.keyEmail = keyEmail; self.streakDays = streakDays
+        self.flashcardStreak = flashcardStreak; self.news = news; self.weeklyReview = weeklyReview
+        self.groupTasksDue = groupTasksDue; self.examLine = examLine
+    }
+
     public var isSaturday: Bool { brief.calendar.weekday(day) == 7 }
 
     public var notificationTitle: String {

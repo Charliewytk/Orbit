@@ -46,6 +46,12 @@ public struct TypeUpBlock: Codable, Hashable, Sendable, Identifiable {
     public var locationHint: String
     /// True when it sits on campus straight after the session.
     public var onCampus: Bool
+
+    public init(sessionID: String, moduleCode: String, week: Int?, title: String, start: Date, end: Date,
+                locationHint: String, onCampus: Bool) {
+        self.sessionID = sessionID; self.moduleCode = moduleCode; self.week = week; self.title = title
+        self.start = start; self.end = end; self.locationHint = locationHint; self.onCampus = onCampus
+    }
     /// Stable ids so re-planning finds the same task and block.
     public var taskID: UUID { TypeUpPlanner.taskID(sessionID: sessionID) }
     public var blockID: UUID { StableUUID.make("orbit-typeup-block|\(sessionID)") }
