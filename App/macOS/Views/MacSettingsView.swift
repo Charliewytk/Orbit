@@ -57,6 +57,8 @@ private struct PrefsEditor<Content: View>: View {
 
 private struct GeneralSettingsTab: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.openWindow) private var openWindow
+    @AppStorage("onboardingDone") private var onboardingDone = false
     @State private var name = ""
     @State private var loaded = false
 
@@ -65,6 +67,18 @@ private struct GeneralSettingsTab: View {
             Form {
                 Section("You") {
                     TextField("First name", text: $name)
+                    Button("Run setup again…") {
+                        onboardingDone = false
+                        openWindow(id: "main")
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
+                }
+                Section {
+                    OnboardingGoals()
+                } header: {
+                    Text("Daily goals")
+                } footer: {
+                    Text("The three rings on Home: study minutes, to-dos done and flashcard reviews.")
                 }
                 PreferencesSections(prefs: prefs)
                 Section {
