@@ -242,3 +242,19 @@ final class CompanionTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(ChatArchive.self, from: data).messages.count, 2)
     }
 }
+
+final class CompanionExtraTests: XCTestCase {
+    func testArticleTextAndNotesMatch() {
+        let html = "<nav><p>Menu item that is long enough to be counted as text</p></nav><article><h1>T</h1><p>Central banks are weighing how quickly to cut rates this year.</p><p>short</p></article>"
+        XCTAssertEqual(ArticleText.extract(html: html), "Central banks are weighing how quickly to cut rates this year.")
+
+        let cal = DayCalendar()
+        let r = LectureRecording(id: "panopto:1", platform: .panopto, url: "https://x", title: "Lecture 4 Phillips curve", moduleCode: "BEE1025", week: 4)
+        let seg = NoteSegment(kind: .typed, text: "Phillips curve notes")
+        let good = LectureNote(id: "n1", title: "Phillips curve", notebook: "Macro", section: "", moduleCode: "BEE1025", week: 4,
+                               created: cal.date(year: 2026, month: 10, day: 20)!, modified: Date(), segments: [seg])
+        let other = LectureNote(id: "n2", title: "Elasticity", notebook: "Micro", section: "", moduleCode: "BEE1026", week: 4,
+                                created: Date(), modified: Date(), segments: [seg])
+        XCTAssertEqual(RecordingNotesMatcher.best(for: r, notes: [other, good], calendar: cal)?.id, "n1")
+    }
+}

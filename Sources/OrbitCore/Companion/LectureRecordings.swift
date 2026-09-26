@@ -11,13 +11,15 @@ public struct LectureRecording: Codable, Hashable, Sendable, Identifiable {
     public var title: String
     public var moduleCode: String?
     public var date: Date?
+    /// Teaching week on ELE, when known (matches notes for the same week).
+    public var week: Int?
     /// Caption/transcript URLs seen next to the recording (VTT/SRT/TXT).
     public var captionURLs: [String]
 
     public init(id: String, platform: Platform, url: String, title: String, moduleCode: String? = nil,
-                date: Date? = nil, captionURLs: [String] = []) {
+                date: Date? = nil, week: Int? = nil, captionURLs: [String] = []) {
         self.id = id; self.platform = platform; self.url = url; self.title = title
-        self.moduleCode = moduleCode; self.date = date; self.captionURLs = captionURLs
+        self.moduleCode = moduleCode; self.date = date; self.week = week; self.captionURLs = captionURLs
     }
 
     /// Panopto's caption download for a session (works for the signed-in browser session).
@@ -303,5 +305,26 @@ public struct RecordingLedger: Codable, Hashable, Sendable {
     public var pending: [LectureRecording] {
         known.values.filter { !processed.contains($0.id) && failed[$0.id] == nil }
             .sorted { ($0.date ?? .distantPast, $0.id) < ($1.date ?? .distantPast, $1.id) }
+    }
+}
+
+/// Picks the student's notes for a recording: same module, then same week or same day, then title overlap.
+public enum RecordingNotesMatcher {
+    public static func best(for r: LectureRecording, notes: [LectureNote], calendar: DayCalendar = DayCalendar()) -> LectureNote? {
+        let titleTokens = Set(LectureDigester.tokens(r.title).filter { $0.count > 3 })
+        func score(_ n: LectureNote) -> Double {
+            var s = 0.0
+            if let m = r.moduleCode {
+                guard n.moduleCode == nil || n.moduleCode == m else { return -1 }
+                if n.moduleCode == m { s += 2 }
+            }
+            if let w = r.week, n.week == w { s += 3 }
+            if let d = r.date, calendar.isSameDay(d, n.created) { s += 3 }
+            let overlap = titleTokens.intersection(LectureDigester.tokens(n.title)).count
+            s += Double(overlap)
+            return s
+        }
+        let scored = notes.filter { !$0.allText.isEmpty }.map { ($0, score($0)) }.filter { $0.1 >= 3 }
+        return scored.max { ($0.1, $0.0.modified) < ($1.1, $1.0.modified) }?.0
     }
 }

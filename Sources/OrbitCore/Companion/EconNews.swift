@@ -243,3 +243,20 @@ public struct NewsLinker: Sendable {
         return out
     }
 }
+
+/// Article body from a publisher page fetched with the student's own logged-in session.
+public enum ArticleText {
+    public static func extract(html: String, maxCharacters: Int = 20_000) -> String {
+        var body = html
+        if let start = html.range(of: "<article", options: .caseInsensitive),
+           let end = html.range(of: "</article>", options: [.caseInsensitive, .backwards]), start.lowerBound < end.lowerBound {
+            body = String(html[start.lowerBound..<end.upperBound])
+        }
+        guard let re = try? NSRegularExpression(pattern: "<p[^>]*>(.*?)</p>", options: [.caseInsensitive, .dotMatchesLineSeparators]) else { return "" }
+        let ns = body as NSString
+        let paragraphs = re.matches(in: body, range: NSRange(location: 0, length: ns.length)).map {
+            HTMLToText.convert(ns.substring(with: $0.range(at: 1))).trimmingCharacters(in: .whitespacesAndNewlines)
+        }.filter { $0.count > 40 }
+        return String(paragraphs.joined(separator: "\n\n").prefix(maxCharacters))
+    }
+}
