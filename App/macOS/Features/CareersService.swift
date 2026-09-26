@@ -181,8 +181,13 @@ final class CareersService {
     }
 
     func updatePreferences(_ change: (inout CareersPreferences) -> Void) {
+        let before = preferences.categories
         change(&preferences)
         save()
+        // A newly tracked category has nothing stored yet: fetch now rather than in up to 2 hours.
+        if !preferences.categories.subtracting(before).isEmpty {
+            Task { @MainActor in await self.sync() }
+        }
     }
 
     // MARK: Assistant text

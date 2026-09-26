@@ -32,10 +32,7 @@ struct ChatView: View {
                             ChatMessageView(message: m).id(m.id)
                         }
                         if app.backend.isThinking {
-                            Text("Thinking…")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.textTertiary)
-                                .id("typing")
+                            TypingBubble().id("typing")
                         }
                     }
                     .padding(.horizontal, Theme.Space.xl)
@@ -57,8 +54,10 @@ struct ChatView: View {
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: Theme.Space.s) {
+            IconTile(symbol: Destination.chat.symbol, color: Destination.chat.color, size: 56)
+                .padding(.bottom, Theme.Space.s)
             Text("Ask Orbit")
-                .font(Theme.pageTitle)
+                .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundStyle(Theme.textPrimary)
             Text(app.backend.isBrain
                  ? "Orbit can see your calendar, tasks, deadlines, inbox and notes, and can add, move and plan things for you."
@@ -66,10 +65,10 @@ struct ChatView: View {
                 .font(Theme.large)
                 .foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
-            VStack(alignment: .leading, spacing: Theme.Space.s) {
+            Flow(spacing: Theme.Space.s) {
                 ForEach(Self.suggestions, id: \.self) { s in
                     Button(s) { send(s) }
-                        .buttonStyle(.orbitLink)
+                        .buttonStyle(GlassCapsuleButtonStyle(tint: Theme.accent))
                 }
             }
             .padding(.top, Theme.Space.l)
@@ -88,23 +87,21 @@ struct ChatView: View {
                 .onSubmit { send(draft) }
             Button { send(draft) } label: {
                 Image(systemName: "arrow.up")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .heavy))
                     .foregroundStyle(empty ? Theme.textTertiary : Color.white)
-                    .frame(width: 24, height: 24)
-                    .background(empty ? Theme.hover : Theme.accent,
-                                in: RoundedRectangle(cornerRadius: Theme.Radius.s, style: .continuous))
+                    .frame(width: 30, height: 30)
+                    .background(empty ? AnyShapeStyle(Theme.hover) : AnyShapeStyle(Theme.accentGradient), in: Circle())
+                    .shadow(color: empty ? .clear : Theme.violet.opacity(0.4), radius: 6, y: 2)
             }
             .buttonStyle(.plain)
             .disabled(empty)
             .keyboardShortcut(.return, modifiers: .command)
             .help("Send (⌘↩)")
         }
-        .padding(.leading, Theme.Space.m)
+        .padding(.leading, Theme.Space.l)
         .padding(.trailing, Theme.Space.s)
         .padding(.vertical, Theme.Space.s)
-        .background(Theme.background, in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous)
-            .strokeBorder(focused ? Theme.textTertiary : Theme.border, lineWidth: focused ? 1 : Theme.hairline))
+        .orbitGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous), tint: focused ? Theme.accent : nil, interactive: true)
         .animation(Motion.fade, value: focused)
         .frame(maxWidth: 720)
         .padding(.horizontal, Theme.Space.xl)
@@ -137,25 +134,33 @@ struct ChatMessageView: View {
         if isUser {
             VStack(alignment: .trailing, spacing: Theme.Space.xs) {
                 Text(message.text)
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.textPrimary)
+                    .font(Theme.body.weight(.medium))
+                    .foregroundStyle(.white)
                     .textSelection(.enabled)
-                    .padding(.horizontal, Theme.Space.m)
-                    .padding(.vertical, Theme.Space.s)
-                    .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
+                    .padding(.horizontal, Theme.Space.l)
+                    .padding(.vertical, 10)
+                    .background(Theme.accentGradient, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .shadow(color: Theme.violet.opacity(0.3), radius: 10, y: 4)
                     .frame(maxWidth: 520, alignment: .trailing)
                 status
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
         } else {
-            VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                Text(LocalizedStringKey(message.text))
-                    .font(Theme.large)
-                    .foregroundStyle(Theme.textPrimary)
-                    .lineSpacing(4)
-                    .textSelection(.enabled)
-                    .fixedSize(horizontal: false, vertical: true)
-                footer
+            HStack(alignment: .top, spacing: Theme.Space.s) {
+                IconTile(symbol: "circle.circle.fill", color: Theme.accent, size: 26)
+                VStack(alignment: .leading, spacing: Theme.Space.xs) {
+                    Text(LocalizedStringKey(message.text))
+                        .font(Theme.large)
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineSpacing(4)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                    footer
+                }
+                .padding(.horizontal, Theme.Space.l)
+                .padding(.vertical, Theme.Space.m)
+                .orbitGlass(in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                Spacer(minLength: Theme.Space.xxl)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -186,5 +191,29 @@ struct ChatMessageView: View {
         return Text(parts.joined(separator: " · "))
             .font(Theme.caption)
             .foregroundStyle(Theme.textTertiary)
+    }
+}
+
+/// Three bouncing dots in a glass bubble while Orbit thinks.
+struct TypingBubble: View {
+    @State private var phase = false
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Theme.Space.s) {
+            IconTile(symbol: "circle.circle.fill", color: Theme.accent, size: 26)
+            HStack(spacing: 5) {
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .fill(Theme.accentGradient)
+                        .frame(width: 8, height: 8)
+                        .offset(y: phase ? -4 : 2)
+                        .animation(.easeInOut(duration: 0.45).repeatForever(autoreverses: true).delay(Double(i) * 0.15), value: phase)
+                }
+            }
+            .padding(.horizontal, Theme.Space.l)
+            .padding(.vertical, 14)
+            .orbitGlass(in: Capsule())
+        }
+        .onAppear { phase = true }
     }
 }

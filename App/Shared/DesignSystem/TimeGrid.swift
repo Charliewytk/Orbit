@@ -248,10 +248,10 @@ struct TimeGrid<Detail: View>: View {
             if let day = days.first(where: { calendar.isSameDay($0, now) }), let y = yPosition(now, on: day),
                y >= 0, y <= gridHeight {
                 Text(calendar.time(now))
-                    .font(Theme.caption.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(Theme.now)
-                    .padding(.horizontal, 2)
-                    .background(Theme.background)
+                    .font(Theme.caption.weight(.bold).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 4)
+                    .background(Theme.now, in: Capsule())
                     .padding(.top, y - 7)
                     .padding(.trailing, 8)
             }
@@ -362,8 +362,9 @@ struct TimeGridBlock: View {
     var body: some View {
         let past = item.end < Date()
         let compact = height < 34
+        let doNow = item.kind == .block && !item.completed && item.contains(Date())
         HStack(spacing: 0) {
-            Rectangle().fill(item.color).frame(width: 3)
+            Rectangle().fill(item.color.gradient).frame(width: 4)
             VStack(alignment: .leading, spacing: 1) {
                 if compact {
                     HStack(spacing: 4) {
@@ -385,14 +386,21 @@ struct TimeGridBlock: View {
             Spacer(minLength: 0)
         }
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(item.color.opacity(fillOpacity))
+        .background(LinearGradient(colors: [item.color.opacity(fillOpacity + 0.06), item.color.opacity(fillOpacity)],
+                                   startPoint: .top, endPoint: .bottom))
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.xs, style: .continuous))
         .overlay {
-            if isSelected {
+            if isSelected || doNow {
                 RoundedRectangle(cornerRadius: Theme.Radius.xs, style: .continuous)
-                    .strokeBorder(item.color, lineWidth: 1)
+                    .strokeBorder(doNow ? DoNow.color : item.color, lineWidth: doNow ? 1.5 : 1)
             }
         }
+        .overlay(alignment: .topTrailing) {
+            if doNow && height >= 34 {
+                DoNowBadge().scaleEffect(0.85).padding(3)
+            }
+        }
+        .shadow(color: doNow ? DoNow.color.opacity(0.35) : .clear, radius: 8)
         .opacity(past && !item.contains(Date()) ? 0.55 : 1)
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
@@ -401,7 +409,7 @@ struct TimeGridBlock: View {
     }
 
     private var fillOpacity: Double {
-        let base = item.kind == .block ? 0.08 : 0.14
+        let base = item.kind == .block ? 0.14 : 0.2
         return hovering || isSelected ? base + 0.08 : base
     }
 

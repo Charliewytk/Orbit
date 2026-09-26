@@ -9,6 +9,7 @@ struct TasksView: View {
     @Query(sort: \StoredTask.createdAt) private var tasks: [StoredTask]
     @Query(sort: \StoredBlock.start) private var blocks: [StoredBlock]
     @State private var showDone = false
+    @State private var originFilter: TaskOrigin?
     #if os(macOS)
     @State private var showInspector = true
     #endif
@@ -32,6 +33,7 @@ struct TasksView: View {
         var nextBlock: [String: StoredBlock] = [:]
         var openCount = 0
         var overdue = 0
+        var originCounts: [TaskOrigin: Int] = [:]
         var ordered: [StoredTask] { groups.flatMap(\.items) }
     }
 
@@ -42,7 +44,9 @@ struct TasksView: View {
             if m.nextBlock[b.taskID] == nil { m.nextBlock[b.taskID] = b }
             if cal.isSameDay(b.start, now) { todayBlock.insert(b.taskID) }
         }
-        let open = tasks.filter { !$0.isDone }
+        let allOpen = tasks.filter { !$0.isDone }
+        for t in allOpen { m.originCounts[t.origin, default: 0] += 1 }
+        let open = allOpen.filter { originFilter == nil || $0.origin == originFilter }
         let byID = Dictionary(open.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let ranked = TaskScorer().rank(open.map(\.value), now: now).compactMap { byID[$0.id.uuidString] }
         // Anything the scorer didn't return (ids that aren't UUIDs) goes at the end.
@@ -65,7 +69,7 @@ struct TasksView: View {
             buckets[b, default: []].append(t)
         }
         m.groups = Bucket.allCases.compactMap { b in buckets[b].map { BucketGroup(bucket: b, items: $0) } }
-        m.done = tasks.filter(\.isDone).sorted { ($0.completedAt ?? now) > ($1.completedAt ?? now) }
+        m.done = tasks.filter { $0.isDone && (originFilter == nil || $0.origin == originFilter) }.sorted { ($0.completedAt ?? now) > ($1.completedAt ?? now) }
         m.openCount = open.count
         m.overdue = open.filter { ($0.deadline ?? .distantFuture) < now }.count
         return m
@@ -81,8 +85,16 @@ struct TasksView: View {
                 QuickAddField(placeholder: "Add a task, e.g. “essay plan BEM2031 2h by Friday”") { task in
                     app.selectedTaskID = task.id
                 }
-                .padding(.bottom, Theme.Space.s)
-                Hairline()
+                .padding(.horizontal, Theme.Space.s)
+                .padding(.vertical, Theme.Space.s)
+                .orbitGlassCard(radius: Theme.Radius.l)
+                ScrollView(.horizontal) {
+                    OriginFilterChips(selection: $originFilter, counts: model.originCounts)
+                        .padding(.vertical, 2)
+                }
+                .scrollIndicators(.never)
+                .padding(.top, Theme.Space.m)
+                .padding(.bottom, Theme.Space.xs)
             }
             .padding(.horizontal, pagePadding)
             .frame(maxWidth: Theme.readingWidth + pagePadding * 2)
@@ -96,10 +108,15 @@ struct TasksView: View {
                         }
 
                         ForEach(model.groups) { group in
-                            groupHeader(group.bucket.rawValue, count: group.items.count)
-                            ForEach(group.items) { task in
-                                row(task, model: model, now: now)
+                            VStack(alignment: .leading, spacing: 0) {
+                                groupHeader(group.bucket.rawValue, count: group.items.count)
+                                ForEach(group.items) { task in
+                                    row(task, model: model, now: now)
+                                }
                             }
+                            .padding(Theme.Space.s)
+                            .orbitGlassCard(radius: Theme.Radius.l)
+                            .padding(.top, Theme.Space.m)
                         }
 
                         if !model.done.isEmpty {
@@ -204,13 +221,18 @@ struct TasksView: View {
 
     private func groupHeader(_ title: String, count: Int) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
-            Text(title).font(Theme.headline).foregroundStyle(Theme.textPrimary)
-            Text("\(count)").font(Theme.caption.monospacedDigit()).foregroundStyle(Theme.textTertiary)
+            Text(title).font(Theme.sectionTitle).foregroundStyle(Theme.textPrimary)
+            Text("\(count)")
+                .font(Theme.caption.monospacedDigit().weight(.bold))
+                .foregroundStyle(Theme.accent)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 1)
+                .background(Theme.accent.opacity(0.14), in: Capsule())
                 .contentTransition(.numericText())
         }
         .padding(.horizontal, Theme.Space.s)
-        .padding(.top, Theme.Space.xl)
-        .padding(.bottom, Theme.Space.xs)
+        .padding(.top, Theme.Space.s)
+        .padding(.bottom, Theme.Space.s)
     }
 
     private func row(_ task: StoredTask, model: ListModel, now: Date) -> some View {
@@ -255,8 +277,12 @@ struct TaskRow: View {
     var body: some View {
         let cal = app.calendar
         let done = pending ?? task.isDone
+        let origin = task.origin
+        let doingNow = !done && (nextBlock.map { $0.start <= now && $0.end > now } ?? false)
         HStack(spacing: 10) {
             CircleCheckbox(isOn: done, action: toggle)
+            Capsule().fill(origin.color.gradient).frame(width: 3, height: 16)
+                .help(origin.label)
             Text(task.title.isEmpty ? "Untitled" : task.title)
                 .font(Theme.body)
                 .foregroundStyle(done ? Theme.textTertiary : Theme.textPrimary)
@@ -268,8 +294,9 @@ struct TaskRow: View {
                     .foregroundStyle(Theme.textTertiary)
             }
             Spacer(minLength: Theme.Space.s)
+            if doingNow { DoNowBadge() }
             if !done {
-                if let b = nextBlock {
+                if let b = nextBlock, !doingNow {
                     Text(cal.isSameDay(b.start, now) ? cal.time(b.start) : "\(Fmt.shortDue(b.start, cal, now: now)) \(cal.time(b.start))")
                         .font(Theme.caption.monospacedDigit())
                         .foregroundStyle(Theme.textTertiary)

@@ -8,6 +8,7 @@ struct CalendarView: View {
     @Environment(AppModel.self) private var app
     @Query(sort: \StoredEvent.start) private var events: [StoredEvent]
     @Query(sort: \StoredBlock.start) private var blocks: [StoredBlock]
+    @Query private var tasks: [StoredTask]
     @AppStorage("calendarMode") private var mode: Mode = .week
     @State private var anchor = Date()
 
@@ -29,6 +30,10 @@ struct CalendarView: View {
                 TimeGridItemDetail(item: $0)
             }
             .id(mode)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+            .orbitGlassCard()
+            .padding(.horizontal, Theme.Space.l)
+            .padding(.bottom, Theme.Space.l)
         }
         .orbitBackground()
         .navigationTitle("Calendar")
@@ -49,7 +54,7 @@ struct CalendarView: View {
         let isCurrent = days.contains { cal.isSameDay($0, Date()) }
         return HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
             Text(mode == .day ? cal.format(first, "EEEE d MMMM") : cal.format(first, "MMMM yyyy"))
-                .font(.system(size: Theme.Size.title2, weight: .bold))
+                .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundStyle(Theme.textPrimary)
             if mode == .week {
                 Text("Week of \(cal.format(first, "d MMM"))")
@@ -57,8 +62,9 @@ struct CalendarView: View {
                     .foregroundStyle(Theme.textSecondary)
             }
             Spacer(minLength: Theme.Space.m)
+            OriginLegend()
             Button("Today") { withAnimation(Motion.snappy) { anchor = Date() } }
-                .buttonStyle(.quiet)
+                .orbitGlassButton()
                 .disabled(isCurrent)
                 .keyboardShortcut("t", modifiers: [.command])
             SegmentedHeader(options: [(Mode.day, "Day"), (Mode.week, "Week")], selection: $mode)
@@ -94,13 +100,16 @@ struct CalendarView: View {
                                     location: e.location, notes: e.notes, calendarName: Self.label(for: e.source),
                                     moduleCode: code)
             }
+        let taskByID = Dictionary(tasks.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         out += blocks
             .filter { $0.start < end && $0.end > start && !$0.skipped }
             .map { b in
-                TimeGridItem(id: "b-\(b.id)", kind: .block, title: b.title, start: b.start, end: b.end,
-                             color: b.moduleCode == nil ? Theme.success : Theme.moduleColor(b.moduleCode),
-                             calendarName: "Orbit study block", moduleCode: b.moduleCode, blockID: b.id,
-                             completed: b.completed, started: b.startedAt != nil)
+                // Blocks are coloured by where their work came from (You set / Orbit recommends / Required).
+                let origin = taskByID[b.taskID]?.origin ?? .recommended
+                return TimeGridItem(id: "b-\(b.id)", kind: .block, title: b.title, start: b.start, end: b.end,
+                                    color: origin.color,
+                                    calendarName: "Orbit study block · \(origin.label)", moduleCode: b.moduleCode, blockID: b.id,
+                                    completed: b.completed, started: b.startedAt != nil)
             }
         return out
     }
