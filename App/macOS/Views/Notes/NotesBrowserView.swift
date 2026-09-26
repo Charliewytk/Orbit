@@ -129,7 +129,7 @@ private struct NotesListPane: View {
                 List(selection: $selection) {
                     ForEach(NotesBrowser.filter(subject, query: filter)) { section in
                         Section(section.name.isEmpty ? "Notes" : section.name) {
-                            ForEach(section.entries) { e in NoteRow(entry: e).tag(e.id) }
+                            ForEach(section.entries) { e in BrowserNoteRow(entry: e).tag(e.id) }
                         }
                     }
                 }
@@ -160,7 +160,7 @@ private struct NotesListPane: View {
     }
 }
 
-private struct NoteRow: View {
+private struct BrowserNoteRow: View {
     var entry: LibraryEntry
 
     var body: some View {

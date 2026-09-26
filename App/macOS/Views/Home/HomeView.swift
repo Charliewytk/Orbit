@@ -695,8 +695,7 @@ struct ScheduleRow: View {
                     .foregroundStyle(past ? Theme.textTertiary : Theme.textPrimary)
                     .strikethrough(item.completed)
                     .lineLimit(1)
-                Text(ctx.calendar.time(item.start) + " · " + Fmt.duration(item.minutes)
-                     + (item.kind == .block ? " · " + (origin?.shortLabel ?? "Study") : ""))
+                Text(detailLine(origin))
                     .font(Theme.caption.monospacedDigit())
                     .foregroundStyle(Theme.textTertiary)
                     .lineLimit(1)
@@ -711,6 +710,17 @@ struct ScheduleRow: View {
             }
         }
         .opacity(item.kind == .routine ? 0.8 : 1)
+    }
+
+    private func detailLine(_ origin: TaskOrigin?) -> String {
+        var line: String = ctx.calendar.time(item.start)
+        line += " · "
+        line += Fmt.duration(item.minutes)
+        if item.kind == .block {
+            let label: String = origin?.shortLabel ?? "Study"
+            line += " · " + label
+        }
+        return line
     }
 
     private func rowFill(_ origin: TaskOrigin?) -> Color {

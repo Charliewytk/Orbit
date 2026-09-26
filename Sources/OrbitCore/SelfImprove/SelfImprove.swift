@@ -248,10 +248,12 @@ public struct DiffFileStat: Hashable, Sendable {
     public var added: Int?
     public var removed: Int?
     public var isBinary: Bool { added == nil }
+    public init(path: String, added: Int?, removed: Int?) { self.path = path; self.added = added; self.removed = removed }
 }
 
 public struct DiffSummary: Hashable, Sendable {
     public var files: [DiffFileStat]
+    public init(files: [DiffFileStat]) { self.files = files }
     public var totalAdded: Int { files.compactMap(\.added).reduce(0, +) }
     public var totalRemoved: Int { files.compactMap(\.removed).reduce(0, +) }
     public var isEmpty: Bool { files.isEmpty }
