@@ -110,7 +110,7 @@ struct OnboardingView: View {
             ExeterAdvancedOptions()
         case .ele:
             hero(symbol: "graduationcap", title: "Connect ELE",
-                 text: "Orbit signs in to ELE the same way the Moodle app does, to fetch your modules, deadlines, grades and reading lists.")
+                 text: "Sign in to ELE once, just like in your browser. Orbit then reads your modules, each week's slides, readings and tutorials, and your assessments with their weights and deadlines.")
             ELEConnectRow()
         case .notes:
             hero(symbol: "pencil.and.scribble", title: "Your OneNote notes",

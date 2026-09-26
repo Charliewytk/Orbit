@@ -3,11 +3,13 @@ import SwiftData
 import OrbitCore
 
 extension OrbitBrain {
-    /// ELE via the Moodle web-service token, or the calendar-export fallback.
+    /// ELE through the website session (normal path), else a legacy Moodle-app token, else the calendar export.
     func syncELE() async {
         guard begin(.ele) else { return }
         defer { end(.ele) }
-        if let credentials = accounts.moodle {
+        if accounts.eleWebSignedIn {
+            await syncELEWeb()
+        } else if let credentials = accounts.moodle {
             await syncMoodle(credentials)
         } else if let s = MacPrefs.string(MacPrefs.eleCalendarURL), let url = URL(string: s) {
             await syncELEFeed(url)
@@ -82,7 +84,7 @@ extension OrbitBrain {
         context.saveQuietly()
     }
 
-    private func announce(_ changes: ELEChanges) {
+    func announce(_ changes: ELEChanges) {
         let cal = DayCalendar(timeZone: prefs.timeZone)
         for a in changes.newAssessments.prefix(5) {
             let due = a.due.map { " · due \(Fmt.dayTime($0, cal))" } ?? ""

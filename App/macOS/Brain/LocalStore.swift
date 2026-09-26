@@ -89,6 +89,9 @@ enum MacPrefs {
     static let notesFolderPath = "notesFolderPath"
     static let iMessageEnabled = "iMessageEnabled"
     static let eleCalendarURL = "eleCalendarURL"
+    static let eleWebSignedIn = "eleWebSignedIn"
+    static let eleWebNeedsSignIn = "eleWebNeedsSignIn"
+    static let eleWebSummary = "eleWebSummary"
     static let timetableURL = "timetableURL"
     static let useExeterCalendar = "useExeterCalendar"
     /// "provider/model" for OpenCode; empty = OpenCode's default.

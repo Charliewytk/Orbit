@@ -120,6 +120,8 @@ final class StoredModule {
     var colorHex: String?
     /// Credits typed in by the student (ELE doesn't publish them), so sync never overwrites them.
     var creditsEdited: Bool = false
+    /// Weeks from the ELE course page ([ELEModuleWeek] as JSON): slides, readings, tutorials.
+    var weeksJSON: String?
 
     init(id: String = "") { self.id = id }
 }
@@ -139,6 +141,8 @@ final class StoredAssessment {
     var weightEdited: Bool = false
     /// Set once "Plan this assessment" created tasks for it.
     var plannedAt: Date?
+    /// Extra facts from the ELE assessment table: format, duration, AI status, "TBA" notes.
+    var details: String?
 
     init(id: String = UUID().uuidString) { self.id = id }
 }

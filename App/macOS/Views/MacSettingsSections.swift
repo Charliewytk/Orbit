@@ -276,29 +276,56 @@ struct ELEConnectRow: View {
 
     var body: some View {
         let accounts = brain.accounts
-        VStack(alignment: .leading, spacing: 8) {
-            AccountRow(title: "ELE (Moodle)", symbol: "graduationcap", connected: accounts.eleConnected,
-                       detail: accounts.eleConnected ? "Signed in with the Moodle app method" : nil,
-                       busy: accounts.busy == "ele") {
-                if accounts.eleConnected {
-                    Button("Disconnect") { accounts.disconnectELE() }
-                } else {
-                    Button("Sign in to ELE") {
-                        Task {
-                            await accounts.connectELE()
-                            await brain.syncELE()
-                        }
+        let syncing = brain.running.contains(.ele)
+        VStack(alignment: .leading, spacing: 10) {
+            if accounts.busy == "ele" {
+                HStack(spacing: 10) {
+                    ProgressView().controlSize(.small)
+                    Text("Finish signing in in the ELE window (Exeter Microsoft sign-in and MFA)…")
+                        .font(Theme.callout).foregroundStyle(Theme.textSecondary)
+                }
+            } else if !accounts.eleConnected || accounts.eleNeedsSignIn {
+                if accounts.eleNeedsSignIn {
+                    Label("ELE signed you out. Sign in again to keep your modules and deadlines up to date.",
+                          systemImage: "exclamationmark.triangle.fill")
+                        .font(Theme.callout).foregroundStyle(Theme.warning)
+                }
+                Button {
+                    Task { if await accounts.connectELE() { await brain.syncELE() } }
+                } label: {
+                    Label(accounts.eleNeedsSignIn ? "Sign in to ELE again" : "Sign in to ELE", systemImage: "graduationcap.fill")
+                        .font(.title3.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                }
+                .buttonStyle(PillButtonStyle())
+                .controlSize(.large)
+                Text("Opens ele.exeter.ac.uk in a window. Sign in as usual; Orbit stays signed in and reads your modules, weeks, readings and assessments like your browser does.")
+                    .font(Theme.caption).foregroundStyle(Theme.textTertiary)
+            } else {
+                HStack(spacing: 10) {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.success).font(.title3)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(syncing ? "Reading ELE…" : (accounts.eleSummary.map { "✓ \($0)" } ?? "✓ Signed in to ELE"))
+                            .font(Theme.callout.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                        Text(accounts.eleWebSignedIn ? "ele.exeter.ac.uk · syncs every hour" : "Signed in with the Moodle app method")
+                            .font(Theme.caption).foregroundStyle(Theme.textSecondary)
                     }
-                    .buttonStyle(PillButtonStyle())
+                    Spacer()
+                    if syncing { ProgressView().controlSize(.small) }
+                    Button("Sync now") { Task { await brain.syncELE() } }
+                        .disabled(syncing)
+                    Button("Sign out") { accounts.disconnectELE() }
+                        .buttonStyle(.borderless).foregroundStyle(Theme.textSecondary)
                 }
             }
             if !accounts.eleConnected {
                 TextField("Or paste your ELE calendar export link (ELE → Calendar → Export calendar)", text: $calendarURL)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit { Task { await brain.syncELE() } }
-                if let error = accounts.lastError, error.contains("ELE") {
-                    Text(error).font(Theme.caption).foregroundStyle(Theme.warning)
-                }
+            }
+            if let error = accounts.lastError, error.contains("ELE") {
+                Text(error).font(Theme.caption).foregroundStyle(Theme.warning)
             }
         }
     }

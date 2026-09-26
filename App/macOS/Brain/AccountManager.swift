@@ -54,7 +54,7 @@ final class AccountManager {
     /// Microsoft Graph sign-in is an optional advanced extra: only offered when a client ID was built in.
     var microsoftAvailable: Bool { microsoftConfig != nil }
 
-    var eleConnected: Bool { moodle != nil }
+    var eleConnected: Bool { eleWebSignedIn || moodle != nil }
 
     func refreshStatus() async {
         googleConnected = await google?.isSignedIn ?? false
@@ -193,38 +193,56 @@ final class AccountManager {
         return succeeded
     }
 
-    // MARK: ELE (Moodle)
+    // MARK: ELE (website sign-in)
 
-    /// Signs in the way the Moodle mobile app does (Microsoft SSO in a web sheet).
-    func connectELE() async {
+    /// The logged-in ELE browser session (login window + hidden worker web view).
+    @ObservationIgnored let eleWeb = ELEWebSession()
+    /// True once the student has signed in to ELE in the login window (cookies persist).
+    private(set) var eleWebSignedIn = MacPrefs.defaults.bool(forKey: MacPrefs.eleWebSignedIn)
+    /// ELE cookies expired: show "Sign in to ELE again".
+    private(set) var eleNeedsSignIn = MacPrefs.defaults.bool(forKey: MacPrefs.eleWebNeedsSignIn)
+    /// "Found 5 modules, 3 assessments" after the last successful sync.
+    var eleSummary: String? = MacPrefs.defaults.string(forKey: MacPrefs.eleWebSummary)
+
+    /// Opens the ELE login window (Exeter Microsoft SSO + MFA) and waits until the dashboard loads.
+    @discardableResult
+    func connectELE() async -> Bool {
         busy = "ele"
         defer { busy = nil }
-        do {
-            let passport = MoodleAuth.makePassport()
-            var launch: URL?
-            if let config = try? await MoodleAuth().siteConfig() {
-                if !config.isMobileAccessAvailable {
-                    lastError = "ELE has the Moodle app switched off. Paste your ELE calendar export link instead."
-                    return
-                }
-                if config.loginType.usesSSO { launch = config.launchURL }
-            }
-            let scheme = MoodleAuth.defaultURLScheme
-            let url = MoodleAuth.ssoLaunchURL(passport: passport, urlScheme: scheme, launchURL: launch)
-            let authenticator = WebAuthenticator(callbackScheme: scheme)
-            let callback = try await authenticator.authenticate(url: url, callbackScheme: scheme)
-            let credentials = try MoodleAuth.parseSSOCallback(url: callback, passport: passport)
-            try KeychainBlob.save(credentials, key: "ele")
-            moodle = credentials
+        let ok = await eleWeb.signIn()
+        if ok {
+            eleWebSignedIn = true
+            eleNeedsSignIn = false
             lastError = nil
-        } catch OAuthError.cancelled {
-        } catch {
-            lastError = "ELE sign-in didn't work (\(error)). You can paste your ELE calendar export link instead."
+            MacPrefs.defaults.set(true, forKey: MacPrefs.eleWebSignedIn)
+            MacPrefs.defaults.set(false, forKey: MacPrefs.eleWebNeedsSignIn)
         }
+        return ok
+    }
+
+    /// Called by the sync when ELE sends the hidden browser back to the login page.
+    func markELENeedsSignIn() {
+        eleNeedsSignIn = true
+        MacPrefs.defaults.set(true, forKey: MacPrefs.eleWebNeedsSignIn)
+    }
+
+    func eleSyncSucceeded(modules: Int, assessments: Int) {
+        eleNeedsSignIn = false
+        eleSummary = "Found \(modules) module\(modules == 1 ? "" : "s"), \(assessments) assessment\(assessments == 1 ? "" : "s")"
+        MacPrefs.defaults.set(false, forKey: MacPrefs.eleWebNeedsSignIn)
+        MacPrefs.defaults.set(eleSummary, forKey: MacPrefs.eleWebSummary)
     }
 
     func disconnectELE() {
+        // Legacy Moodle-app token (older installs), if any.
         KeychainBlob.delete(key: "ele")
         moodle = nil
+        eleWebSignedIn = false
+        eleNeedsSignIn = false
+        eleSummary = nil
+        for key in [MacPrefs.eleWebSignedIn, MacPrefs.eleWebNeedsSignIn, MacPrefs.eleWebSummary] {
+            MacPrefs.defaults.removeObject(forKey: key)
+        }
+        Task { await eleWeb.signOut() }
     }
 }

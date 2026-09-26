@@ -192,6 +192,22 @@ extension StoredModule {
 
     var code: String { id }
 
+    /// ELE weeks decoded from `weeksJSON`.
+    var weeks: [ELEModuleWeek] {
+        guard let json = weeksJSON, let data = json.data(using: .utf8) else { return [] }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return (try? decoder.decode([ELEModuleWeek].self, from: data)) ?? []
+    }
+
+    func setWeeks(_ weeks: [ELEModuleWeek]) {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = .sortedKeys
+        let json = (try? encoder.encode(weeks)).map { String(decoding: $0, as: UTF8.self) }
+        if json != weeksJSON { weeksJSON = json }
+    }
+
     var value: Module {
         Module(code: id, name: name, credits: credits, eleCourseID: eleCourseID, colorHex: colorHex)
     }

@@ -10,6 +10,7 @@ struct UniView: View {
     @Query private var allAnnouncements: [StoredAnnouncement]
     @Query(sort: \StoredBrief.createdAt, order: .reverse) private var briefs: [StoredBrief]
     @Query private var tasks: [StoredTask]
+    @State private var openModule: StoredModule?
 
     private var assessments: [StoredAssessment] {
         allAssessments.sorted { ($0.due ?? .distantFuture) < ($1.due ?? .distantFuture) }
@@ -32,13 +33,16 @@ struct UniView: View {
                 if modules.isEmpty {
                     Card {
                         EmptyState(systemImage: "graduationcap", title: "No modules yet",
-                                   message: "Connect ELE in Settings on your Mac and your modules, deadlines and reading lists appear here.")
+                                   message: "Sign in to ELE in Settings on your Mac and your modules, weeks, readings and assessments appear here.")
                     }
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 12)], spacing: 12) {
                         ForEach(modules) { m in
-                            ModuleCard(module: m, standing: year.modules.first { $0.moduleCode == m.id },
-                                       review: weekly?.weekly?.modules.first { $0.moduleCode == m.id })
+                            Button { openModule = m } label: {
+                                ModuleCard(module: m, standing: year.modules.first { $0.moduleCode == m.id },
+                                           review: weekly?.weekly?.modules.first { $0.moduleCode == m.id })
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -65,6 +69,10 @@ struct UniView: View {
         }
         .orbitBackground()
         .navigationTitle("Uni")
+        .sheet(item: $openModule) { m in
+            ModuleDetailView(module: m, assessments: assessments.filter { $0.moduleCode == m.id },
+                             readings: readings.filter { $0.moduleCode == m.id })
+        }
     }
 }
 
@@ -228,6 +236,7 @@ struct AssessmentRow: View {
                         ModuleChip(code: assessment.moduleCode)
                         if assessment.weightPercent > 0 { Tag(text: "\(Int(assessment.weightPercent))%", systemImage: "scalemass") }
                         Tag(text: assessment.kind.rawValue.capitalized)
+                        if let words = assessment.wordCount { Tag(text: "\(words.formatted()) words", systemImage: "text.alignleft") }
                         Spacer()
                         if let due = assessment.due {
                             Text(Fmt.due(due, app.calendar)).font(Theme.caption)
@@ -235,6 +244,10 @@ struct AssessmentRow: View {
                         }
                     }
                     Text(assessment.title).font(Theme.body.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                    if let details = assessment.details, !details.isEmpty {
+                        Text(details).font(Theme.caption).foregroundStyle(Theme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     if !plannedTasks.isEmpty {
                         ProgressView(value: Double(done), total: Double(max(1, plannedTasks.count))) {
                             Text("\(done) of \(plannedTasks.count) steps done").font(Theme.caption).foregroundStyle(Theme.textSecondary)
@@ -250,7 +263,7 @@ struct AssessmentRow: View {
                         }
                         .buttonStyle(SoftButtonStyle())
                         if let s = assessment.eleURL, let url = URL(string: s) {
-                            Button { openExternal(url) } label: { Label("ELE", systemImage: "arrow.up.right.square") }
+                            Button { openExternal(url) } label: { Label("Open on ELE", systemImage: "arrow.up.right.square") }
                                 .buttonStyle(.borderless).font(Theme.caption)
                         }
                     }
@@ -349,6 +362,143 @@ struct AnnouncementRow: View {
                 .font(Theme.caption)
                 .buttonStyle(.borderless)
             }
+        }
+    }
+}
+
+/// One module: assessments, then each ELE week's slides/handouts, readings and tutorials.
+struct ModuleDetailView: View {
+    @Environment(AppModel.self) private var app
+    @Environment(\.dismiss) private var dismiss
+    var module: StoredModule
+    var assessments: [StoredAssessment]
+    var readings: [StoredReading]
+
+    private var courseURL: URL? {
+        module.eleCourseID.flatMap { URL(string: "https://ele.exeter.ac.uk/course/view.php?id=\($0)") }
+    }
+
+    var body: some View {
+        let color = Theme.moduleColor(module.id)
+        let weeks = module.weeks
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(alignment: .firstTextBaseline) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(module.id).font(Theme.headline).foregroundStyle(color)
+                            Text(module.name.isEmpty ? module.id : module.name).font(Theme.title(24)).foregroundStyle(Theme.textPrimary)
+                        }
+                        Spacer()
+                        if let courseURL {
+                            Button { openExternal(courseURL) } label: { Label("Open on ELE", systemImage: "arrow.up.right.square") }
+                                .buttonStyle(SoftButtonStyle(color: color))
+                        }
+                    }
+
+                    if !assessments.isEmpty {
+                        SectionHeader(title: "Assessments")
+                        ForEach(assessments) { a in
+                            Card(padding: 12) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack {
+                                        Text(a.title).font(Theme.body.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                                        Spacer()
+                                        if a.weightPercent > 0 { Tag(text: "\(Int(a.weightPercent))%", color: color, systemImage: "scalemass") }
+                                    }
+                                    HStack(spacing: 8) {
+                                        Text(a.due.map { Fmt.due($0, app.calendar) } ?? "Deadline TBA")
+                                            .font(Theme.caption).foregroundStyle(Theme.textSecondary)
+                                        if let w = a.wordCount { Tag(text: "\(w.formatted()) words") }
+                                        Spacer()
+                                        if let s = a.eleURL, let url = URL(string: s) {
+                                            Button("Open on ELE") { openExternal(url) }.buttonStyle(.borderless).font(Theme.caption)
+                                        }
+                                    }
+                                    if let d = a.details, !d.isEmpty {
+                                        Text(d).font(Theme.caption).foregroundStyle(Theme.textTertiary)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    SectionHeader(title: "Weeks", subtitle: weeks.isEmpty ? "Appears after the next ELE sync" : nil)
+                    ForEach(weeks) { w in
+                        WeekCard(week: w, color: color, readings: readings.filter { $0.week == w.week })
+                    }
+                }
+                .padding(Theme.padding)
+            }
+            .orbitBackground()
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 560, idealWidth: 680, minHeight: 520, idealHeight: 760)
+        #endif
+    }
+}
+
+struct WeekCard: View {
+    @Environment(AppModel.self) private var app
+    var week: ELEModuleWeek
+    var color: Color
+    var readings: [StoredReading]
+
+    var body: some View {
+        Card(padding: 12) {
+            DisclosureGroup {
+                VStack(alignment: .leading, spacing: 8) {
+                    if !week.tutorials.isEmpty {
+                        ForEach(week.tutorials, id: \.self) { t in
+                            Label("Tutorial: \(t)", systemImage: "person.3").font(Theme.callout)
+                        }
+                    }
+                    ForEach(Array(week.lectures.enumerated()), id: \.offset) { _, link in linkRow(link, symbol: "doc.richtext") }
+                    if !readings.isEmpty {
+                        ForEach(readings) { r in
+                            Button { withAnimation(Theme.spring) { app.toggle(r) } } label: {
+                                Label(r.title, systemImage: r.done ? "checkmark.square.fill" : "book")
+                                    .font(Theme.callout)
+                                    .foregroundStyle(r.done ? Theme.textTertiary : Theme.textPrimary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    } else {
+                        ForEach(week.readings, id: \.self) { r in Label(r, systemImage: "book").font(Theme.callout) }
+                    }
+                    ForEach(Array(week.readingGuides.enumerated()), id: \.offset) { _, link in linkRow(link, symbol: "list.bullet.rectangle") }
+                    ForEach(Array(week.other.enumerated()), id: \.offset) { _, link in linkRow(link, symbol: "link") }
+                    if week.isEmpty {
+                        Text("Nothing posted yet.").font(Theme.caption).foregroundStyle(Theme.textTertiary)
+                    }
+                }
+                .padding(.top, 6)
+            } label: {
+                HStack {
+                    Text("Week \(week.week)").font(Theme.callout.weight(.semibold)).foregroundStyle(color)
+                    if let d = week.weekCommencing {
+                        Text("w/c \(d.formatted(.dateTime.day().month(.abbreviated)))").font(Theme.caption).foregroundStyle(Theme.textSecondary)
+                    }
+                    Spacer()
+                    if !week.lectures.isEmpty { Tag(text: "\(week.lectures.count)", systemImage: "doc.richtext") }
+                    if !week.readings.isEmpty { Tag(text: "\(week.readings.count)", systemImage: "book") }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func linkRow(_ link: ELEWebLink, symbol: String) -> some View {
+        if let s = link.url, let url = URL(string: s) {
+            Button { openExternal(url) } label: {
+                Label(link.name, systemImage: symbol).font(Theme.callout)
+            }
+            .buttonStyle(.borderless)
+        } else {
+            Label(link.name, systemImage: symbol).font(Theme.callout)
         }
     }
 }
