@@ -5,6 +5,8 @@ import OrbitCore
 /// Sidebar / tab destinations.
 enum Destination: String, CaseIterable, Identifiable, Hashable {
     case today, calendar, inbox, tasks, uni, notes, plans, chat, settings
+    // Mac-only feature screens (App/macOS/Features).
+    case review, progress, focus, money
 
     var id: String { rawValue }
 
@@ -19,6 +21,10 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .plans: "Plans"
         case .chat: "Ask Orbit"
         case .settings: "Settings"
+        case .review: "Flashcards"
+        case .progress: "Progress"
+        case .focus: "Focus"
+        case .money: "Money"
         }
     }
 
@@ -33,6 +39,10 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .plans: "map"
         case .chat: "bubble.left.and.text.bubble.right"
         case .settings: "gearshape"
+        case .review: "rectangle.on.rectangle.angled"
+        case .progress: "chart.bar.xaxis"
+        case .focus: "timer"
+        case .money: "sterlingsign.circle"
         }
     }
 
@@ -53,6 +63,14 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .plans: PlansView()
         case .chat: ChatView()
         case .settings: SettingsView()
+        #if os(macOS)
+        case .review: FlashcardsView()
+        case .progress: ProgressScreen()
+        case .focus: FocusView()
+        case .money: MoneyView()
+        #else
+        case .review, .progress, .focus, .money: EmptyState(systemImage: "desktopcomputer", title: "On your Mac", message: "Open Orbit on your Mac for this.")
+        #endif
         }
     }
 }
@@ -144,8 +162,14 @@ struct MacRootView: View {
                 item(.plans, count: pendingPlans)
                 item(.chat)
             }
-            // TODO(features): "Money" and "Review" (flashcards) screens from App/macOS/Features/
-            // slot in here as their own section once those files exist.
+            Section("Study") {
+                item(.review)
+                item(.progress)
+                item(.focus)
+            }
+            Section("Life") {
+                item(.money)
+            }
         }
         .listStyle(.sidebar)
         .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
@@ -165,8 +189,6 @@ struct MacRootView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        // TODO(features): the focus timer and "Update available" (App/macOS/Features/) go in
-        // their own ToolbarItem before this group once those views exist.
         ToolbarItemGroup(placement: .primaryAction) {
             Button {
                 withAnimation(Motion.quick) { showPalette = true }
@@ -206,6 +228,37 @@ struct MacRootView: View {
             }
             .transition(.opacity)
         }
+    }
+}
+/// Weekly "on track" report, reading plan, deadlines and feedback themes in one place.
+struct ProgressScreen: View {
+    enum Tab: String, CaseIterable, Identifiable {
+        case report = "On track", reading = "Reading plan", deadlines = "Deadlines", feedback = "Feedback"
+        var id: String { rawValue }
+    }
+    @State private var tab: Tab = .report
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Picker("", selection: $tab) {
+                ForEach(Tab.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: 480)
+            .padding(.vertical, Theme.Space.m)
+            Hairline()
+            Group {
+                switch tab {
+                case .report: WeeklyReportView()
+                case .reading: ReadingPlanView()
+                case .deadlines: DeadlinesView()
+                case .feedback: FeedbackThemesView()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .navigationTitle("Progress")
     }
 }
 #else

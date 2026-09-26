@@ -4,7 +4,7 @@ import OrbitCore
 
 /// The Mac's native Settings window (⌘,): tabs of grouped forms.
 struct MacSettingsView: View {
-    private enum Tab: Hashable { case general, accounts, ai, uni, advanced }
+    private enum Tab: Hashable { case general, accounts, ai, uni, extras, money, advanced }
     @State private var tab: Tab = .general
 
     var body: some View {
@@ -21,6 +21,12 @@ struct MacSettingsView: View {
             UniSettingsTab()
                 .tabItem { Label("Uni", systemImage: "graduationcap") }
                 .tag(Tab.uni)
+            FeatureSettingsView()
+                .tabItem { Label("Extras", systemImage: "puzzlepiece.extension") }
+                .tag(Tab.extras)
+            MoneySettingsView()
+                .tabItem { Label("Money", systemImage: "sterlingsign.circle") }
+                .tag(Tab.money)
             AdvancedSettingsTab()
                 .tabItem { Label("Advanced", systemImage: "wrench.and.screwdriver") }
                 .tag(Tab.advanced)

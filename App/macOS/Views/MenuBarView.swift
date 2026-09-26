@@ -82,6 +82,8 @@ struct MenuBarView: View {
                 .padding(.horizontal, Theme.Space.xs)
             }
 
+            FocusMenuBarSection()
+                .padding(.horizontal, Theme.Space.xs)
             Hairline().padding(.vertical, Theme.Space.xs)
             QuickAddField(placeholder: "Quick add")
                 .padding(.horizontal, Theme.Space.xs)
@@ -93,7 +95,6 @@ struct MenuBarView: View {
                     NSApp.activate(ignoringOtherApps: true)
                 }
                 Button("Sync now") { Task { await brain.syncNow() } }
-                // TODO(features): focus timer and "Update available" from App/macOS/Features/ go here.
                 Spacer()
                 BrainStatusFooter().fixedSize()
                 Button("Quit") { NSApp.terminate(nil) }
