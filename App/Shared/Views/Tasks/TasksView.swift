@@ -19,18 +19,24 @@ struct TasksView: View {
         var id: String { rawValue }
     }
 
+    private struct BucketGroup: Identifiable {
+        var bucket: Bucket
+        var items: [StoredTask]
+        var id: Bucket { bucket }
+    }
+
     /// Everything the list shows, computed once per render.
-    private struct Model {
-        var groups: [(Bucket, [StoredTask])] = []
+    private struct ListModel {
+        var groups: [BucketGroup] = []
         var done: [StoredTask] = []
         var nextBlock: [String: StoredBlock] = [:]
         var openCount = 0
         var overdue = 0
-        var ordered: [StoredTask] { groups.flatMap(\.1) }
+        var ordered: [StoredTask] { groups.flatMap(\.items) }
     }
 
-    private func makeModel(now: Date, cal: DayCalendar) -> Model {
-        var m = Model()
+    private func makeModel(now: Date, cal: DayCalendar) -> ListModel {
+        var m = ListModel()
         var todayBlock = Set<String>()
         for b in blocks where !b.skipped && !b.completed && b.end > now {
             if m.nextBlock[b.taskID] == nil { m.nextBlock[b.taskID] = b }
@@ -58,7 +64,7 @@ struct TasksView: View {
             }
             buckets[b, default: []].append(t)
         }
-        m.groups = Bucket.allCases.compactMap { b in buckets[b].map { (b, $0) } }
+        m.groups = Bucket.allCases.compactMap { b in buckets[b].map { BucketGroup(bucket: b, items: $0) } }
         m.done = tasks.filter(\.isDone).sorted { ($0.completedAt ?? now) > ($1.completedAt ?? now) }
         m.openCount = open.count
         m.overdue = open.filter { ($0.deadline ?? .distantFuture) < now }.count
@@ -68,76 +74,83 @@ struct TasksView: View {
     var body: some View {
         let now = Date()
         let model = makeModel(now: now, cal: app.calendar)
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    PageHeader(title: "Tasks", subtitle: subtitle(model))
+        VStack(spacing: 0) {
+            // Header and quick add stay put; only the list scrolls (and takes list keys).
+            VStack(alignment: .leading, spacing: 0) {
+                PageHeader(title: "Tasks", subtitle: subtitle(model))
+                QuickAddField(placeholder: "Add a task, e.g. “essay plan BEM2031 2h by Friday”") { task in
+                    app.selectedTaskID = task.id
+                }
+                .padding(.bottom, Theme.Space.s)
+                Hairline()
+            }
+            .padding(.horizontal, pagePadding)
+            .frame(maxWidth: Theme.readingWidth + pagePadding * 2)
+            .frame(maxWidth: .infinity)
 
-                    QuickAddField(placeholder: "Add a task, e.g. “essay plan BEM2031 2h by Friday”") { task in
-                        app.selectedTaskID = task.id
-                    }
-                    .padding(.bottom, Theme.Space.s)
-                    Hairline()
-
-                    if model.openCount == 0 {
-                        EmptyState(title: "All clear.", message: "Type a task above and Orbit finds it a slot.")
-                    }
-
-                    ForEach(model.groups, id: \.0) { bucket, items in
-                        groupHeader(bucket.rawValue, count: items.count)
-                        ForEach(items) { task in
-                            row(task, model: model, now: now)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        if model.openCount == 0 {
+                            EmptyState(title: "All clear.", message: "Type a task above and Orbit finds it a slot.")
                         }
-                    }
 
-                    if !model.done.isEmpty {
-                        Button {
-                            withAnimation(Motion.smooth) { showDone.toggle() }
-                        } label: {
-                            HStack(spacing: Theme.Space.xs) {
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 9, weight: .semibold))
-                                    .rotationEffect(.degrees(showDone ? 90 : 0))
-                                Text("Completed")
-                                Text("\(model.done.count)").monospacedDigit().foregroundStyle(Theme.textTertiary)
-                            }
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.textSecondary)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.top, Theme.Space.xl)
-                        .padding(.bottom, Theme.Space.xs)
-                        .padding(.horizontal, Theme.Space.s)
-
-                        if showDone {
-                            ForEach(model.done.prefix(50)) { task in
+                        ForEach(model.groups) { group in
+                            groupHeader(group.bucket.rawValue, count: group.items.count)
+                            ForEach(group.items) { task in
                                 row(task, model: model, now: now)
                             }
                         }
+
+                        if !model.done.isEmpty {
+                            Button {
+                                withAnimation(Motion.smooth) { showDone.toggle() }
+                            } label: {
+                                HStack(spacing: Theme.Space.xs) {
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 9, weight: .semibold))
+                                        .rotationEffect(.degrees(showDone ? 90 : 0))
+                                    Text("Completed")
+                                    Text("\(model.done.count)").monospacedDigit().foregroundStyle(Theme.textTertiary)
+                                }
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.textSecondary)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.top, Theme.Space.xl)
+                            .padding(.bottom, Theme.Space.xs)
+                            .padding(.horizontal, Theme.Space.s)
+
+                            if showDone {
+                                ForEach(model.done.prefix(50)) { task in
+                                    row(task, model: model, now: now)
+                                }
+                            }
+                        }
                     }
+                    .padding(.horizontal, pagePadding)
+                    .padding(.bottom, Theme.Space.xxxl)
+                    .frame(maxWidth: Theme.readingWidth + pagePadding * 2)
+                    .frame(maxWidth: .infinity)
+                    .animation(Motion.smooth, value: model.ordered.map(\.id))
                 }
-                .padding(.horizontal, pagePadding)
-                .padding(.bottom, Theme.Space.xxxl)
-                .frame(maxWidth: Theme.readingWidth + pagePadding * 2)
-                .frame(maxWidth: .infinity)
-                .animation(Motion.smooth, value: model.ordered.map(\.id))
-            }
-            .focusable()
-            .focusEffectDisabled()
-            .focused($listFocused)
-            .onKeyPress(.downArrow) { move(1, model: model, proxy: proxy); return .handled }
-            .onKeyPress(.upArrow) { move(-1, model: model, proxy: proxy); return .handled }
-            .onKeyPress(.space) {
-                guard let t = selectedTask else { return .ignored }
-                withAnimation(Motion.smooth) { app.toggleComplete(t) }
-                return .handled
-            }
-            .onKeyPress(.delete) {
-                guard let t = selectedTask else { return .ignored }
-                move(1, model: model, proxy: proxy)
-                withAnimation(Motion.smooth) { app.deleteWithUndo(t) }
-                return .handled
+                .focusable()
+                .focusEffectDisabled()
+                .focused($listFocused)
+                .onKeyPress(.downArrow) { move(1, model: model, proxy: proxy); return .handled }
+                .onKeyPress(.upArrow) { move(-1, model: model, proxy: proxy); return .handled }
+                .onKeyPress(.space) {
+                    guard let t = selectedTask else { return .ignored }
+                    withAnimation(Motion.smooth) { app.toggleComplete(t) }
+                    return .handled
+                }
+                .onKeyPress(.delete) {
+                    guard let t = selectedTask else { return .ignored }
+                    move(1, model: model, proxy: proxy)
+                    withAnimation(Motion.smooth) { app.deleteWithUndo(t) }
+                    return .handled
+                }
             }
         }
         .orbitBackground()
@@ -183,7 +196,7 @@ struct TasksView: View {
         app.selectedTaskID.flatMap { id in tasks.first { $0.id == id } }
     }
 
-    private func subtitle(_ m: Model) -> String {
+    private func subtitle(_ m: ListModel) -> String {
         var parts = ["\(m.openCount) open"]
         if m.overdue > 0 { parts.append("\(m.overdue) overdue") }
         return parts.joined(separator: " · ")
@@ -200,7 +213,7 @@ struct TasksView: View {
         .padding(.bottom, Theme.Space.xs)
     }
 
-    private func row(_ task: StoredTask, model: Model, now: Date) -> some View {
+    private func row(_ task: StoredTask, model: ListModel, now: Date) -> some View {
         TaskRow(task: task, nextBlock: model.nextBlock[task.id], isSelected: app.selectedTaskID == task.id, now: now)
             .id(task.id)
             .onTapGesture {
@@ -218,7 +231,7 @@ struct TasksView: View {
             .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
     }
 
-    private func move(_ delta: Int, model: Model, proxy: ScrollViewProxy) {
+    private func move(_ delta: Int, model: ListModel, proxy: ScrollViewProxy) {
         let ordered = model.ordered + (showDone ? Array(model.done.prefix(50)) : [])
         guard !ordered.isEmpty else { return }
         let index = ordered.firstIndex { $0.id == app.selectedTaskID } ?? (delta > 0 ? -1 : ordered.count)
@@ -236,7 +249,7 @@ struct TaskRow: View {
     var isSelected: Bool = false
     var now: Date = Date()
     /// Optimistic checkbox state while the change settles.
-    @State private var pending: Bool?
+    @State private var pending: Bool? = nil
     @State private var tick = 0
 
     var body: some View {
@@ -312,7 +325,7 @@ private struct TaskEditor: View {
     @Query(sort: \StoredBlock.start) private var allBlocks: [StoredBlock]
     @Query(sort: \StoredModule.id) private var modules: [StoredModule]
     @Bindable var task: StoredTask
-    @State private var savedFingerprint: String?
+    @State private var savedFingerprint: String? = nil
 
     private var fingerprint: String {
         [task.title, task.notes, "\(task.estimateMinutes)", "\(task.minutesDone)", "\(task.priorityRaw)",

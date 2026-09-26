@@ -51,10 +51,10 @@ struct TimeGrid<Detail: View>: View {
     var onSelectDay: ((Date) -> Void)? = nil
     @ViewBuilder var detail: (TimeGridItem) -> Detail
 
-    @State private var selectedID: String?
+    @State private var selectedID: String? = nil
 
-    private let gutter: CGFloat = 52
-    private let topInset: CGFloat = 8
+    private var gutter: CGFloat { 52 }
+    private var topInset: CGFloat { 8 }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -99,7 +99,7 @@ struct TimeGrid<Detail: View>: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(onSelectDay == nil)
+                .allowsHitTesting(onSelectDay != nil)
             }
         }
         .padding(.vertical, Theme.Space.s)
@@ -236,7 +236,7 @@ struct TimeGrid<Detail: View>: View {
                 .frame(width: days.count > 1 ? columnWidth : nil)
                 .frame(maxWidth: days.count > 1 ? nil : .infinity, alignment: .leading)
                 .padding(.leading, CGFloat(index) * columnWidth)
-                .padding(.top, y - 0.75)
+                .padding(.top, y - 3.5)
                 .allowsHitTesting(false)
             }
         }

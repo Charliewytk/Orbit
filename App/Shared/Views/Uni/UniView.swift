@@ -341,7 +341,7 @@ struct ModulePage: View {
 
     enum Tab: String, Hashable { case overview, weeks, assessments, readings }
     @State private var tab: Tab = .overview
-    @State private var replan: StoredAssessment?
+    @State private var replan: StoredAssessment? = nil
 
     private var courseURL: URL? {
         module.eleCourseID.flatMap { URL(string: "https://ele.exeter.ac.uk/course/view.php?id=\($0)") }
@@ -649,7 +649,7 @@ struct WeekOutline: View {
     var readings: [StoredReading]
     var isCurrent: Bool = false
     var startExpanded: Bool = false
-    @State private var expanded: Bool?
+    @State private var expanded: Bool? = nil
 
     var body: some View {
         let open = expanded ?? startExpanded

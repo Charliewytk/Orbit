@@ -625,7 +625,7 @@ struct BrainStatusFooter: View {
                 ProgressView().controlSize(.mini)
                 Text("Syncing \(source.title.lowercased())…")
             } else {
-                Text(brain.openCodeUp ? "OpenCode ready" : brain.ollama.available ? "Ollama ready" : "AI offline")
+                Text(brain.openCodeUp ? "OpenCode ready" : brain.ollama.available ? "Ollama ready" : "Assistant offline")
             }
             Spacer()
         }

@@ -219,7 +219,7 @@ struct NoteDetailView: View {
     @Environment(AppModel.self) private var app
     @Query private var cards: [StoredFlashcard]
     var note: StoredNote
-    @State private var full: LectureNote?
+    @State private var full: LectureNote? = nil
 
     var body: some View {
         Page(maxWidth: 720) {

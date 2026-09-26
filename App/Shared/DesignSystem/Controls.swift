@@ -251,6 +251,11 @@ struct SegmentedHeader<Value: Hashable>: View {
     @Binding var selection: Value
     @Namespace private var ns
 
+    init(options: [(value: Value, title: String)], selection: Binding<Value>) {
+        self.options = options
+        self._selection = selection
+    }
+
     var body: some View {
         HStack(spacing: 2) {
             ForEach(options.indices, id: \.self) { i in
@@ -293,7 +298,7 @@ struct KeyHint: View {
 }
 
 /// Plain accent text button (links, inline suggestions).
-struct LinkButtonStyle: ButtonStyle {
+struct TextLinkButtonStyle: ButtonStyle {
     var color: Color = Theme.accent
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -303,8 +308,8 @@ struct LinkButtonStyle: ButtonStyle {
     }
 }
 
-extension ButtonStyle where Self == LinkButtonStyle {
-    static var orbitLink: LinkButtonStyle { LinkButtonStyle() }
+extension ButtonStyle where Self == TextLinkButtonStyle {
+    static var orbitLink: TextLinkButtonStyle { TextLinkButtonStyle() }
 }
 
 extension ButtonStyle where Self == SoftButtonStyle {

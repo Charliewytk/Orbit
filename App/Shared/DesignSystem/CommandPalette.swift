@@ -57,6 +57,10 @@ struct CommandPalette: View {
     @State private var selection = 0
     @FocusState private var focused: Bool
 
+    init(isPresented: Binding<Bool>) {
+        self._isPresented = isPresented
+    }
+
     var body: some View {
         let results = self.results
         VStack(spacing: 0) {
@@ -158,7 +162,7 @@ struct CommandPalette: View {
             }
             .sorted { $0.1 > $1.1 }
             .prefix(24)
-            .map(\.0)
+            .map { $0.0 }
         // Keep sections together, in the order of their best hit.
         var order: [String] = []
         for c in best where !order.contains(c.section) { order.append(c.section) }

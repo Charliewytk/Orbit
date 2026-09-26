@@ -165,6 +165,8 @@ struct MacRootView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
+        // TODO(features): the focus timer and "Update available" (App/macOS/Features/) go in
+        // their own ToolbarItem before this group once those views exist.
         ToolbarItemGroup(placement: .primaryAction) {
             Button {
                 withAnimation(Motion.quick) { showPalette = true }

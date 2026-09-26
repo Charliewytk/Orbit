@@ -21,7 +21,7 @@ public struct GitHubRelease: Codable, Hashable, Sendable {
     /// The full commit SHA from a "sha: <40 hex>" line in the release notes.
     public var commitSHA: String? {
         guard let body else { return nil }
-        let pattern = "(?im)^\\s*[*_`]*sha[*_`]*\\s*:\\s*`?([0-9a-f]{7,40})`?"
+        let pattern = "(?im)^\\s*[*_`]*sha[*_`]*\\s*:[*_`]*\\s*`?([0-9a-f]{7,40})"
         guard let re = try? NSRegularExpression(pattern: pattern),
               let m = re.firstMatch(in: body, range: NSRange(body.startIndex..., in: body)),
               let r = Range(m.range(at: 1), in: body) else { return nil }

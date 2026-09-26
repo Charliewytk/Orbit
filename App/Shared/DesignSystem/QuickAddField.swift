@@ -14,6 +14,12 @@ struct QuickAddField: View {
     @State private var added = 0
     @FocusState private var focused: Bool
 
+    init(placeholder: String = "Add a task", autofocus: Bool = false, onAdded: ((StoredTask) -> Void)? = nil) {
+        self.placeholder = placeholder
+        self.autofocus = autofocus
+        self.onAdded = onAdded
+    }
+
     var body: some View {
         let trimmed = text.trimmingCharacters(in: .whitespaces)
         let result = trimmed.isEmpty ? nil : app.parse(text)
