@@ -4,7 +4,7 @@ import OrbitCore
 
 /// Sidebar / tab destinations.
 enum Destination: String, CaseIterable, Identifiable, Hashable {
-    case today, calendar, inbox, tasks, uni, notes, plans, chat, settings
+    case home, today, calendar, inbox, tasks, uni, notes, plans, chat, settings
     // Mac-only feature screens (App/macOS/Features).
     case review, progress, focus, money, careers
 
@@ -12,6 +12,7 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
+        case .home: "Home"
         case .today: "Today"
         case .calendar: "Calendar"
         case .inbox: "Inbox"
@@ -31,31 +32,58 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
 
     var symbol: String {
         switch self {
-        case .today: "sun.max"
+        case .home: "house.fill"
+        case .today: "sun.max.fill"
         case .calendar: "calendar"
-        case .inbox: "tray"
+        case .inbox: "tray.full.fill"
         case .tasks: "checklist"
-        case .uni: "graduationcap"
+        case .uni: "graduationcap.fill"
         case .notes: "note.text"
-        case .plans: "map"
-        case .chat: "bubble.left.and.text.bubble.right"
-        case .settings: "gearshape"
-        case .review: "rectangle.on.rectangle.angled"
+        case .plans: "map.fill"
+        case .chat: "bubble.left.and.text.bubble.right.fill"
+        case .settings: "gearshape.fill"
+        case .review: "rectangle.on.rectangle.angled.fill"
         case .progress: "chart.bar.xaxis"
         case .focus: "timer"
-        case .money: "sterlingsign.circle"
-        case .careers: "briefcase"
+        case .money: "sterlingsign"
+        case .careers: "briefcase.fill"
+        }
+    }
+
+    /// The icon tile colour (macOS Settings style).
+    var color: Color {
+        switch self {
+        case .home: Theme.accent
+        case .today: Color(hex: 0xFF9F0A)
+        case .calendar: Color(hex: 0xFF3B5C)
+        case .inbox: Color(hex: 0x0A84FF)
+        case .tasks: Color(hex: 0xFF8A00)
+        case .uni: Color(hex: 0x8B5CF6)
+        case .notes: Color(hex: 0xF5B400)
+        case .plans: Color(hex: 0x30C75E)
+        case .chat: Color(hex: 0xEC4899)
+        case .settings: Color(hex: 0x8E8E93)
+        case .review: Color(hex: 0x06B6D4)
+        case .progress: Color(hex: 0x14B8A6)
+        case .focus: Color(hex: 0x5E5CE6)
+        case .money: Color(hex: 0x22C55E)
+        case .careers: Color(hex: 0xB7791F)
         }
     }
 
     /// The Mac sidebar order; ⌘1…⌘8 follow it.
-    static let macSidebar: [Destination] = [.today, .calendar, .inbox, .tasks, .uni, .notes, .plans, .chat]
+    static let macSidebar: [Destination] = [.home, .calendar, .inbox, .tasks, .uni, .notes, .plans, .chat]
 
     /// The screen's content. Callers wrap it in a `NavigationStack`
     /// (or push it onto an existing one), so screens never nest stacks.
     @MainActor @ViewBuilder
     var screen: some View {
         switch self {
+        #if os(macOS)
+        case .home: HomeView()
+        #else
+        case .home: TodayView()
+        #endif
         case .today: TodayView()
         case .calendar: CalendarView()
         case .inbox: InboxView()
@@ -91,7 +119,11 @@ struct RootView: View {
                 PhoneRootView()
                 #endif
             } else {
+                #if os(macOS)
+                MacOnboardingView { withAnimation(Motion.smooth) { onboardingDone = true } }
+                #else
                 OnboardingView { withAnimation(Motion.quick) { onboardingDone = true } }
+                #endif
             }
         }
         .tint(Theme.accent)
@@ -103,7 +135,7 @@ struct RootView: View {
 struct MacRootView: View {
     @Environment(AppModel.self) private var app
     @Environment(OrbitBrain.self) private var brain
-    @State private var selection: Destination? = .today
+    @State private var selection: Destination? = .home
     @State private var showPalette = false
     @State private var showQuickAdd = false
     @Query private var plans: [StoredPlan]
@@ -112,81 +144,50 @@ struct MacRootView: View {
 
     var body: some View {
         NavigationSplitView {
-            sidebar
+            GlassSidebar(selection: $selection, counts: counts)
+                .navigationSplitViewColumnWidth(min: 210, ideal: 232, max: 290)
         } detail: {
             NavigationStack {
-                (selection ?? .today).screen
+                (selection ?? .home).screen
             }
-            .id(selection ?? .today)
-            .transition(.opacity)
+            .id(selection ?? .home)
+            .transition(.opacity.combined(with: .scale(scale: 0.995)))
             .environment(\.dedicatedTaskIDs, homeworkTaskIDs)
-            .frame(minWidth: 560, minHeight: 480)
+            .frame(minWidth: 620, minHeight: 520)
             .toolbar { toolbarContent }
         }
         .animation(Motion.fade, value: selection)
         .overlay { paletteOverlay }
         .onReceive(NotificationCenter.default.publisher(for: .orbitNavigate)) { note in
-            if let d = note.object as? Destination, d != .settings { selection = d }
+            guard let d = note.object as? Destination, d != .settings else { return }
+            // Today lives on the Home dashboard on the Mac.
+            selection = d == .today ? .home : d
         }
         .onReceive(NotificationCenter.default.publisher(for: .orbitCommandPalette)) { _ in
             withAnimation(Motion.quick) { showPalette.toggle() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .orbitQuickAdd)) { _ in
-            showQuickAdd = true
+            if selection == .home {
+                NotificationCenter.default.post(name: .orbitFocusHomeQuickAdd, object: nil)
+            } else {
+                showQuickAdd = true
+            }
         }
     }
 
-    /// Homework has its own section on Today, so Due soon leaves those tasks out.
+    /// Homework has its own section on Home, so Due soon leaves those tasks out.
     private var homeworkTaskIDs: Set<String> {
         Set(brain.academic.homework.map { $0.taskID.uuidString })
     }
 
-    // MARK: Sidebar
-
-    private var sidebar: some View {
+    private var counts: [Destination: Int] {
         let now = Date()
         let cal = app.calendar
         let dueToday = openTasks.filter { t in t.deadline.map { cal.days(from: now, to: $0) <= 0 } ?? false }.count
         let recentMail = unhandledMail.filter { $0.date > now.addingTimeInterval(-7 * 86400) && $0.category != .ignore }.count
         let pendingPlans = plans.filter { $0.status == .pending && $0.start > now }.count
-
-        return List(selection: $selection) {
-            Section {
-                item(.today)
-                item(.calendar)
-                item(.inbox, count: recentMail)
-                item(.tasks, count: dueToday)
-            }
-            Section("University") {
-                item(.uni)
-                item(.notes)
-            }
-            Section("Personal") {
-                item(.plans, count: pendingPlans)
-                item(.chat)
-            }
-            Section("Study") {
-                item(.review)
-                item(.progress)
-                item(.focus)
-            }
-            Section("Life") {
-                item(.money)
-                item(.careers)
-            }
-        }
-        .listStyle(.sidebar)
-        .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            BrainStatusFooter()
-                .padding(.horizontal, Theme.Space.l)
-                .padding(.vertical, Theme.Space.m)
-        }
-    }
-
-    private func item(_ d: Destination, count: Int = 0) -> some View {
-        SidebarItem(title: d.title, systemImage: d.symbol, count: count)
-            .tag(d)
+        let dueCards = FeatureHub.shared.dailyReviewPlan(now: now).dueCount
+        return [.inbox: recentMail, .tasks: dueToday, .plans: pendingPlans, .review: dueCards]
     }
 
     // MARK: Toolbar
@@ -211,8 +212,8 @@ struct MacRootView: View {
                 QuickAddField(placeholder: "Add a task, e.g. “essay plan BEM2031 2h by Fri”", autofocus: true) { _ in
                     showQuickAdd = false
                 }
-                .frame(width: 420)
-                .padding(Theme.Space.s)
+                .frame(width: 440)
+                .padding(Theme.Space.m)
             }
         }
     }
@@ -223,17 +224,127 @@ struct MacRootView: View {
     private var paletteOverlay: some View {
         if showPalette {
             ZStack(alignment: .top) {
-                Color.black.opacity(0.08)
+                Color.black.opacity(0.12)
                     .ignoresSafeArea()
                     .onTapGesture { withAnimation(Motion.quick) { showPalette = false } }
                 CommandPalette(isPresented: $showPalette)
                     .padding(.top, 88)
-                    .transition(.scale(scale: 0.98, anchor: .top).combined(with: .opacity))
+                    .transition(.scale(scale: 0.96, anchor: .top).combined(with: .opacity))
             }
             .transition(.opacity)
         }
     }
 }
+
+/// The Mac sidebar: grouped rows with colour icon tiles and a sliding glass
+/// capsule for the selection (no heavy accent-filled row).
+struct GlassSidebar: View {
+    @Binding var selection: Destination?
+    var counts: [Destination: Int]
+    @Namespace private var ns
+    @FocusState private var focused: Bool
+
+    static let sections: [(title: String?, items: [Destination])] = [
+        (nil, [.home, .calendar, .inbox, .tasks]),
+        ("University", [.uni, .notes, .review, .progress]),
+        ("Focus and life", [.focus, .plans, .money, .careers]),
+        ("Assistant", [.chat]),
+    ]
+
+    private var flat: [Destination] { Self.sections.flatMap(\.items) }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Self.sections.indices, id: \.self) { i in
+                    let section = Self.sections[i]
+                    if let title = section.title {
+                        Text(title.uppercased())
+                            .font(.system(size: 10, weight: .bold))
+                            .tracking(0.6)
+                            .foregroundStyle(Theme.textTertiary)
+                            .padding(.horizontal, 12)
+                            .padding(.top, Theme.Space.l)
+                            .padding(.bottom, 4)
+                    }
+                    ForEach(section.items) { d in row(d) }
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, Theme.Space.s)
+        }
+        .scrollIndicators(.never)
+        .focusable()
+        .focused($focused)
+        .focusEffectDisabled()
+        .onKeyPress(.upArrow) { move(-1); return .handled }
+        .onKeyPress(.downArrow) { move(1); return .handled }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            BrainStatusFooter()
+                .padding(.horizontal, Theme.Space.m)
+                .padding(.vertical, 8)
+                .orbitGlass(in: Capsule())
+                .padding(.horizontal, Theme.Space.m)
+                .padding(.bottom, Theme.Space.m)
+        }
+    }
+
+    private func row(_ d: Destination) -> some View {
+        let selected = selection == d
+        return Button {
+            withAnimation(Motion.snappy) { selection = d }
+        } label: {
+            SidebarItem(title: d.title, systemImage: d.symbol, color: d.color, count: counts[d] ?? 0, selected: selected)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background {
+                    if selected {
+                        Color.clear
+                            .orbitGlass(in: Capsule(), tint: d.color)
+                            .matchedGeometryEffect(id: "selection", in: ns)
+                    }
+                }
+                .contentShape(Capsule())
+        }
+        .buttonStyle(SidebarRowStyle(selected: selected))
+        .help(d.title)
+    }
+
+    private func move(_ delta: Int) {
+        let list = flat
+        let index = list.firstIndex(of: selection ?? .home) ?? 0
+        let next = min(max(0, index + delta), list.count - 1)
+        withAnimation(Motion.snappy) { selection = list[next] }
+    }
+}
+
+/// Hover fill for sidebar rows that aren't selected.
+private struct SidebarRowStyle: ButtonStyle {
+    var selected: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        SidebarRowBody(configuration: configuration, selected: selected)
+    }
+
+    private struct SidebarRowBody: View {
+        var configuration: ButtonStyleConfiguration
+        var selected: Bool
+        @State private var hovering = false
+
+        var body: some View {
+            configuration.label
+                .background(Capsule().fill(!selected && hovering ? Theme.hover : .clear))
+                .scaleEffect(configuration.isPressed ? 0.98 : 1)
+                .onHover { hovering = $0 }
+                .animation(Motion.fade, value: hovering)
+        }
+    }
+}
+
+extension Notification.Name {
+    /// Focus the Home dashboard's big quick-add bar (⌘N while Home is showing).
+    static let orbitFocusHomeQuickAdd = Notification.Name("orbitFocusHomeQuickAdd")
+}
+
 /// Weekly "on track" report, reading plan, deadlines and feedback themes in one place.
 struct ProgressScreen: View {
     enum Tab: String, CaseIterable, Identifiable {
@@ -244,14 +355,8 @@ struct ProgressScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("", selection: $tab) {
-                ForEach(Tab.allCases) { Text($0.rawValue).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: 480)
-            .padding(.vertical, Theme.Space.m)
-            Hairline()
+            GlassSegmented(options: Tab.allCases.map { ($0, $0.rawValue) }, selection: $tab)
+                .padding(.vertical, Theme.Space.m)
             Group {
                 switch tab {
                 case .report: WeeklyReportView()
@@ -261,7 +366,9 @@ struct ProgressScreen: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .scrollContentBackground(.hidden)
         }
+        .orbitBackground()
         .navigationTitle("Progress")
     }
 }
@@ -299,7 +406,7 @@ struct MoreLinks: View {
                     d.screen
                 } label: {
                     HStack(spacing: Theme.Space.m) {
-                        Image(systemName: d.symbol).frame(width: 24).foregroundStyle(Theme.textSecondary)
+                        IconTile(symbol: d.symbol, color: d.color, size: 26)
                         Text(d.title).foregroundStyle(Theme.textPrimary)
                         Spacer()
                         Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.textTertiary)

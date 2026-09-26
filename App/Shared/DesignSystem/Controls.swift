@@ -76,36 +76,48 @@ extension ListRow where Leading == EmptyView {
 
 // MARK: - Checkbox
 
-/// Things-style circular checkbox. Fills instantly; the caller persists.
+/// Round checkbox: fills with the accent gradient, bounces and bursts when ticked.
 struct CircleCheckbox: View {
     var isOn: Bool
     var color: Color = Theme.textTertiary
-    var size: CGFloat = 16
+    var size: CGFloat = 18
     var action: () -> Void
     @State private var hovering = false
+    @State private var bursts = 0
+    @State private var pop = false
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            if !isOn { bursts += 1; pop = true }
+            action()
+        } label: {
             ZStack {
                 Circle()
-                    .strokeBorder(isOn ? Theme.accent : (hovering ? Theme.textSecondary : color), lineWidth: 1.25)
+                    .strokeBorder(isOn ? Color.clear : (hovering ? Theme.accent : color), lineWidth: 1.5)
                 Circle()
-                    .fill(Theme.accent)
-                    .scaleEffect(isOn ? 1 : 0.4)
+                    .fill(Theme.accentGradient)
+                    .scaleEffect(isOn ? 1 : 0.3)
                     .opacity(isOn ? 1 : 0)
+                    .shadow(color: Theme.violet.opacity(isOn ? 0.45 : 0), radius: 4)
                 Image(systemName: "checkmark")
-                    .font(.system(size: size * 0.55, weight: .bold))
+                    .font(.system(size: size * 0.5, weight: .heavy))
                     .foregroundStyle(.white)
-                    .scaleEffect(isOn ? 1 : 0.5)
+                    .scaleEffect(isOn ? 1 : 0.3)
                     .opacity(isOn ? 1 : 0)
+                CheckBurst(trigger: bursts)
             }
             .frame(width: size, height: size)
-            .contentShape(Circle().inset(by: -4))
+            .scaleEffect(pop ? 1.25 : 1)
+            .contentShape(Circle().inset(by: -5))
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
-        .animation(Motion.snappy, value: isOn)
+        .animation(Motion.bouncy, value: isOn)
         .animation(Motion.fade, value: hovering)
+        .onChange(of: pop) { _, new in
+            guard new else { return }
+            withAnimation(Motion.bouncy.delay(0.12)) { pop = false }
+        }
         .accessibilityLabel(isOn ? "Done" : "Not done")
         .help(isOn ? "Mark not done" : "Complete")
     }
@@ -151,30 +163,34 @@ struct DueText: View {
 
 // MARK: - Page structure
 
-/// Notion-style page header: a large title and one line of quiet metadata.
+/// Page header: a big bold title, a gradient underline and one line of metadata.
 struct PageHeader<Accessory: View>: View {
     var title: String
     var subtitle: String? = nil
     @ViewBuilder var accessory: Accessory
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Space.m) {
+        HStack(alignment: .bottom, spacing: Theme.Space.m) {
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
                 Text(title)
                     .font(Theme.pageTitle)
                     .foregroundStyle(Theme.textPrimary)
                     .textSelection(.enabled)
+                Capsule()
+                    .fill(Theme.accentGradient)
+                    .frame(width: 44, height: 4)
                 if let subtitle, !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(Theme.body)
+                        .font(Theme.body.weight(.medium))
                         .foregroundStyle(Theme.textSecondary)
                         .contentTransition(.numericText())
+                        .padding(.top, 2)
                 }
             }
             Spacer(minLength: 0)
             accessory
         }
-        .padding(.top, Theme.Space.xxl)
+        .padding(.top, Theme.Space.xl)
         .padding(.bottom, Theme.Space.l)
     }
 }
@@ -185,7 +201,7 @@ extension PageHeader where Accessory == EmptyView {
     }
 }
 
-/// A scrollable, centred page column with Notion-like margins.
+/// A scrollable, centred page column over the ambient backdrop.
 struct Page<Content: View>: View {
     var maxWidth: CGFloat = Theme.readingWidth
     @ViewBuilder var content: Content
@@ -205,14 +221,14 @@ struct Page<Content: View>: View {
 
     private var horizontalPadding: CGFloat {
         #if os(macOS)
-        return Theme.Space.xxxl
+        return Theme.Space.xxl
         #else
         return Theme.Space.l
         #endif
     }
 }
 
-/// A titled section on a page: 17 pt heading, then content, then space.
+/// A titled glass card on a page.
 struct PageSection<Content: View, Accessory: View>: View {
     var title: String
     var count: Int? = nil
@@ -225,8 +241,11 @@ struct PageSection<Content: View, Accessory: View>: View {
                 Text(title).font(Theme.sectionTitle).foregroundStyle(Theme.textPrimary)
                 if let count {
                     Text("\(count)")
-                        .font(Theme.body.monospacedDigit())
-                        .foregroundStyle(Theme.textTertiary)
+                        .font(Theme.caption.monospacedDigit().weight(.bold))
+                        .foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2)
+                        .background(Theme.accent.opacity(0.14), in: Capsule())
                         .contentTransition(.numericText())
                 }
                 Spacer(minLength: 0)
@@ -235,7 +254,10 @@ struct PageSection<Content: View, Accessory: View>: View {
             .padding(.bottom, Theme.Space.xs)
             content
         }
-        .padding(.top, Theme.Space.xl)
+        .padding(Theme.Space.l)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .orbitGlassCard()
+        .padding(.top, Theme.Space.l)
     }
 }
 
@@ -245,11 +267,10 @@ extension PageSection where Accessory == EmptyView {
     }
 }
 
-/// A plain segmented control for switching views inside a page.
+/// A capsule segmented control for switching views inside a page.
 struct SegmentedHeader<Value: Hashable>: View {
     var options: [(value: Value, title: String)]
     @Binding var selection: Value
-    @Namespace private var ns
 
     init(options: [(value: Value, title: String)], selection: Binding<Value>) {
         self.options = options
@@ -257,30 +278,7 @@ struct SegmentedHeader<Value: Hashable>: View {
     }
 
     var body: some View {
-        HStack(spacing: 2) {
-            ForEach(options.indices, id: \.self) { i in
-                let option = options[i]
-                let selected = option.value == selection
-                Button {
-                    withAnimation(Motion.snappy) { selection = option.value }
-                } label: {
-                    Text(option.title)
-                        .font(Theme.body.weight(selected ? .medium : .regular))
-                        .foregroundStyle(selected ? Theme.textPrimary : Theme.textSecondary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background {
-                            if selected {
-                                RoundedRectangle(cornerRadius: Theme.Radius.s, style: .continuous)
-                                    .fill(Theme.pressed)
-                                    .matchedGeometryEffect(id: "segment", in: ns)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-        }
+        GlassSegmented(options: options, selection: $selection)
     }
 }
 
@@ -293,7 +291,7 @@ struct KeyHint: View {
             .foregroundStyle(Theme.textTertiary)
             .padding(.horizontal, 5)
             .padding(.vertical, 1)
-            .background(Theme.hover, in: RoundedRectangle(cornerRadius: Theme.Radius.xs, style: .continuous))
+            .background(Theme.hover, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
     }
 }
 
@@ -318,20 +316,28 @@ extension ButtonStyle where Self == SoftButtonStyle {
 
 // MARK: - Sidebar
 
-/// A sidebar row: SF Symbol, title and an optional count in secondary text.
+/// A sidebar row: colour icon tile, title and a count badge.
 struct SidebarItem: View {
     var title: String
     var systemImage: String
+    var color: Color = Theme.accent
     var count: Int = 0
+    var selected: Bool = false
 
     var body: some View {
-        HStack(spacing: 0) {
-            Label(title, systemImage: systemImage)
+        HStack(spacing: 9) {
+            IconTile(symbol: systemImage, color: color, size: 22)
+            Text(title)
+                .font(Theme.body.weight(selected ? .semibold : .medium))
+                .foregroundStyle(Theme.textPrimary)
             Spacer(minLength: Theme.Space.s)
             if count > 0 {
                 Text("\(count)")
-                    .font(Theme.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    .font(Theme.caption.monospacedDigit().weight(.bold))
+                    .foregroundStyle(selected ? .white : Theme.textSecondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(selected ? AnyShapeStyle(color) : AnyShapeStyle(Theme.hover), in: Capsule())
                     .contentTransition(.numericText())
                     .animation(Motion.snappy, value: count)
             }
@@ -350,14 +356,18 @@ struct TwoPane<Selection: Hashable, ListContent: View, Detail: View>: View {
 
     var body: some View {
         #if os(macOS)
-        HStack(spacing: 0) {
+        HStack(spacing: Theme.Space.m) {
             list
                 .frame(width: listWidth)
                 .frame(maxHeight: .infinity)
-            Rectangle().fill(Theme.separator).frame(width: Theme.hairline)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+                .orbitGlassCard()
             detail(selection)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+                .orbitGlassCard()
         }
+        .padding(Theme.Space.m)
         .orbitBackground()
         #else
         list
@@ -377,8 +387,10 @@ struct ToastView: View {
 
     var body: some View {
         HStack(spacing: Theme.Space.m) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(Theme.accentGradient)
             Text(toast.text)
-                .font(Theme.body)
+                .font(Theme.body.weight(.medium))
                 .foregroundStyle(Theme.textPrimary)
                 .lineLimit(2)
             if toast.undo != nil {
@@ -389,10 +401,8 @@ struct ToastView: View {
         }
         .padding(.horizontal, Theme.Space.l)
         .padding(.vertical, 10)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.m, style: .continuous)
-            .strokeBorder(Theme.border, lineWidth: Theme.hairline))
-        .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
+        .orbitGlass(in: Capsule(), tint: Theme.accent)
+        .shadow(color: Theme.glassShadow, radius: 16, y: 6)
         .onTapGesture(perform: onDismiss)
     }
 }

@@ -276,6 +276,7 @@ final class AppModel {
     func review(_ card: StoredFlashcard, grade: Int) {
         card.apply(SpacedRepetition.reviewWithLearningSteps(card.value, grade: grade, now: Date()))
         context.saveQuietly()
+        NotificationCenter.default.post(name: .orbitFlashcardReviewed, object: nil)
     }
 
     // MARK: Uni
@@ -366,6 +367,11 @@ final class AppModel {
         WidgetCenter.shared.reloadAllTimelines()
         #endif
     }
+}
+
+extension Notification.Name {
+    /// Posted after a flashcard review from the shared screens (the Mac counts it for the rings).
+    static let orbitFlashcardReviewed = Notification.Name("orbitFlashcardReviewed")
 }
 
 /// A short message at the bottom of the window, optionally with Undo.

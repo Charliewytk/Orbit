@@ -102,6 +102,7 @@ extension FeatureHub {
         state.cardMeta[card.id.uuidString] = meta
         let day = cal.format(now, "yyyy-MM-dd")
         state.reviewedToday = [day: (state.reviewedToday[day] ?? 0) + 1]
+        stats.recordReview(now: now)
         context.saveQuietly()
         completeReviewTaskIfDone(now: now)
     }

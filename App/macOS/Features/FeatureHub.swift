@@ -26,6 +26,7 @@ final class FeatureHub {
     let capture = QuickCaptureController()
     let careers = CareersService()
     let ed = EdService()
+    let stats = StatsService()
 
     // UI status
     var flashcardStatus = ""
@@ -60,6 +61,8 @@ final class FeatureHub {
         capture.hub = self
         careers.hub = self
         ed.hub = self
+        stats.hub = self
+        stats.load()
         careers.load()
         ed.load()
         focus.restore(state.activeFocus)
@@ -89,6 +92,7 @@ final class FeatureHub {
         money.save()
         careers.save()
         ed.save()
+        stats.save()
     }
 
     /// Every minute. Each job decides for itself whether it's due.
