@@ -252,13 +252,14 @@ public struct NoteIndex: Codable, Sendable {
 
     /// Keyword (and, with `queryEmbedding`, semantic) search. `moduleCode` narrows to one module.
     public func search(_ query: String, moduleCode: String? = nil, limit: Int = 8,
-                       queryEmbedding: [Double]? = nil) -> [NoteSearchHit] {
+                       queryEmbedding: [Double]? = nil, include: ((IndexedNoteChunk) -> Bool)? = nil) -> [NoteSearchHit] {
         let qTerms = Self.terms(query)
         let keyword = bm25(qTerms)
         let maxKeyword = keyword.max() ?? 0
         var hits: [NoteSearchHit] = []
         for (i, chunk) in chunks.enumerated() {
             if let moduleCode, chunk.moduleCode?.caseInsensitiveCompare(moduleCode) != .orderedSame { continue }
+            if let include, !include(chunk) { continue }
             let k = maxKeyword > 0 ? keyword[i] / maxKeyword : 0
             var semantic: Double?
             if let q = queryEmbedding, let e = chunk.embedding { semantic = Self.cosine(q, e) }
@@ -279,9 +280,9 @@ public struct NoteIndex: Codable, Sendable {
 
     /// Hybrid search, embedding the query with `embedder`. Falls back to keywords if embedding fails.
     public func search(_ query: String, moduleCode: String? = nil, limit: Int = 8,
-                       embedder: NoteEmbedder) async -> [NoteSearchHit] {
+                       embedder: NoteEmbedder, include: (@Sendable (IndexedNoteChunk) -> Bool)? = nil) async -> [NoteSearchHit] {
         let q = try? await embedder.embed([query]).first
-        return search(query, moduleCode: moduleCode, limit: limit, queryEmbedding: q ?? nil)
+        return search(query, moduleCode: moduleCode, limit: limit, queryEmbedding: q ?? nil, include: include)
     }
 
     static func cosine(_ a: [Double], _ b: [Double]) -> Double {

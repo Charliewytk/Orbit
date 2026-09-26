@@ -31,9 +31,13 @@ public struct DateMatch: Hashable, Sendable {
 public struct DateExtractor: Sendable {
     public var now: Date
     public var timeZone: TimeZone
+    /// When set, teaching-week phrases ("end of week 2", "week 1 of term 2",
+    /// "W/c 21 September", "by week 3 Monday") are understood too.
+    public var academic: AcademicCalendar?
 
-    public init(now: Date = Date(), timeZone: TimeZone = TimeZone(identifier: "Europe/London")!) {
-        self.now = now; self.timeZone = timeZone
+    public init(now: Date = Date(), timeZone: TimeZone = TimeZone(identifier: "Europe/London")!,
+                academic: AcademicCalendar? = nil) {
+        self.now = now; self.timeZone = timeZone; self.academic = academic
     }
 
     /// The first date in the text, if any.
@@ -51,6 +55,17 @@ public struct DateExtractor: Sendable {
                     atom.range = m.range
                     atoms.append(atom)
                 }
+            }
+        }
+
+        if let academic {
+            for m in academic.matches(in: text, reference: now) {
+                var atom = Atom()
+                atom.range = m.range
+                atom.day = cal.startOfDay(m.date)
+                if m.hasTime { atom.minute = cal.minuteOfDay(m.date) }
+                atom.periodEnd = m.periodEnd
+                atoms.append(atom)
             }
         }
 

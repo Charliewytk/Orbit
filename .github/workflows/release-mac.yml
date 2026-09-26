@@ -23,6 +23,8 @@ concurrency:
 jobs:
   build:
     name: Build Orbit.app
+    # Skip work-in-progress snapshots so half-finished versions never get published.
+    if: github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'WIP')
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4

@@ -47,11 +47,16 @@ public enum ELEAssessmentExtractor {
         public var timeZone: TimeZone
         /// Hour used when neither table nor brief gives a time (Exeter's usual noon).
         public var defaultHour: Int
+        /// Resolves week-based deadlines ("end of week 5", "week 1 of term 2").
+        public var academic: AcademicCalendar?
+        /// The module's teaching term, for "week N" with no term stated.
+        public var term: Int?
 
         public init(moduleCode: String, academicYear: Int, sectionURL: String? = nil,
-                    timeZone: TimeZone = ELEWebParser.london, defaultHour: Int = 12) {
+                    timeZone: TimeZone = ELEWebParser.london, defaultHour: Int = 12,
+                    academic: AcademicCalendar? = nil, term: Int? = nil) {
             self.moduleCode = moduleCode; self.academicYear = academicYear; self.sectionURL = sectionURL
-            self.timeZone = timeZone; self.defaultHour = defaultHour
+            self.timeZone = timeZone; self.defaultHour = defaultHour; self.academic = academic; self.term = term
         }
     }
 
@@ -212,6 +217,16 @@ public enum ELEAssessmentExtractor {
     public static func resolveDue(_ deadline: String, brief: String, kind: AssessmentKind,
                                   context: Context) -> (Date?, String?) {
         let lower = deadline.lowercased()
+        let tentative = lower.contains("tba") || lower.contains("tbc") || lower.contains("to be") || lower.contains("exam period")
+        if !tentative, dayMonth(in: deadline) == nil, let academic = context.academic,
+           let m = academic.resolve(deadline, reference: Date(), term: context.term) {
+            var due = m.dueDate(in: academic)
+            if let t = time(in: deadline), !m.isPeriod {
+                due = academic.dayCalendar.date(minute: t.hour * 60 + t.minute, of: m.date)
+            }
+            let week = academic.academicWeek(term: m.term, week: m.week).map(\.label) ?? "week \(m.week)"
+            return (due, "Due \(deadline) (\(week)); check the exact time on ELE")
+        }
         if lower.contains("tba") || lower.contains("tbc") || lower.contains("to be") || lower.contains("exam period")
             || (dayMonth(in: deadline) == nil && (lower.contains("term") || lower.contains("week"))) {
             return (nil, deadline.isEmpty ? nil : "Due date \(deadline)")
