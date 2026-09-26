@@ -33,11 +33,15 @@ struct MoneyView: View {
                 }
             }
         }
-        .toolbar {
-            Picker("View", selection: $tab) {
-                ForEach(Tab.allCases) { Text($0.rawValue).tag($0) }
+        .scrollContentBackground(.hidden)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if money.hasAnyData {
+                GlassSegmented(options: Tab.allCases.map { ($0, $0.rawValue) }, selection: $tab)
+                    .padding(.vertical, Theme.Space.m)
             }
-            .pickerStyle(.segmented)
+        }
+        .orbitBackground()
+        .toolbar {
             Button { showSettings = true } label: { Label("Money settings", systemImage: "gearshape") }
         }
         .sheet(isPresented: $showSettings) {

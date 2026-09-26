@@ -67,6 +67,8 @@ struct BrainState: Codable {
     /// sync can resume where it stopped).
     var oneNotePageStamps: [String: Date] = [:]
     var notesFolderCursor: Date?
+    /// GoodNotes page note id → MD5 of the rendered page (only changed pages are read again).
+    var notePageHashes: [String: String]?
     var iMessageCursor: Date?
     var streak: StreakState?
     var lastMorningBrief: String?

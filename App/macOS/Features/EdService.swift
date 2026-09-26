@@ -4,7 +4,7 @@ import Observation
 import SwiftData
 import OrbitCore
 
-/// Ed Discussion (edstem.org, EU). Polls the student's courses every 30 minutes
+/// Ed Discussion (edstem.org, US region by default; see EdWeb.region). Polls the student's courses every 30 minutes
 /// while the Mac is awake, notifies about important posts (staff, pinned,
 /// announcements, deadline/exam/room-change words, replies to their threads),
 /// adds deadline mentions as to-dos, and feeds posts into the ELE activity feed
@@ -72,7 +72,7 @@ final class EdService {
         await sync()
     }
 
-    /// For a personal API token pasted from edstem.org/eu/settings/api-tokens.
+    /// For a personal API token pasted from edstem.org/<region>/settings/api-tokens.
     func useAPIToken(_ token: String) async -> Bool {
         let t = token.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else { return false }

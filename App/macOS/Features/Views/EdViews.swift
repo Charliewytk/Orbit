@@ -34,6 +34,7 @@ struct EdView: View {
                     }
                 }
                 .listStyle(.inset)
+                .scrollContentBackground(.hidden)
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -136,11 +137,12 @@ struct EdConnectRow: View {
                     Task { await ed.signIn() }
                 }
                 .disabled(ed.signingIn)
-                Text("Opens edstem.org/eu in a window. Sign in with your Exeter account; Orbit keeps Ed's sign-in token in your Keychain and reads your course threads.")
+                EdRegionPicker()
+                Text("Opens \(EdWeb.region.webBase.host ?? "edstem.org")\(EdWeb.region.webBase.path) in a window. Sign in with your Exeter account; Orbit keeps Ed's sign-in token in your Keychain and reads your course threads.")
                     .font(Theme.caption).foregroundStyle(Theme.textTertiary)
                 DisclosureGroup("Use an Ed API token instead") {
                     HStack {
-                        SecureField("Token from edstem.org/eu/settings/api-tokens", text: $apiToken)
+                        SecureField("Token from edstem.org/\(EdWeb.region.rawValue)/settings/api-tokens", text: $apiToken)
                             .textFieldStyle(.roundedBorder)
                         Button("Save") {
                             checkingToken = true
@@ -159,5 +161,19 @@ struct EdConnectRow: View {
                 Text(error).font(Theme.caption).foregroundStyle(Theme.warning)
             }
         }
+    }
+}
+
+/// Which Ed site to sign in to. Exeter uses the US one; the EU site says
+/// "Could not find that account" for Exeter logins.
+struct EdRegionPicker: View {
+    @AppStorage(EdWeb.regionKey) private var region = EdRegion.default.rawValue
+
+    var body: some View {
+        Picker("Ed region", selection: $region) {
+            ForEach(EdRegion.allCases) { r in Text(r.label).tag(r.rawValue) }
+        }
+        .frame(maxWidth: 360)
+        .help("Exeter's Ed courses are on the US site.")
     }
 }

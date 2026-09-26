@@ -25,12 +25,25 @@ jobs:
     name: Build Orbit.app
     # Skip work-in-progress snapshots so half-finished versions never get published.
     if: github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'WIP')
-    runs-on: macos-15
+    # macOS 26 runner with Xcode 26: the Liquid Glass APIs (glassEffect, GlassEffectContainer,
+    # .glass button styles, backgroundExtensionEffect) need the macOS 26 SDK. The app still
+    # targets macOS 15: every macOS 26 call sits behind `#if compiler(>=6.2)` and
+    # `if #available(macOS 26.0, *)`, so an Xcode 16 fallback also builds (without glass).
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)"
+          if [ -z "$XCODE" ]; then
+            echo "::warning::No Xcode 26 on this runner; falling back to Xcode 16 (no Liquid Glass)."
+            XCODE="$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+          fi
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+          swift --version
 
       - name: Build
         run: |

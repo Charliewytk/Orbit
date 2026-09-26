@@ -1,16 +1,35 @@
 import Foundation
 
-// Ed Discussion (edstem.org), EU region. Ed has no public API docs for students,
-// but its web app talks to a JSON API that accepts the same token:
-//   GET https://eu.edstem.org/api/user                              → you + your courses
-//   GET https://eu.edstem.org/api/courses/{id}/threads?limit=30&sort=new
-//   GET https://eu.edstem.org/api/threads/{id}?view=1               → one thread with replies
+// Ed Discussion (edstem.org). Exeter's courses are on the US region
+// (edstem.org/us, API us.edstem.org); EU and AU are selectable in Settings.
+// Ed has no public API docs for students, but its web app talks to a JSON API
+// that accepts the same token:
+//   GET https://us.edstem.org/api/user                              → you + your courses
+//   GET https://us.edstem.org/api/courses/{id}/threads?limit=30&sort=new
+//   GET https://us.edstem.org/api/threads/{id}?view=1               → one thread with replies
 // Auth: header `x-token: <token>` (the web app's token, read from its localStorage
 // after the student signs in) or `Authorization: Bearer <token>` for an API token
-// made at edstem.org/eu/settings/api-tokens. The token is a secret: never log it.
+// made at edstem.org/us/settings/api-tokens. The token is a secret: never log it.
 
-public enum EdRegion: String, Codable, Sendable, CaseIterable {
-    case eu, us, au
+public enum EdRegion: String, Codable, Sendable, CaseIterable, Identifiable {
+    case us, eu, au
+
+    /// Exeter's Ed courses live on the US region.
+    public static let `default`: EdRegion = .us
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .us: "US (edstem.org/us)"
+        case .eu: "EU (edstem.org/eu)"
+        case .au: "Australia (edstem.org/au)"
+        }
+    }
+
+    public var loginURL: URL { webBase.appendingPathComponent("login") }
+    public var dashboardURL: URL { webBase.appendingPathComponent("dashboard") }
+    public var apiTokensURL: URL { webBase.appendingPathComponent("settings/api-tokens") }
 
     public var apiBase: URL {
         switch self {
@@ -172,7 +191,7 @@ public struct EdClient: Sendable {
     private let token: String
     public var tokenKind: TokenKind
 
-    public init(token: String, tokenKind: TokenKind = .session, region: EdRegion = .eu, http: HTTPClient = HTTPClient(timeout: 30)) {
+    public init(token: String, tokenKind: TokenKind = .session, region: EdRegion = .default, http: HTTPClient = HTTPClient(timeout: 30)) {
         self.token = token; self.tokenKind = tokenKind; self.region = region; self.http = http
     }
 

@@ -56,6 +56,7 @@ extension OrbitBrain {
         local.save(await coordinator.state, "mail-state.json")
 
         cache(report.messages)
+        await addTicketEvents(from: report.messages)
         let index = context.indexed(StoredEmailDigest.self)
         for digest in report.digests {
             if let existing = index[digest.id] { existing.apply(digest) } else { context.insert(StoredEmailDigest(digest: digest)) }
@@ -81,6 +82,42 @@ extension OrbitBrain {
         }
         if report.digests.contains(where: { !$0.suggestedTasks.isEmpty || !$0.suggestedEvents.isEmpty }) {
             app?.refreshWidgets()
+        }
+    }
+
+    // MARK: Ticket emails (FIXR, Eventbrite, Skiddle, Ticketmaster, DICE)
+
+    /// Ticket confirmations go straight on the calendar (Orbit's Google calendar, or
+    /// this Mac's), without asking, with a notification. One entry per event.
+    func addTicketEvents(from messages: [EmailMessage]) async {
+        let parser = TicketEmailParser(timeZone: prefs.timeZone)
+        let now = Date()
+        var added: [TicketEvent] = []
+        for m in messages {
+            guard let t = parser.parse(m), t.end > now else { continue }
+            guard context.record(StoredPlan.self, id: t.planID) == nil else { continue }
+            let plan = StoredPlan(id: t.planID)
+            plan.title = t.title
+            plan.start = t.start
+            plan.end = t.end
+            plan.location = t.venue
+            plan.sourceRaw = "email"
+            plan.quote = t.notes
+            plan.confidence = 0.95
+            plan.kindLabel = t.provider.label
+            plan.status = .accepted
+            context.insert(plan)
+            added.append(t)
+            OrbitLog.log("mail", "ticket email → calendar: \(t.provider.label) \(t.title)")
+        }
+        guard !added.isEmpty else { return }
+        context.saveQuietly()
+        await writeAcceptedPlans()
+        let cal = DayCalendar(timeZone: prefs.timeZone)
+        for t in added {
+            let when = "\(cal.format(t.start, "EEE d MMM"))" + (t.hasTime ? " \(cal.time(t.start))" : "")
+            notify(id: t.planID, title: "Added \(t.provider.label) event: \(t.title)",
+                   body: [when, t.venue].compactMap { $0 }.joined(separator: " · "), category: "plans")
         }
     }
 

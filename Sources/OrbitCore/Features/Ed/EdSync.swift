@@ -115,7 +115,7 @@ public enum EdSync {
     /// Processes one course's newest threads. The first time a course is seen it
     /// is baselined: threads from the last `baselineDays` go in the feed, nothing notifies.
     public static func process(course: EdCourse, response: EdThreadsResponse, state: inout EdState,
-                               region: EdRegion = .eu, now: Date = Date(), baselineDays: Double = 14) -> [EdItem] {
+                               region: EdRegion = .default, now: Date = Date(), baselineDays: Double = 14) -> [EdItem] {
         let users = Dictionary((response.users ?? []).map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let firstRun = !state.baselined.contains(course.id)
         let me = state.userID

@@ -149,7 +149,7 @@ final class EdClientTests: XCTestCase {
         XCTAssertEqual(byID["ed-reply-90002-2"]?.kind, .reply)
         XCTAssertEqual(byID["ed-pinned-90004"]?.kind, .pinned)
         XCTAssertEqual(second.count, 3)
-        XCTAssertEqual(byID["ed-thread-90010"]?.url, "https://edstem.org/eu/courses/3101/discussion/90010")
+        XCTAssertEqual(byID["ed-thread-90010"]?.url, "https://edstem.org/us/courses/3101/discussion/90010")
         XCTAssertEqual(byID["ed-thread-90010"]?.moduleCode, "BEE1022")
 
         // Nothing changes: nothing new.
@@ -218,7 +218,7 @@ final class EdClientTests: XCTestCase {
         let client = EdClient(token: "test-token", http: HTTPClient(transport: stub))
         let me = try await client.user()
         XCTAssertEqual(me.user.name, "Student Example")
-        XCTAssertEqual(stub.requests[0].url?.absoluteString, "https://eu.edstem.org/api/user")
+        XCTAssertEqual(stub.requests[0].url?.absoluteString, "https://us.edstem.org/api/user")
         XCTAssertEqual(stub.requests[0].value(forHTTPHeaderField: "x-token"), "test-token")
         do {
             _ = try await client.threads(courseID: 3101)
@@ -231,5 +231,15 @@ final class EdClientTests: XCTestCase {
         let api = EdClient(token: "pat", tokenKind: .apiToken, http: HTTPClient(transport: stub))
         _ = try await api.user()
         XCTAssertEqual(stub.requests[2].value(forHTTPHeaderField: "Authorization"), "Bearer pat")
+    }
+}
+
+final class EdRegionTests: XCTestCase {
+    func testDefaultIsUSForExeter() {
+        XCTAssertEqual(EdRegion.default, .us)
+        XCTAssertEqual(EdRegion.us.loginURL.absoluteString, "https://edstem.org/us/login")
+        XCTAssertEqual(EdRegion.us.dashboardURL.absoluteString, "https://edstem.org/us/dashboard")
+        XCTAssertEqual(EdRegion.us.apiBase.absoluteString, "https://us.edstem.org/api/")
+        XCTAssertEqual(EdRegion.eu.loginURL.absoluteString, "https://edstem.org/eu/login")
     }
 }

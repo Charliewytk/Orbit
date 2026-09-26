@@ -84,13 +84,19 @@ extension OrbitBrain {
             return
         }
         let scanner = NotesFolderScanner(root: URL(fileURLWithPath: path))
+        // GoodNotes auto-backups: one PDF per notebook, one note per page.
+        let pageMode = GoodNotesBackup.isGoodNotesPath(path)
         do {
             let result = try scanner.scan(since: state.notesFolderCursor)
             let pipeline = HandwritingPipeline.standard(router: router, profile: handwritingProfile)
             var failed = 0
             for item in result.items {
                 do {
-                    if let note = try await note(from: item, pipeline: pipeline) { await store(note: note) }
+                    if pageMode && item.kind == .pdf {
+                        for note in try await pageNotes(from: item, pipeline: pipeline) { await store(note: note) }
+                    } else if let note = try await note(from: item, pipeline: pipeline) {
+                        await store(note: note)
+                    }
                 } catch {
                     failed += 1
                 }
@@ -127,6 +133,49 @@ extension OrbitBrain {
             let region = try await pipeline.transcribe(image: data, regionID: item.relativePath)
             return Self.makeNote(item, segments: region.segments)
         }
+    }
+
+    /// A GoodNotes notebook PDF → one note per page. The notebook name picks the
+    /// module ("Mathematics for Economists" → BEE1024); the page header gives the
+    /// date and week ("Week 1 Monday, 21 September 2026"), else the file's date.
+    /// Pages whose rendering hasn't changed since last time are skipped (no re-OCR).
+    private func pageNotes(from item: NotesFolderScanner.Item, pipeline: HandwritingPipeline) async throws -> [LectureNote] {
+        let notebook = item.url.deletingPathExtension().lastPathComponent
+        let folders = item.relativePath.split(separator: "/").dropLast().map(String.init)
+        var modules = academic.modules.map { (code: $0.code, name: $0.name) }
+        for m in context.all(StoredModule.self) where !modules.contains(where: { $0.code == m.id }) {
+            modules.append((code: m.id, name: m.name))
+        }
+        let moduleCode = NotebookModuleMatcher(modules: modules).moduleCode(forNotebook: notebook)
+            ?? NoteMetadataDetector.moduleCode(in: [notebook] + folders.reversed().map { Optional($0) })
+        let tz = prefs.timeZone
+        let pages = await Self.renderPDF(item.url)
+        var hashes = state.notePageHashes ?? [:]
+        var out: [LectureNote] = []
+        for (i, page) in pages.enumerated() {
+            let id = "file:\(item.relativePath)#p\(i + 1)"
+            let hash = page.image.map { MD5.digest($0).map { String(format: "%02x", $0) }.joined() } ?? MD5.hex(page.text ?? "")
+            if hashes[id] == hash, local.note(id: id) != nil { continue }
+            var segments: [NoteSegment] = []
+            if let text = page.text { segments.append(NoteSegment(kind: .typed, text: text)) }
+            if let image = page.image {
+                let hint = page.text.map { String($0.prefix(300)) }
+                let region = try await pipeline.transcribe(image: image, regionID: "\(item.relativePath)#\(i)", hint: hint)
+                segments += region.segments
+            }
+            let text = segments.map(\.text).joined(separator: "\n")
+            let header = PageHeaderDate.parse(text, timeZone: tz, reference: item.modified)
+            let date = header.date ?? item.modified
+            let week = header.week ?? academic.calendar.week(for: date)?.week
+            let day = DayCalendar(timeZone: tz)
+            let title = header.date.map { "\(notebook) · \(day.format($0, "EEE d MMM"))" } ?? "\(notebook) · page \(i + 1)"
+            out.append(LectureNote(id: id, title: title, notebook: notebook, section: folders.last ?? "GoodNotes",
+                                   moduleCode: moduleCode, week: week, created: date, modified: item.modified,
+                                   segments: segments))
+            hashes[id] = hash
+        }
+        state.notePageHashes = hashes
+        return out
     }
 
     private static func makeNote(_ item: NotesFolderScanner.Item, segments: [NoteSegment]) -> LectureNote {

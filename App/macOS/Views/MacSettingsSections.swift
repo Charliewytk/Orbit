@@ -487,7 +487,6 @@ struct MacAccountsSection: View {
             GoogleConnectRow()
             MacCalendarsRow()
             ELEConnectRow()
-            NotesSourcePicker()
             TextField("Timetable calendar link (optional .ics)", text: $timetableURL)
                 .textFieldStyle(.roundedBorder)
         } header: {
@@ -496,6 +495,15 @@ struct MacAccountsSection: View {
             Text("Orbit writes only to its own “Orbit” calendar and saves email replies as drafts. It never sends email or edits your own events.")
         }
         .task { await brain.accounts.refreshStatus() }
+
+        Section {
+            GoodNotesFolderPicker()
+            DisclosureGroup("Other sources (OneNote, any PDF folder)") {
+                NotesSourcePicker().padding(.top, 6)
+            }
+        } header: {
+            Text("Lecture notes")
+        }
 
         Section {
             DisclosureGroup("Set up Exeter email and calendar") {

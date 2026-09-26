@@ -358,11 +358,15 @@ struct TwoPane<Selection: Hashable, ListContent: View, Detail: View>: View {
         #if os(macOS)
         HStack(spacing: Theme.Space.m) {
             list
+                .environment(\.inGlassPane, true)
+                .scrollContentBackground(.hidden)
                 .frame(width: listWidth)
                 .frame(maxHeight: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
                 .orbitGlassCard()
             detail(selection)
+                .environment(\.inGlassPane, true)
+                .scrollContentBackground(.hidden)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
                 .orbitGlassCard()

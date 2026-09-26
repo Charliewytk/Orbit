@@ -9,9 +9,13 @@ import OrbitCore
 /// the log. The web view uses the persistent default store, so a later silent
 /// refresh (`EdTokenHarvester`) can pick up a renewed token without a window.
 enum EdWeb {
-    static let region = EdRegion.eu
-    static let loginURL = URL(string: "https://edstem.org/eu/login")!
-    static let dashboardURL = URL(string: "https://edstem.org/eu/dashboard")!
+    /// Settings → Uni → Ed region (US by default: that's where Exeter's courses are).
+    static let regionKey = "features.ed.region"
+    static var region: EdRegion {
+        UserDefaults.standard.string(forKey: regionKey).flatMap(EdRegion.init(rawValue:)) ?? .default
+    }
+    static var loginURL: URL { region.loginURL }
+    static var dashboardURL: URL { region.dashboardURL }
 
     /// Every localStorage entry whose key mentions a token: {key: value}.
     static let tokenScript = """

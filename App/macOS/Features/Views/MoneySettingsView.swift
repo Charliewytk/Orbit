@@ -51,6 +51,7 @@ struct MoneySettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .orbitScreen()
         .navigationTitle("Money settings")
         .onAppear {
             clientID = money.monzoClientID

@@ -104,14 +104,40 @@ extension View {
         #endif
     }
 
-    /// Standard screen background: the ambient backdrop.
+    /// Standard screen background: the ambient backdrop. Skipped inside a glass
+    /// pane (TwoPane), so there's only ever one backdrop on screen.
     func orbitBackground() -> some View {
-        background { AmbientBackdrop().ignoresSafeArea() }
+        modifier(OrbitBackdropModifier())
     }
 
     /// For Form / List screens: hide their opaque background and show the backdrop.
     func orbitScreen() -> some View {
         scrollContentBackground(.hidden).orbitBackground()
+    }
+}
+
+/// Draws the ambient backdrop unless the view already sits inside a glass pane.
+struct OrbitBackdropModifier: ViewModifier {
+    @Environment(\.inGlassPane) private var inGlassPane
+
+    func body(content: Content) -> some View {
+        if inGlassPane {
+            content
+        } else {
+            content.background { AmbientBackdrop().ignoresSafeArea() }
+        }
+    }
+}
+
+private struct InGlassPaneKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// True inside TwoPane's glass panes (screens there don't draw their own backdrop).
+    var inGlassPane: Bool {
+        get { self[InGlassPaneKey.self] }
+        set { self[InGlassPaneKey.self] = newValue }
     }
 }
 
