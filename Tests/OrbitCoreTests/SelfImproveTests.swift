@@ -12,11 +12,11 @@ final class SelfImproveTests: XCTestCase {
 
     func testCloneAndPull() {
         let clone = SelfImproveCommands.clone(config)
-        XCTAssertEqual(clone[0].args, ["clone", "--branch", "main", "https://github.com/Charliewytk/Orbit.git", config.sourceDir])
+        XCTAssertEqual(clone[0].args, ["clone", "--branch", "claude/zealous-albattani-h2xkcz", "https://github.com/Charliewytk/Orbit.git", config.sourceDir])
         XCTAssertEqual(clone[1].args, ["checkout", "-B", "local/improvements"])
         XCTAssertEqual(clone[1].cwd, config.sourceDir)
         let pull = SelfImproveCommands.pullUpstream(config)
-        XCTAssertEqual(pull.last?.args, ["pull", "--no-rebase", "--no-edit", "origin", "main"])
+        XCTAssertEqual(pull.last?.args, ["pull", "--no-rebase", "--no-edit", "origin", "claude/zealous-albattani-h2xkcz"])
     }
 
     func testOpencodeCommand() {
