@@ -340,20 +340,20 @@ struct NotesSourcePicker: View {
                 Picker("Read notes from", selection: $source) {
                     Text("Automatic").tag("")
                     Text("OneNote (Microsoft sign-in)").tag("graph")
-                    Text("My OneNote export folder").tag("folder")
+                    Text("My notes folder (PDFs)").tag("folder")
                     Text("Don't read notes").tag("none")
                 }
             }
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("OneNote export folder").font(Theme.body.weight(.medium))
+                    Text("Notes folder").font(Theme.body.weight(.medium))
                     Text(folderPath.isEmpty ? "No folder picked yet" : folderPath)
                         .font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(1).truncationMode(.middle)
                 }
                 Spacer()
-                Button(folderPath.isEmpty ? "Pick your OneNote export folder…" : "Change…") { choosing = true }
+                Button(folderPath.isEmpty ? "Pick your notes folder…" : "Change…") { choosing = true }
             }
-            Text("In OneNote, choose File → Export, pick PDF, and save into this folder. Do it again whenever you add notes; Orbit notices new files by itself.")
+            Text("Any folder of PDFs works: GoodNotes or Notability auto-backup in iCloud Drive, or OneNote → File → Export → PDF. Orbit watches it, reads typed text and your handwriting, and notices new files by itself.")
                 .font(Theme.caption).foregroundStyle(Theme.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
