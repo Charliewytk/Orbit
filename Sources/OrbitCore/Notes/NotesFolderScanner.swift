@@ -13,6 +13,8 @@ import CoreGraphics
 public struct NotesFolderScanner: Sendable {
     public enum Kind: String, Codable, Sendable {
         case pdf, markdown, text, image
+        /// Orbit's rich typed notes (`.rtfd` packages, `.rtf`).
+        case richText
     }
 
     public struct Item: Codable, Hashable, Sendable {
@@ -50,6 +52,7 @@ public struct NotesFolderScanner: Sendable {
         case "md", "markdown": .markdown
         case "txt": .text
         case "png", "jpg", "jpeg", "heic": .image
+        case "rtfd", "rtf": .richText
         default: nil
         }
     }
@@ -68,8 +71,12 @@ public struct NotesFolderScanner: Sendable {
         var newest = since
         for case let url as URL in e {
             let values = try? url.resourceValues(forKeys: Set(keys))
-            if values?.isDirectory == true { continue }
             let ext = url.pathExtension.lowercased()
+            if values?.isDirectory == true {
+                // An .rtfd note is a package: one item, not a folder to walk into.
+                guard ext == "rtfd" else { continue }
+                e.skipDescendants()
+            }
             if ext == "one" || ext == "onetoc2" { unsupported.append(url); continue }
             guard let kind = Self.kind(forExtension: ext) else { continue }
             let modified = values?.contentModificationDate ?? .distantPast

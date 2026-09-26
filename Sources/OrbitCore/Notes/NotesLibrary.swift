@@ -53,6 +53,20 @@ public struct TypedNotesStore: Sendable {
         return url
     }
 
+    /// A new rich typed note: <root>/<Subject>/<Title>.rtfd (" 2", " 3"… when taken).
+    /// Only the path is chosen here; the app writes the RTFD package.
+    public func newRichNoteURL(subject: String, title: String, fileManager: FileManager = .default) -> URL {
+        let dir = root.appendingPathComponent(Self.folderName(moduleCode: nil, moduleName: subject), isDirectory: true)
+        let base = Self.folderName(moduleCode: nil, moduleName: title.isEmpty ? "Untitled" : title)
+        var target = dir.appendingPathComponent(base + ".rtfd", isDirectory: true)
+        var n = 2
+        while fileManager.fileExists(atPath: target.path) {
+            target = dir.appendingPathComponent("\(base) \(n).rtfd", isDirectory: true)
+            n += 1
+        }
+        return target
+    }
+
     /// Copies a file into a module folder, adding " 2", " 3"… when the name is taken.
     public func importFile(_ source: URL, moduleCode: String?, moduleName: String?, fileManager: FileManager = .default) throws -> URL {
         let dir = folder(moduleCode: moduleCode, moduleName: moduleName)
@@ -182,7 +196,7 @@ public enum NotesLibrary {
         }
         if let typedRoot, let result = try? NotesFolderScanner(root: typedRoot).scan() {
             for item in result.items {
-                let isTyped = item.kind == .markdown || item.kind == .text
+                let isTyped = item.kind == .markdown || item.kind == .text || item.kind == .richText
                 let folder = item.relativePath.split(separator: "/").dropLast().last.map(String.init)
                 let title = item.url.deletingPathExtension().lastPathComponent
                 let module = folder.flatMap(matcher.moduleCode(forNotebook:)) ?? NoteMetadataDetector.moduleCode(in: [title])

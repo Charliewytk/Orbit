@@ -288,6 +288,9 @@ public struct CourseKnowledgeBase: Codable, Sendable {
     /// Exeter's "My Assessments" dashboard block.
     public var myAssessments: [ELEMyAssessmentRow] = []
     public private(set) var index: NoteIndex
+    /// Global dedupe: every document goes through it (see `IngestionLedger`), so the same
+    /// content from several places (ELE, Drive, Notability, typed notes, email, Ed) is stored once.
+    public private(set) var ingestion = IngestionLedger()
     public var updatedAt: Date = .distantPast
 
     public init(calendar: AcademicCalendarConfig = .exeter2026, index: NoteIndex = NoteIndex(chunkSize: 900, overlap: 120, typedBoost: 1)) {
@@ -297,7 +300,7 @@ public struct CourseKnowledgeBase: Codable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case calendarConfig, modules, documents, assessments, homework, readings, timetable, activity, feedback,
-             myAssessments, index, updatedAt
+             myAssessments, index, ingestion, updatedAt
     }
 
     /// Tolerant decoding: fields added later default to empty instead of failing the whole file.
@@ -315,6 +318,25 @@ public struct CourseKnowledgeBase: Codable, Sendable {
         myAssessments = (try? c.decodeIfPresent([ELEMyAssessmentRow].self, forKey: .myAssessments)) ?? []
         index = try c.decodeIfPresent(NoteIndex.self, forKey: .index) ?? NoteIndex(chunkSize: 900, overlap: 120, typedBoost: 1)
         updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? .distantPast
+        if let saved = try? c.decodeIfPresent(IngestionLedger.self, forKey: .ingestion) {
+            ingestion = saved
+        } else {
+            backfillIngestion()
+        }
+    }
+
+    /// A store saved before the dedupe ledger existed: register every document (oldest first)
+    /// and drop the ones that turn out to be copies of another.
+    mutating func backfillIngestion() {
+        let docs = documents.values.sorted { ($0.modified, $0.id) < ($1.modified, $1.id) }
+        for d in docs {
+            let (decision, obsolete) = ingestion.register(source: .document(d.id), text: d.text, proposedID: d.id, date: d.modified)
+            for id in obsolete where id != d.id { documents[id] = nil; index.remove(noteID: id) }
+            if let canonical = decision.canonicalID, canonical != d.id {
+                documents[d.id] = nil
+                index.remove(noteID: d.id)
+            }
+        }
     }
 
     // MARK: Activity
@@ -357,35 +379,82 @@ public struct CourseKnowledgeBase: Codable, Sendable {
 
     // MARK: Documents
 
-    /// Adds or replaces a document. Unchanged text is left alone (keeps embeddings). Returns true if indexed.
+    /// Adds or replaces a document through the global dedupe. Unchanged text is left alone
+    /// (keeps embeddings); text already known from another source only adds a source reference;
+    /// a new version of a known document replaces its chunks. Returns true if (re)indexed.
     @discardableResult
     public mutating func upsert(_ doc: CourseDocument) -> Bool {
-        if let old = documents[doc.id], old.contentHash == doc.contentHash {
-            documents[doc.id] = doc
-            return false
+        ingest(doc, source: .document(doc.id)).needsIndexing
+    }
+
+    /// `upsert` with an explicit source (a Drive file id, an email attachment…).
+    @discardableResult
+    public mutating func ingest(_ doc: CourseDocument, source: IngestionSource) -> IngestDecision {
+        let (decision, obsolete) = ingestion.register(source: source, text: doc.text, proposedID: doc.id, date: doc.modified)
+        for id in obsolete {
+            documents[id] = nil
+            index.remove(noteID: id)
         }
+        switch decision {
+        case .empty:
+            // Keep the (empty) record for listings, but nothing to search.
+            index.remove(noteID: doc.id)
+            documents[doc.id] = doc
+        case .unchanged(let id), .duplicate(let id):
+            // Only the document's owner may refresh its metadata (title, week…).
+            guard id == doc.id else { break }
+            if let old = documents[id], old.contentHash == doc.contentHash {
+                documents[id] = doc
+            } else {
+                index(doc)
+                return .replace(canonicalID: id)
+            }
+        case .ingest(let id), .replace(let id):
+            var d = doc
+            d.id = id
+            index(d)
+        }
+        return decision
+    }
+
+    private mutating func index(_ doc: CourseDocument) {
         documents[doc.id] = doc
         index.remove(noteID: doc.id)
         let text = doc.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return false }
+        guard !text.isEmpty else { return }
         let title = [doc.moduleCode, doc.week.map { "Week \($0)" }, doc.title].compactMap { $0 }.joined(separator: " ")
         index.add(LectureNote(id: doc.id, title: title, notebook: doc.kind.rawValue, section: doc.section ?? "",
                               moduleCode: doc.moduleCode, week: doc.week, created: doc.modified, modified: doc.modified,
-                              segments: [NoteSegment(kind: doc.kind == .lectureNotes ? .typed : .typed, text: text)]))
+                              segments: [NoteSegment(kind: .typed, text: text)]))
         updatedAt = Date()
-        return true
     }
 
+    /// Forgets one source; the document goes only when no other source still has it.
     public mutating func remove(documentID: String) {
-        documents[documentID] = nil
-        index.remove(noteID: documentID)
+        remove(source: .document(documentID))
+        if ingestion.canonical(documentID) == nil {
+            documents[documentID] = nil
+            index.remove(noteID: documentID)
+        }
     }
 
-    public func document(id: String) -> CourseDocument? { documents[id] }
+    public mutating func remove(source: IngestionSource) {
+        if let dead = ingestion.remove(source: source) {
+            documents[dead] = nil
+            index.remove(noteID: dead)
+        }
+    }
+
+    /// Every place a document's content came from.
+    public func sources(ofDocument id: String) -> [IngestionSource] { ingestion.sources(of: id) }
+
+    public func document(id: String) -> CourseDocument? {
+        documents[id] ?? ingestion.canonicalID(for: .document(id)).flatMap { documents[$0] }
+    }
 
     /// Finds a document by id, exact title, or the best title match ("stats sheet", "week 2 slides").
     public func document(named query: String, moduleCode: String? = nil) -> CourseDocument? {
-        if let d = documents[query] { return d }
+        if let d = document(id: query) { return d }
         let q = query.lowercased().trimmingCharacters(in: .whitespaces)
         let pool = documents.values.filter { moduleCode == nil || $0.moduleCode?.caseInsensitiveCompare(moduleCode!) == .orderedSame }
         if let exact = pool.first(where: { $0.title.lowercased() == q }) { return exact }
