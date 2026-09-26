@@ -1,6 +1,7 @@
 import Foundation
 #if canImport(Security)
 import Security
+import OrbitCore
 
 /// Stores small Codable secrets (e.g. the ELE token) in the Keychain.
 /// OAuth tokens use OrbitCore's `KeychainTokenStore`; this is for everything else.
@@ -14,7 +15,7 @@ enum KeychainBlob {
             kSecAttrAccount as String: key,
         ]
         #if os(macOS)
-        q[kSecUseDataProtectionKeychain as String] = true
+        if KeychainSupport.modernAvailable { q[kSecUseDataProtectionKeychain as String] = true }
         #endif
         return q
     }

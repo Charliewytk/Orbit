@@ -1,0 +1,84 @@
+name: Mac app
+
+# Builds Orbit.app on a GitHub Mac and publishes it as a download on the
+# repo's Releases page ("Orbit for Mac (latest)"). Free on public repos.
+#
+# The build is ad-hoc signed (no Apple team needed), so:
+#   - first launch: right-click Orbit.app → Open (macOS warns it's from an
+#     unidentified developer);
+#   - iCloud sync and synced keychain are off; everything is stored on the Mac.
+
+on:
+  push:
+    branches: [main, claude/zealous-albattani-h2xkcz]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mac-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Orbit.app
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Orbit.xcodeproj \
+            -scheme Orbit-macOS \
+            -configuration Release \
+            -destination "generic/platform=macOS" \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            CODE_SIGN_ENTITLEMENTS="$PWD/App/Supporting/macOS/Orbit-Unsigned.entitlements" \
+            ENABLE_HARDENED_RUNTIME=NO \
+            ORBIT_ICLOUD_CONTAINER="" \
+            | tee build.log | grep -E "error:|BUILD" || true
+          grep -q "BUILD SUCCEEDED" build.log
+
+      - name: Show errors
+        if: failure()
+        run: grep -E "error:" build.log | sort -u | head -150
+
+      - name: Package
+        id: pkg
+        run: |
+          APP=$(find build/Build/Products/Release -maxdepth 1 -name "*.app" | head -1)
+          echo "Built: $APP"
+          mkdir -p dist
+          cp -R "$APP" dist/Orbit.app
+          # Re-sign the whole bundle ad hoc so macOS accepts it.
+          codesign --force --deep --sign - dist/Orbit.app
+          ditto -c -k --sequesterRsrc --keepParent dist/Orbit.app dist/Orbit-mac.zip
+          hdiutil create -volname Orbit -srcfolder dist/Orbit.app -ov -format UDZO dist/Orbit-mac.dmg
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: mac-latest
+          name: Orbit for Mac (latest)
+          prerelease: true
+          make_latest: true
+          body: |
+            Latest Mac build from commit ${{ steps.pkg.outputs.sha }}.
+
+            **Install:** download `Orbit-mac.dmg`, open it and drag **Orbit** into **Applications**.
+            **First launch:** right-click Orbit in Applications → **Open** → **Open**
+            (macOS warns because it isn't notarised by Apple). After that, open it normally.
+          files: |
+            dist/Orbit-mac.dmg
+            dist/Orbit-mac.zip

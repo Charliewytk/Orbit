@@ -8,6 +8,10 @@
 ORBIT_BUNDLE_PREFIX = com.charliewytk
 DEVELOPMENT_TEAM =
 MARKETING_VERSION = 0.1.0
+
+// iCloud sync container. The free unsigned download build blanks this, so the
+// app stores everything locally on the Mac instead.
+ORBIT_ICLOUD_CONTAINER = iCloud.$(ORBIT_BUNDLE_PREFIX).orbit
 CURRENT_PROJECT_VERSION = 1
 
 // Google iOS OAuth client (project gen-lang-client-0630020611). iOS-type

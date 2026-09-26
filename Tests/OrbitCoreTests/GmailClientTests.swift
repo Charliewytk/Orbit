@@ -24,7 +24,7 @@ final class GmailClientTests: XCTestCase {
            "mimeType": "multipart/alternative",
            "headers": [
              {"name": "From", "value": "Sam Jones <sam@example.com>"},
-             {"name": "To", "value": "charlie@gmail.com"},
+             {"name": "To", "value": "student@example.com"},
              {"name": "Cc", "value": "Pat <pat@example.com>"},
              {"name": "Subject", "value": "\(subject)"},
              {"name": "Date", "value": "Tue, 22 Sep 2026 09:15:00 +0000"}
@@ -54,7 +54,7 @@ final class GmailClientTests: XCTestCase {
     }
 
     func testFirstSyncListsPagesFetchesMessagesAndSkipsDeleted() async throws {
-        stub.on("GET", "/users/me/profile", json: #"{"emailAddress": "charlie@gmail.com", "historyId": "5000"}"#)
+        stub.on("GET", "/users/me/profile", json: #"{"emailAddress": "student@example.com", "historyId": "5000"}"#)
         stub.on("GET", "pageToken=p2", json: #"{"messages": [{"id": "m3", "threadId": "t3"}]}"#)
         stub.on("GET", "/users/me/messages?", json: #"{"messages": [{"id": "m1", "threadId": "t1"}, {"id": "m2", "threadId": "t2"}], "nextPageToken": "p2"}"#)
         stub.on("GET", "/messages/m1?format=full", json: Self.fullMessage(id: "m1", subject: "Slides"))
@@ -70,7 +70,7 @@ final class GmailClientTests: XCTestCase {
         XCTAssertEqual(m1.threadID, "t-m1")
         XCTAssertEqual(m1.from, "sam@example.com")
         XCTAssertEqual(m1.fromName, "Sam Jones")
-        XCTAssertEqual(m1.to, ["charlie@gmail.com", "pat@example.com"])
+        XCTAssertEqual(m1.to, ["student@example.com", "pat@example.com"])
         XCTAssertEqual(m1.subject, "Slides")
         XCTAssertEqual(m1.body, "Hi Charlie,\nCan you send the slides by Friday?\n")
         XCTAssertEqual(m1.snippet, "Hi Charlie, Can you send the slides by Friday's lecture?")

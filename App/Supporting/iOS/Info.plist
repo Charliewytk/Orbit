@@ -70,7 +70,7 @@
 	<key>OrbitGoogleReversedClientID</key>
 	<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
 	<key>OrbitICloudContainer</key>
-	<string>iCloud.$(ORBIT_BUNDLE_PREFIX).orbit</string>
+	<string>$(ORBIT_ICLOUD_CONTAINER)</string>
 	<key>OrbitMicrosoftClientID</key>
 	<string>$(MICROSOFT_CLIENT_ID)</string>
 	<key>UIApplicationSceneManifest</key>

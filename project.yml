@@ -91,7 +91,7 @@ targets:
         OrbitGoogleReversedClientID: $(GOOGLE_REVERSED_CLIENT_ID)
         OrbitMicrosoftClientID: $(MICROSOFT_CLIENT_ID)
         OrbitAppGroup: group.$(ORBIT_BUNDLE_PREFIX).orbit
-        OrbitICloudContainer: iCloud.$(ORBIT_BUNDLE_PREFIX).orbit
+        OrbitICloudContainer: $(ORBIT_ICLOUD_CONTAINER)
     entitlements:
       path: App/Supporting/iOS/Orbit.entitlements
       properties:
@@ -150,7 +150,7 @@ targets:
         OrbitGoogleReversedClientID: $(GOOGLE_REVERSED_CLIENT_ID)
         OrbitMicrosoftClientID: $(MICROSOFT_CLIENT_ID)
         OrbitAppGroup: group.$(ORBIT_BUNDLE_PREFIX).orbit
-        OrbitICloudContainer: iCloud.$(ORBIT_BUNDLE_PREFIX).orbit
+        OrbitICloudContainer: $(ORBIT_ICLOUD_CONTAINER)
     entitlements:
       path: App/Supporting/macOS/Orbit.entitlements
       properties:

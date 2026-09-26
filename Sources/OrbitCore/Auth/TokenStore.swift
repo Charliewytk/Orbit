@@ -47,6 +47,24 @@ public struct KeychainError: Error, CustomStringConvertible, Sendable {
     }
 }
 
+#if os(macOS)
+/// Whether this build can use the modern (data-protection) keychain. That needs
+/// a signed app with an application identifier; the free unsigned download
+/// doesn't have one, so it falls back to the classic login keychain (not synced).
+public enum KeychainSupport {
+    public static let modernAvailable: Bool = {
+        let probe: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: "com.orbit.keychain-probe",
+            kSecAttrAccount as String: "probe",
+            kSecUseDataProtectionKeychain as String: true,
+        ]
+        let status = SecItemCopyMatching(probe as CFDictionary, nil)
+        return status != errSecMissingEntitlement
+    }()
+}
+#endif
+
 /// Stores tokens as generic passwords. Synchronizable items travel through
 /// iCloud Keychain, so signing in on the Mac also signs in the iPhone.
 public struct KeychainTokenStore: TokenStore {
@@ -64,12 +82,16 @@ public struct KeychainTokenStore: TokenStore {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
-            kSecAttrSynchronizable as String: synchronizable ? kCFBooleanTrue as Any : kCFBooleanFalse as Any,
         ]
-        if let accessGroup { q[kSecAttrAccessGroup as String] = accessGroup }
         #if os(macOS)
         // Synchronizable items need the modern (iOS-style) keychain on macOS.
-        q[kSecUseDataProtectionKeychain as String] = true
+        let modern = KeychainSupport.modernAvailable
+        if modern { q[kSecUseDataProtectionKeychain as String] = true }
+        if modern, let accessGroup { q[kSecAttrAccessGroup as String] = accessGroup }
+        q[kSecAttrSynchronizable as String] = (synchronizable && modern) ? kCFBooleanTrue as Any : kCFBooleanFalse as Any
+        #else
+        if let accessGroup { q[kSecAttrAccessGroup as String] = accessGroup }
+        q[kSecAttrSynchronizable as String] = synchronizable ? kCFBooleanTrue as Any : kCFBooleanFalse as Any
         #endif
         return q
     }
