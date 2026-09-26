@@ -69,14 +69,13 @@ struct Flow<Content: View>: View {
     }
 }
 
-/// "Gmail" / "Exeter" badge.
+/// "Gmail" / "Exeter" as quiet secondary text.
 struct AccountBadge: View {
     var account: MailAccount
     var body: some View {
-        switch account {
-        case .gmail: Tag(text: "Gmail", color: Theme.danger, systemImage: "envelope")
-        case .exeter: Tag(text: "Exeter", color: Theme.accent, systemImage: "building.columns")
-        }
+        Text(account == .gmail ? "Gmail" : "Exeter")
+            .font(Theme.caption)
+            .foregroundStyle(Theme.textTertiary)
     }
 }
 
@@ -84,7 +83,7 @@ struct AccountBadge: View {
 struct StatusDot: View {
     var color: Color
     var body: some View {
-        Circle().fill(color).frame(width: 8, height: 8)
+        Circle().fill(color).frame(width: 7, height: 7)
     }
 }
 
@@ -118,28 +117,7 @@ extension ModuleStanding.Outlook {
     }
 }
 
-/// A floating message at the bottom of the window.
-struct BannerOverlay: ViewModifier {
-    var message: String?
-    func body(content: Content) -> some View {
-        content.overlay(alignment: .bottom) {
-            if let message {
-                Text(message)
-                    .font(.system(.callout, design: .rounded).weight(.medium))
-                    .padding(.horizontal, 16).padding(.vertical, 10)
-                    .background(.regularMaterial, in: Capsule())
-                    .overlay(Capsule().strokeBorder(Theme.border, lineWidth: 0.5))
-                    .padding(.bottom, 24)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(Theme.spring, value: message)
-    }
-}
-
 extension View {
-    func banner(_ message: String?) -> some View { modifier(BannerOverlay(message: message)) }
-
     /// Success haptic on iOS (no-op on Mac).
     func successHaptic<T: Equatable>(_ trigger: T) -> some View {
         #if os(iOS)

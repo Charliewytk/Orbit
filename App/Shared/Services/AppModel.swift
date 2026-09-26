@@ -16,8 +16,18 @@ final class AppModel {
     /// Cached synced preferences (reloaded on launch and when the app comes forward).
     private(set) var prefs: UserPrefs = UserPrefs()
     private(set) var firstName: String = ""
-    /// A short message shown at the bottom of the screen.
-    var banner: String?
+    /// The toast shown at the bottom of the window (one at a time).
+    var toast: Toast?
+    /// The current toast's text (kept for older call sites).
+    var banner: String? { toast?.text }
+
+    // UI routing shared by the Mac shell, the command palette and the menu bar.
+    /// The task selected in Tasks (the inspector shows it).
+    var selectedTaskID: String?
+    /// The module open in Uni (nil = the year overview).
+    var selectedModuleID: String?
+    /// Text handed to Ask Orbit by the command palette.
+    var pendingQuestion: String?
 
     var context: ModelContext { container.mainContext }
     var calendar: DayCalendar { DayCalendar(timeZone: prefs.timeZone) }
@@ -55,12 +65,22 @@ final class AppModel {
         AppGroup.defaults.set(trimmed, forKey: "firstName")
     }
 
-    func show(_ message: String) {
-        banner = message
+    /// Shows a toast. With `undo`, the toast offers Undo and stays a little longer.
+    func show(_ message: String, undo: (@MainActor () -> Void)? = nil) {
+        let toast = Toast(text: message, undo: undo)
+        self.toast = toast
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(3))
-            if self.banner == message { self.banner = nil }
+            try? await Task.sleep(for: .seconds(undo == nil ? 4 : 6))
+            if self.toast?.id == toast.id { self.toast = nil }
         }
+    }
+
+    func dismissToast() { toast = nil }
+
+    func undoToast() {
+        guard let toast else { return }
+        self.toast = nil
+        toast.undo?()
     }
 
     // MARK: Tasks
@@ -100,6 +120,20 @@ final class AppModel {
         context.saveQuietly()
         backend.tasksChanged()
         refreshWidgets()
+    }
+
+    /// Deletes a task and offers Undo.
+    func deleteWithUndo(_ task: StoredTask) {
+        let snapshot = task.value
+        let notes = task.notes
+        let title = task.title
+        delete(task)
+        show("Deleted “\(title)”", undo: { [weak self] in
+            guard let self else { return }
+            let restored = self.addTask(snapshot)
+            restored.notes = notes
+            self.context.saveQuietly()
+        })
     }
 
     func delete(_ task: StoredTask) {
@@ -190,6 +224,12 @@ final class AppModel {
     func markHandled(_ digest: StoredEmailDigest, _ handled: Bool = true) {
         digest.handled = handled
         context.saveQuietly()
+    }
+
+    /// Marks an email done with an Undo toast.
+    func markHandledWithUndo(_ digest: StoredEmailDigest) {
+        markHandled(digest, true)
+        show("Marked done", undo: { [weak self] in self?.markHandled(digest, false) })
     }
 
     // MARK: Plans
@@ -326,4 +366,13 @@ final class AppModel {
         WidgetCenter.shared.reloadAllTimelines()
         #endif
     }
+}
+
+/// A short message at the bottom of the window, optionally with Undo.
+struct Toast: Identifiable, Equatable {
+    let id = UUID()
+    var text: String
+    var undo: (@MainActor () -> Void)?
+
+    static func == (a: Toast, b: Toast) -> Bool { a.id == b.id }
 }

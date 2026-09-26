@@ -45,6 +45,28 @@ enum Fmt {
         }
     }
 
+    /// Compact due label for list rows: "Today", "Tomorrow", "Fri", "3 Oct", "Yesterday", "2d ago".
+    static func shortDue(_ date: Date, _ cal: DayCalendar, now: Date = Date()) -> String {
+        let days = cal.days(from: now, to: date)
+        switch days {
+        case 0: return "Today"
+        case 1: return "Tomorrow"
+        case -1: return "Yesterday"
+        case 2...6: return cal.format(date, "EEE")
+        case ..<(-1): return "\(-days)d ago"
+        default: return cal.format(date, "d MMM")
+        }
+    }
+
+    /// "in 24 min", "in 2h", "now".
+    static func relative(_ date: Date, now: Date = Date()) -> String {
+        let minutes = Int((date.timeIntervalSince(now) / 60).rounded(.up))
+        if minutes <= 0 { return "now" }
+        if minutes < 60 { return "in \(minutes) min" }
+        let h = minutes / 60, m = minutes % 60
+        return m == 0 || h >= 3 ? "in \(h)h" : "in \(h)h \(m)m"
+    }
+
     static func minuteOfDay(_ m: MinuteOfDay) -> String { String(format: "%02d:%02d", (m / 60) % 24, m % 60) }
 
     static func greeting(_ name: String, now: Date = Date(), cal: DayCalendar) -> String {
