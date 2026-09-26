@@ -16,14 +16,32 @@ private iCloud.
 
 | Area | Highlights |
 |---|---|
-| Today | Morning brief, a timeline of events and planned study blocks, "next up" with start/done/skip, due-soon strip, "Lighten my day", "Reshuffle", evening review |
+| Home | One Liquid Glass dashboard: today and tomorrow side by side, today's to-dos with instant add, daily rings (study, to-dos, reviews), streak and heatmap, next up with Start Focus, deadline countdowns, uni this week, ELE and Ed activity, inbox, careers, money, flashcards and Ask Orbit |
 | Tasks | Natural-language quick add ("essay plan BEM2031 2h before Friday") with a live preview; the smart scheduler finds the slots |
 | Inbox | Gmail + Exeter mail sorted into urgent / needs reply / dates / uni, one-line summaries, one-tap suggested to-dos and events, reply drafts saved to your Drafts folder (never sent) |
 | Uni | Modules, weights, marks, "what do I need for a First?", upcoming assessments with on-track status, reading lists, ELE announcements, "Plan this assessment", revision timetables |
 | Notes | OneNote typed + handwritten notes merged, handwriting read on your Mac (Apple Vision + a local vision model), hybrid search, "Ask your notes", flashcards (SM-2), gap detection |
 | Plans | Plans found in WhatsApp exports, Instagram downloads, pasted text, screenshots, iMessage and the share sheet, each one tap from your calendar |
 | Chat | An assistant that can see and change your schedule, to-dos, deadlines, inbox and notes |
+| Careers | Trackr's UK finance programmes with firm logos, category / status / eligibility filters, a watchlist and alerts when spring weeks open |
+| Tickets | FIXR (and Eventbrite, Skiddle, Ticketmaster, DICE) ticket emails go straight onto your calendar |
 | Extras | Menu bar item, widgets ("Next up", "Due this week"), Siri / Shortcuts ("Add to Orbit", "What's next"), share extension |
+
+## Screenshots
+
+The Mac app uses the macOS 26 **Liquid Glass** look (with a material fallback on macOS 15):
+glass cards over a softly moving backdrop that changes colour through the day, colour icon
+tiles in the sidebar, and a Home dashboard you land on every time. Screenshots to add under
+`docs/screenshots/`:
+
+- `home.png` — Home dashboard (greeting, quick add, bento grid of glass cards)
+- `rings.png` — "Your day": study / to-do / review rings, streak flame and heatmap
+- `onboarding.png` — the full-window setup flow
+- `careers.png` — Careers with firm logos and filters
+- `focus.png` — the big ring timer
+- `menubar.png` — the menu bar popover
+
+The design system is described in [docs/DESIGN.md](docs/DESIGN.md).
 
 Orbit only writes to its own **Orbit** Google calendar, saves email replies as **drafts**, and asks
 for one tap before adding anything it found in your email or messages.
