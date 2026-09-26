@@ -132,7 +132,7 @@ public struct AppleMailReader: MailProvider {
     /// Finds account folders (`V*/<uuid>`) whose recent mail is addressed to `addressSuffix`.
     /// Samples up to `sample` messages per account.
     public static func detectAccountFolders(root: URL = defaultRoot, addressSuffix: String = "@exeter.ac.uk",
-                                            sample: Int = 20) throws -> [URL] {
+                                            sample: Int = 60) throws -> [URL] {
         let fm = FileManager.default
         try checkReadable(root)
         let versions = try fm.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
@@ -141,11 +141,17 @@ public struct AppleMailReader: MailProvider {
         for v in versions {
             let accounts = (try? fm.contentsOfDirectory(at: v, includingPropertiesForKeys: nil)) ?? []
             for acct in accounts where acct.lastPathComponent != "MailData" {
+                // Gmail accounts in Mail have a "[Gmail]" folder; never treat them as Exeter.
+                let top = (try? fm.contentsOfDirectory(atPath: acct.path)) ?? []
+                if top.contains(where: { $0.hasPrefix("[Gmail]") }) { continue }
                 let files = (try? messageFiles(in: acct, skipping: ["Sent", "Drafts", "Junk"]))?
                     .sorted { $0.modified > $1.modified }.prefix(sample) ?? []
                 let matched = files.contains { file in
                     guard let parsed = try? EMLXParser.parse(contentsOf: file.url).parsed else { return false }
-                    return (parsed.to + parsed.cc).contains { $0.address.lowercased().hasSuffix(addressSuffix.lowercased()) }
+                    // Match the domain anywhere (…@exeter.ac.uk, …@groups.exeter.ac.uk, lists)
+                    // in To/Cc, which is where the account's own address shows up.
+                    let domain = addressSuffix.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "@"))
+                    return (parsed.to + parsed.cc).contains { $0.address.lowercased().hasSuffix(domain) }
                 }
                 if matched { hits.append(acct) }
             }

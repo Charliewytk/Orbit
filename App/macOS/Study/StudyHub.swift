@@ -116,7 +116,17 @@ final class StudyHub {
     /// Fetches each module's Talis reading list (once a day per list).
     func refreshReadingLists(_ snap: ELEWebSnapshot) async {
         let talis = TalisReadingList()
-        for link in ELECoverage.readingListLinks(snap) where TalisReadingList.isTalisURL(link.url) {
+        var links = ELECoverage.readingListLinks(snap).filter { TalisReadingList.isTalisURL($0.url) }
+        // ELE often links lists through a login launch, so also look each module up on Talis.
+        for code in snap.contents.keys.sorted() where !links.contains(where: { $0.moduleCode == code }) {
+            let key = "discover:\(code)"
+            if let last = library.fetchedLists[key], Date().timeIntervalSince(last) < 86400 { continue }
+            let found = await talis.discoverLists(moduleCode: code)
+            library.fetchedLists[key] = Date()
+            OrbitLog.log(Self.log, "reading list lookup \(code): \(found.count) list(s)")
+            links += found.map { (moduleCode: code, url: $0.absoluteString) }
+        }
+        for link in links {
             if let last = library.fetchedLists[link.url], Date().timeIntervalSince(last) < 86400 { continue }
             guard let url = URL(string: link.url) else { continue }
             do {

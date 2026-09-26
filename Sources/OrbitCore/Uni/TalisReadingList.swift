@@ -43,6 +43,39 @@ public struct TalisReadingList: Sendable {
         return (URL(string: s + ".json") ?? listURL, URL(string: s + ".html") ?? listURL)
     }
 
+    /// Finds a module's reading lists on Talis by module code, for when ELE only links
+    /// them through a login launch (LTI). Tries the tenancy's module lookup pages.
+    public func discoverLists(moduleCode: String, tenant: String = "exeter") async -> [URL] {
+        let code = moduleCode.lowercased()
+        let candidates = [
+            "https://\(tenant).rl.talis.com/modules/\(code)/lists.json",
+            "https://rl.talis.com/3/\(tenant)/modules/\(code)/lists.json",
+            "https://\(tenant).rl.talis.com/modules/\(code).html",
+            "https://rl.talis.com/3/\(tenant)/modules/\(code).html",
+        ]
+        for c in candidates {
+            guard let url = URL(string: c),
+                  let data = try? await http.data("GET", url, headers: ["Accept": "application/json, text/html"]) else { continue }
+            let found = Self.listURLs(in: String(decoding: data, as: UTF8.self), tenant: tenant)
+            if !found.isEmpty { return found }
+        }
+        return []
+    }
+
+    /// List addresses mentioned in a Talis page or RDF/JSON document.
+    static func listURLs(in text: String, tenant: String) -> [URL] {
+        let pattern = "https?:(?:\\\\?/){2}[a-z0-9.]*rl\\.talis\\.com(?:\\\\?/[a-z0-9]+)*\\\\?/lists\\\\?/[A-Za-z0-9-]+"
+        guard let re = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
+        let ns = text as NSString
+        var seen = Set<String>()
+        var out: [URL] = []
+        for m in re.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+            let raw = ns.substring(with: m.range).replacingOccurrences(of: "\\/", with: "/")
+            if seen.insert(raw.lowercased()).inserted, let u = URL(string: raw) { out.append(u) }
+        }
+        return out
+    }
+
     public func fetch(listURL: URL, moduleCode: String) async throws -> [Entry] {
         let (jsonURL, htmlURL) = Self.urls(for: listURL)
         if let data = try? await http.data("GET", jsonURL, headers: ["Accept": "application/json"]),

@@ -13,7 +13,7 @@ enum SyncSource: String, CaseIterable, Codable, Identifiable {
         case .gmail: "Gmail"
         case .exeterMail: "Exeter email"
         case .ele: "ELE"
-        case .notes: "OneNote notes"
+        case .notes: "Notes"
         case .imessage: "iMessage"
         case .ai: "AI"
         case .briefs: "Briefs & reviews"
