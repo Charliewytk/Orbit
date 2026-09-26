@@ -117,6 +117,20 @@ final class AccountManager {
         await refreshStatus()
     }
 
+    /// Incremental Google consent for extra scopes (e.g. drive.readonly for the Notability folder).
+    /// Google keeps the scopes already granted (`include_granted_scopes`).
+    @discardableResult
+    func grantGoogle(scopes: [String]) async -> Bool {
+        guard let config = googleConfig else { return false }
+        return await signIn(config: config.incremental(adding: scopes), account: "google", label: "Google") { self.google = $0 }
+    }
+
+    /// Whether the Google token covers `scopes` (true when Google didn't say which were granted).
+    func googleHasScopes(_ scopes: [String]) async -> Bool {
+        guard let session = google, let tokens = try? await session.currentTokens() else { return false }
+        return tokens.missingScopes(scopes).isEmpty
+    }
+
     // MARK: Microsoft (Exeter, optional advanced)
 
     @discardableResult

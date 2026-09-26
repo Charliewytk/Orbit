@@ -4,7 +4,7 @@ import OrbitCore
 
 /// The Mac's native Settings window (⌘,): tabs of grouped forms.
 struct MacSettingsView: View {
-    enum Tab: String, Hashable { case general, accounts, ai, uni, routine, extras, money, health, backups, advanced, companion }
+    enum Tab: String, Hashable { case general, accounts, ai, uni, routine, extras, money, health, backups, advanced, companion, improve }
     /// UserDefaults key for the selected tab (other screens set it to open Settings on a tab).
     static let tabKey = "settings.tab"
     @AppStorage(MacSettingsView.tabKey) private var tab: Tab = .general
@@ -41,6 +41,9 @@ struct MacSettingsView: View {
             CompanionSettingsView()
                 .tabItem { Label("Briefing", systemImage: "sunrise") }
                 .tag(Tab.companion)
+            SelfImproveSettingsTab()
+                .tabItem { Label("Improve", systemImage: "hammer") }
+                .tag(Tab.improve)
             AdvancedSettingsTab()
                 .tabItem { Label("Advanced", systemImage: "wrench.and.screwdriver") }
                 .tag(Tab.advanced)
@@ -72,7 +75,9 @@ private struct PrefsEditor<Content: View>: View {
 private struct GeneralSettingsTab: View {
     @Environment(AppModel.self) private var app
     @Environment(\.openWindow) private var openWindow
-    @AppStorage("onboardingDone") private var onboardingDone = false
+    @AppStorage(OnboardingFlow.versionKey) private var onboardingVersion = 0
+    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.light.rawValue
+    @AppStorage(OrbitSound.enabledKey) private var sounds = true
     @State private var name = ""
     @State private var loaded = false
 
@@ -82,10 +87,17 @@ private struct GeneralSettingsTab: View {
                 Section("You") {
                     TextField("First name", text: $name)
                     Button("Run setup again…") {
-                        onboardingDone = false
+                        onboardingVersion = 0
                         openWindow(id: "main")
                         NSApp.activate(ignoringOtherApps: true)
                     }
+                }
+                Section("Look and feel") {
+                    Picker("Appearance", selection: $appearance) {
+                        ForEach(AppAppearance.allCases) { a in Text(a.title).tag(a.rawValue) }
+                    }
+                    .pickerStyle(.segmented)
+                    Toggle("Play small sounds (ticks, closed rings)", isOn: $sounds)
                 }
                 Section {
                     OnboardingGoals()
@@ -178,7 +190,7 @@ private struct UniSettingsTab: View {
 
 private struct AdvancedSettingsTab: View {
     @Environment(AppModel.self) private var app
-    @AppStorage("onboardingDone") private var onboardingDone = true
+    @AppStorage(OnboardingFlow.versionKey) private var onboardingVersion = OnboardingFlow.version
     @Query private var settings: [StoredSettings]
 
     var body: some View {
@@ -200,7 +212,7 @@ private struct AdvancedSettingsTab: View {
                 if let err = OrbitStore.setupError {
                     Text(err).font(Theme.caption).foregroundStyle(Theme.warning).textSelection(.enabled)
                 }
-                Button("Show the welcome tour again") { onboardingDone = false }
+                Button("Show the welcome tour again") { onboardingVersion = 0 }
             }
         }
         .formStyle(.grouped)

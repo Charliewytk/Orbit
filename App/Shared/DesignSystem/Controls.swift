@@ -88,20 +88,19 @@ struct CircleCheckbox: View {
 
     var body: some View {
         Button {
-            if !isOn { bursts += 1; pop = true }
+            if !isOn { bursts += 1; pop = true; OrbitSound.tick() }
             action()
         } label: {
             ZStack {
                 Circle()
                     .strokeBorder(isOn ? Color.clear : (hovering ? Theme.accent : color), lineWidth: 1.5)
                 Circle()
-                    .fill(Theme.accentGradient)
+                    .fill(Theme.accent)
                     .scaleEffect(isOn ? 1 : 0.3)
                     .opacity(isOn ? 1 : 0)
-                    .shadow(color: Theme.violet.opacity(isOn ? 0.45 : 0), radius: 4)
                 Image(systemName: "checkmark")
                     .font(.system(size: size * 0.5, weight: .heavy))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onAccent)
                     .scaleEffect(isOn ? 1 : 0.3)
                     .opacity(isOn ? 1 : 0)
                 CheckBurst(trigger: bursts)
@@ -134,7 +133,7 @@ struct ModuleTag: View {
         if let code, !code.isEmpty {
             HStack(spacing: 5) {
                 ModuleDot(code: code, size: 7)
-                Text(name.map { "\(code) \($0)" } ?? code)
+                Text(name ?? ModuleLabel.title(code))
                     .font(Theme.caption)
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)

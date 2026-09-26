@@ -16,11 +16,47 @@ public protocol MailProvider: Sendable {
     func createDraft(replyTo message: EmailMessage, body: String) async throws -> String
     /// Marks a message read. Optional: the default throws `MailError.unsupported`.
     func markRead(id: String) async throws
+    /// Archives, trashes, or undoes one of those. Optional: the default throws `MailError.unsupported`.
+    /// There is deliberately no permanent delete and no send.
+    func apply(_ action: MailboxAction, ids: [String]) async throws
 }
 
 extension MailProvider {
     public var providerID: String { account.rawValue }
     public func markRead(id: String) async throws { throw MailError.unsupported("markRead") }
+    public func apply(_ action: MailboxAction, ids: [String]) async throws { throw MailError.unsupported(action.rawValue) }
+}
+
+/// Mailbox changes Orbit can make. Trash is recoverable for 30 days; nothing is deleted for good.
+public enum MailboxAction: String, Codable, Sendable, CaseIterable {
+    /// Remove from the inbox (Gmail: drop the INBOX label).
+    case archive
+    /// Move to Trash.
+    case trash
+    /// Undo `archive` (put the INBOX label back).
+    case unarchive
+    /// Undo `trash`.
+    case untrash
+
+    /// The action that undoes this one.
+    public var inverse: MailboxAction {
+        switch self {
+        case .archive: .unarchive
+        case .unarchive: .archive
+        case .trash: .untrash
+        case .untrash: .trash
+        }
+    }
+
+    /// "Archived", "Moved to Trash"…
+    public var pastTense: String {
+        switch self {
+        case .archive: "Archived"
+        case .trash: "Moved to Trash"
+        case .unarchive: "Moved back to Inbox"
+        case .untrash: "Restored from Trash"
+        }
+    }
 }
 
 public enum MailError: Error, CustomStringConvertible, Sendable, Equatable {

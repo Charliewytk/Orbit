@@ -95,6 +95,24 @@ final class AuthOAuthClientTests: XCTestCase {
         XCTAssertEqual(config.callbackScheme, "com.googleusercontent.apps.123")
     }
 
+    func testMissingScopesForIncrementalAuth() {
+        let old = OAuthTokens(accessToken: "a", scope: "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar openid email")
+        XCTAssertEqual(old.missingScopes([GmailClient.modifyScope]), [GmailClient.modifyScope])
+        let fresh = OAuthTokens(accessToken: "a", scope: OAuthConfig.googleScopes.joined(separator: " "))
+        XCTAssertEqual(fresh.missingScopes([GmailClient.modifyScope]), [])
+        XCTAssertEqual(OAuthTokens(accessToken: "a").missingScopes([GmailClient.modifyScope]), [], "unknown scope isn't reported missing")
+    }
+
+    func testIncrementalGoogleConfigAsksOnlyForNewScope() {
+        let config = OAuthConfig.google(clientID: "123.apps.googleusercontent.com",
+                                        redirectURI: "com.googleusercontent.apps.123:/oauth2redirect")
+            .incremental(adding: [GmailClient.modifyScope])
+        let pkce = PKCE(verifier: "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk")
+        let q = query(OAuthClient(config: config).authorizationURL(state: "st", pkce: pkce, loginHint: nil))
+        XCTAssertEqual(q["scope"], "https://www.googleapis.com/auth/gmail.modify openid email")
+        XCTAssertEqual(q["include_granted_scopes"], "true")
+    }
+
     func testMicrosoftConfig() {
         let c = OAuthConfig.microsoft(clientID: "abc", redirectURI: "com.orbit.app://auth")
         XCTAssertEqual(c.authorizationEndpoint.absoluteString,

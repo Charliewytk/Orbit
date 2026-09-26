@@ -46,6 +46,10 @@ struct NotesLibraryState: Codable {
 final class NotesLibraryModel {
     private(set) var entries: [LibraryEntry] = []
     private(set) var tree: [LibraryNode] = []
+    /// Subjects → sections → notes, like Notability's library.
+    private(set) var subjects: [NoteSubject] = []
+    /// The handwritten notes folder being shown (nil when none found yet).
+    var backupRoot: URL?
     private(set) var suggestions: [NoteAction] = []
     private(set) var status: [String: NoteReadStatus] = [:]
     private(set) var isScanning = false
@@ -76,6 +80,7 @@ final class NotesLibraryModel {
     func setEntries(_ e: [LibraryEntry], backupName: String) {
         entries = e
         tree = NotesLibrary.tree(e, backupName: backupName)
+        subjects = NotesBrowser.subjects(e)
         revision += 1
     }
 
@@ -126,8 +131,7 @@ extension OrbitBrain {
         loadNotesLibraryIfNeeded()
         notesLibrary.setScanning(true)
         defer { notesLibrary.setScanning(false) }
-        let backupPath = MacPrefs.string(MacPrefs.notesFolderPath)
-        let backup = backupPath.map { URL(fileURLWithPath: $0, isDirectory: true) }
+        let backup = effectiveNotesFolder()
         let typedRoot = typedNotesStore.root
         notesLibrary.typedRoot = typedRoot
         let matcher = NotebookModuleMatcher(modules: knownModules(), includeDefaults: false)
@@ -135,6 +139,7 @@ extension OrbitBrain {
             NotesLibrary.entries(backupRoot: backup, typedRoot: typedRoot, matcher: matcher)
         }.value
         let name = backup?.lastPathComponent ?? "Notes folder"
+        notesLibrary.backupRoot = backup
         notesLibrary.setEntries(entries, backupName: name)
         notesLibrary.publish()
     }
@@ -175,7 +180,7 @@ extension OrbitBrain {
         loadNotesLibraryIfNeeded()
         let root = typedNotesStore.root
         guard let result = try? NotesFolderScanner(root: root).scan() else { return }
-        for item in result.items where item.kind == .markdown || item.kind == .text {
+        for item in result.items where item.kind == .markdown || item.kind == .text || item.kind == .richText {
             await ingestTypedNote(item: item, root: root, force: false)
         }
         saveNotesLibrary()
@@ -191,7 +196,8 @@ extension OrbitBrain {
         guard rel.hasPrefix(rootPath) else { return }
         rel = String(rel.dropFirst(rootPath.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
-        let item = NotesFolderScanner.Item(url: url, kind: .markdown, modified: values?.contentModificationDate ?? Date(),
+        let kind = NotesFolderScanner.kind(forExtension: url.pathExtension) ?? .markdown
+        let item = NotesFolderScanner.Item(url: url, kind: kind, modified: values?.contentModificationDate ?? Date(),
                                            size: values?.fileSize ?? 0, relativePath: rel)
         guard let note = await ingestTypedNote(item: item, root: root, force: false) else { return }
         saveNotesLibrary()
@@ -199,6 +205,11 @@ extension OrbitBrain {
         await refreshLibrary()
         if note.moduleCode != nil, note.week != nil {
             await academicAfterNotesSync(maxReviews: 1)
+        } else {
+            // Still into the knowledge store (deduped there) so the AI can use it.
+            academicLoadIfNeeded()
+            academic.knowledge.addNotes([note])
+            saveAcademic()
         }
     }
 
@@ -206,7 +217,7 @@ extension OrbitBrain {
     /// (typed = key points, handwriting = detail), else stored on its own.
     @discardableResult
     private func ingestTypedNote(item: NotesFolderScanner.Item, root: URL, force: Bool) async -> LectureNote? {
-        guard let text = try? String(contentsOf: item.url, encoding: .utf8) else { return nil }
+        guard let text = RichNoteFile.markdown(at: item.url) else { return nil }
         let hash = MD5.hex(text)
         if !force, notesLibrary.state.typedHashes[item.relativePath] == hash { return nil }
         let matcher = NotebookModuleMatcher(modules: knownModules(), includeDefaults: false)
@@ -238,8 +249,8 @@ extension OrbitBrain {
         let root = typedNotesStore.root
         let matcher = NotebookModuleMatcher(modules: knownModules(), includeDefaults: false)
         guard let result = try? NotesFolderScanner(root: root).scan() else { return nil }
-        for item in result.items where item.kind == .markdown || item.kind == .text {
-            guard let text = try? String(contentsOf: item.url, encoding: .utf8) else { continue }
+        for item in result.items where item.kind == .markdown || item.kind == .text || item.kind == .richText {
+            guard let text = RichNoteFile.markdown(at: item.url) else { continue }
             let typed = TypedNotesStore.note(markdown: text, relativePath: item.relativePath, modified: item.modified, matcher: matcher)
             if typed.moduleCode == module, typed.week == week, typed.hasTyped {
                 notesLibrary.state.typedHashes[item.relativePath] = MD5.hex(text)
@@ -253,6 +264,9 @@ extension OrbitBrain {
         guard local.note(id: typedID) != nil else { return }
         local.deleteNote(id: typedID)
         noteIndex.remove(noteID: typedID)
+        // Its text now lives in the merged note: the AI mustn't see it twice.
+        academicLoadIfNeeded()
+        academic.knowledge.remove(documentID: "note:" + typedID)
         if let s = context.record(StoredNote.self, id: typedID) { context.delete(s) }
         context.saveQuietly()
     }

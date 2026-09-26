@@ -1,96 +1,80 @@
 import SwiftUI
 import OrbitCore
+#if os(macOS)
+import AppKit
+#endif
 
-// Orbit Glass: the Liquid Glass layer (apps only; not compiled into extensions).
+// Orbit Soft: the app-only visual layer (not compiled into the extensions).
 //
-// Every macOS 26 / iOS 26 API is used behind two guards:
+// Cards are solid (white or pastel) with a faint edge and a soft shadow: cheap to
+// draw, calm to look at. Liquid Glass is used only for small floating toolbar
+// controls. Every macOS 26 / iOS 26 API sits behind two guards:
 //   #if compiler(>=6.2)                → Xcode 16 (Swift 6.0/6.1) never sees the symbols
 //   if #available(macOS 26.0, iOS 26.0, *) → older systems get the fallback at run time
-// The fallback is a material with a bright rim and a soft shadow, so the app looks
-// the same family on macOS 15.
 
-// MARK: - Glass surfaces
+// MARK: - Surfaces
 
-/// What `orbitGlass` falls back to before macOS 26: material + tint + rim + shadow.
-struct GlassFallback<S: Shape>: ViewModifier {
+/// The solid surface every former "glass" call now draws: fill (+ optional
+/// pastel tint), faint edge, soft shadow.
+struct SoftSurface<S: Shape>: ViewModifier {
     var shape: S
     var tint: Color?
     var shadow: Bool = true
-    @Environment(\.colorScheme) private var scheme
 
     func body(content: Content) -> some View {
         content
             .background {
                 ZStack {
-                    shape.fill(.ultraThinMaterial)
-                    if let tint { shape.fill(tint.opacity(scheme == .dark ? 0.16 : 0.1)) }
-                    shape.fill(LinearGradient(colors: [.white.opacity(scheme == .dark ? 0.06 : 0.35), .clear],
-                                              startPoint: .top, endPoint: .center))
+                    shape.fill(Theme.surface)
+                    if let tint { shape.fill(tint.opacity(0.12)) }
                 }
             }
-            .overlay {
-                shape.stroke(LinearGradient(colors: [Theme.glassRim, Theme.glassRim.opacity(0.15)],
-                                            startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 0.8)
-            }
-            .shadow(color: shadow ? Theme.glassShadow : .clear, radius: 16, y: 6)
+            .overlay { shape.stroke(Theme.glassRim, lineWidth: 1) }
+            .shadow(color: shadow ? Theme.glassShadow : .clear, radius: 14, y: 4)
     }
 }
 
 extension View {
-    /// Liquid Glass on macOS 26 / iOS 26, material glass before.
-    @ViewBuilder
+    /// A solid soft surface in `shape` (the old glass call; no material any more).
     func orbitGlass<S: Shape>(in shape: S, tint: Color? = nil, interactive: Bool = false) -> some View {
-        #if compiler(>=6.2)
-        if #available(macOS 26.0, iOS 26.0, *) {
-            self.glassEffect(Glass.regular.tint(tint.map { $0.opacity(0.35) }).interactive(interactive), in: shape)
-        } else {
-            self.modifier(GlassFallback(shape: shape, tint: tint))
-        }
-        #else
-        self.modifier(GlassFallback(shape: shape, tint: tint))
-        #endif
+        modifier(SoftSurface(shape: shape, tint: tint))
     }
 
-    /// Glass in the standard card shape.
+    /// The standard card: solid, radius 28.
     func orbitGlassCard(radius: CGFloat = Theme.Radius.card, tint: Color? = nil) -> some View {
         orbitGlass(in: RoundedRectangle(cornerRadius: radius, style: .continuous), tint: tint)
     }
 
-    /// Clear-ish glass for small floating controls (capsule).
-    @ViewBuilder
+    /// Small capsule surface (chips, footers).
     func orbitGlassCapsule(tint: Color? = nil, interactive: Bool = true) -> some View {
-        orbitGlass(in: Capsule(), tint: tint, interactive: interactive)
+        orbitGlass(in: Capsule(), tint: tint)
     }
 
-    /// `.buttonStyle(.glass)` on macOS 26, a glass capsule before.
+    /// Real Liquid Glass, for floating toolbar controls only (a surface capsule before macOS 26).
     @ViewBuilder
+    func orbitToolbarGlass<S: Shape>(in shape: S) -> some View {
+        #if compiler(>=6.2)
+        if #available(macOS 26.0, iOS 26.0, *) {
+            self.glassEffect(Glass.regular.interactive(), in: shape)
+        } else {
+            self.modifier(SoftSurface(shape: shape, tint: nil, shadow: false))
+        }
+        #else
+        self.modifier(SoftSurface(shape: shape, tint: nil, shadow: false))
+        #endif
+    }
+
+    /// Secondary button: a white capsule with ink text.
     func orbitGlassButton() -> some View {
-        #if compiler(>=6.2)
-        if #available(macOS 26.0, iOS 26.0, *) {
-            self.buttonStyle(.glass)
-        } else {
-            self.buttonStyle(GlassCapsuleButtonStyle())
-        }
-        #else
-        self.buttonStyle(GlassCapsuleButtonStyle())
-        #endif
+        buttonStyle(GlassCapsuleButtonStyle())
     }
 
-    /// `.buttonStyle(.glassProminent)` tinted on macOS 26, a gradient capsule before.
-    @ViewBuilder
+    /// Primary button: a solid ink capsule (or `color`).
     func orbitGlassProminentButton(_ color: Color = Theme.accent) -> some View {
-        #if compiler(>=6.2)
-        if #available(macOS 26.0, iOS 26.0, *) {
-            self.buttonStyle(.glassProminent).tint(color)
-        } else {
-            self.buttonStyle(PillButtonStyle(color: color))
-        }
-        #else
-        self.buttonStyle(PillButtonStyle(color: color))
-        #endif
+        buttonStyle(PillButtonStyle(color: color))
     }
 
-    /// Mirrors content under the sidebar / toolbar on macOS 26 (no-op before).
+    /// Mirrors content under the toolbar on macOS 26 (no-op before).
     @ViewBuilder
     func orbitBackgroundExtension() -> some View {
         #if compiler(>=6.2)
@@ -104,19 +88,18 @@ extension View {
         #endif
     }
 
-    /// Standard screen background: the ambient backdrop. Skipped inside a glass
-    /// pane (TwoPane), so there's only ever one backdrop on screen.
+    /// Standard screen background: the flat off-white canvas.
     func orbitBackground() -> some View {
         modifier(OrbitBackdropModifier())
     }
 
-    /// For Form / List screens: hide their opaque background and show the backdrop.
+    /// For Form / List screens: hide their opaque background and show the canvas.
     func orbitScreen() -> some View {
         scrollContentBackground(.hidden).orbitBackground()
     }
 }
 
-/// Draws the ambient backdrop unless the view already sits inside a glass pane.
+/// Draws the canvas unless the view already sits inside a card pane.
 struct OrbitBackdropModifier: ViewModifier {
     @Environment(\.inGlassPane) private var inGlassPane
 
@@ -124,7 +107,7 @@ struct OrbitBackdropModifier: ViewModifier {
         if inGlassPane {
             content
         } else {
-            content.background { AmbientBackdrop().ignoresSafeArea() }
+            content.background { Theme.background.ignoresSafeArea() }
         }
     }
 }
@@ -134,14 +117,14 @@ private struct InGlassPaneKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    /// True inside TwoPane's glass panes (screens there don't draw their own backdrop).
+    /// True inside TwoPane's card panes (screens there don't draw their own canvas).
     var inGlassPane: Bool {
         get { self[InGlassPaneKey.self] }
         set { self[InGlassPaneKey.self] = newValue }
     }
 }
 
-/// Groups glass shapes so they render (and morph) together on macOS 26.
+/// Groups glass shapes on macOS 26 (only toolbars use glass now).
 struct OrbitGlassContainer<Content: View>: View {
     var spacing: CGFloat = 0
     @ViewBuilder var content: Content
@@ -159,23 +142,24 @@ struct OrbitGlassContainer<Content: View>: View {
     }
 }
 
-/// A glass capsule button (fallback for `.glass`).
+/// Secondary capsule button: white fill, faint edge, ink label.
 struct GlassCapsuleButtonStyle: ButtonStyle {
     var tint: Color? = nil
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(Theme.body.weight(.medium))
+            .font(Theme.body.weight(.semibold))
             .foregroundStyle(tint ?? Theme.textPrimary)
             .padding(.horizontal, Theme.Space.m)
-            .padding(.vertical, 6)
-            .modifier(GlassFallback(shape: Capsule(), tint: tint, shadow: false))
+            .padding(.vertical, 7)
+            .background(Capsule().fill(Theme.surface))
+            .overlay(Capsule().strokeBorder(Theme.border, lineWidth: 1))
             .scaleEffect(configuration.isPressed ? 0.95 : 1)
             .opacity(configuration.isPressed ? 0.85 : 1)
             .animation(Motion.snappy, value: configuration.isPressed)
     }
 }
 
-/// A padded glass card (the dashboard's building block).
+/// A padded card (kept name; now a solid card).
 struct GlassCard<Content: View>: View {
     var padding: CGFloat = Theme.Space.l
     var tint: Color? = nil
@@ -190,9 +174,9 @@ struct GlassCard<Content: View>: View {
     }
 }
 
-// MARK: - Ambient backdrop
+// MARK: - Backdrop
 
-/// Time of day, for the backdrop colours and the greeting.
+/// Time of day, for the greeting.
 enum DayPhase {
     case dawn, day, dusk, night
 
@@ -205,67 +189,21 @@ enum DayPhase {
         default: return .night
         }
     }
-
-    /// Nine mesh colours (3 × 3, row by row).
-    func colors(dark: Bool) -> [Color] {
-        let hex: [UInt32]
-        switch (self, dark) {
-        case (.dawn, false): hex = [0xFFD9C7, 0xFFC4DA, 0xE4D4FF, 0xFFE8D6, 0xF7D6FF, 0xD7DEFF, 0xFFF1E4, 0xE9E1FF, 0xCFE4FF]
-        case (.day, false): hex = [0xD6E4FF, 0xE3DAFF, 0xFFDDF0, 0xDDF3FF, 0xECE6FF, 0xE2DCFF, 0xD2F4EC, 0xDCE6FF, 0xF3DDFF]
-        case (.dusk, false): hex = [0xFFD2B8, 0xFFB8D2, 0xE0C2FF, 0xFFC9C0, 0xF4C6F0, 0xC9C6FF, 0xFFDCC4, 0xE8C8FF, 0xBFC8FF]
-        case (.night, false): hex = [0xCFD3FF, 0xDCCBFF, 0xE9CCF5, 0xD4DAFF, 0xE2D8FF, 0xCFC7F7, 0xD9E0FF, 0xD8CEFF, 0xE4D0F7]
-        case (.dawn, true): hex = [0x2A1633, 0x3A1A3B, 0x221A45, 0x2D1830, 0x2A1B40, 0x1A1D46, 0x1E1428, 0x241A3E, 0x141B3A]
-        case (.day, true): hex = [0x10193D, 0x1C1644, 0x2B1540, 0x0F2140, 0x1B1A48, 0x221748, 0x0E2230, 0x161B44, 0x271644]
-        case (.dusk, true): hex = [0x2E1726, 0x3A1636, 0x251745, 0x301A26, 0x2C1840, 0x1C1A48, 0x24141E, 0x2A1740, 0x161838]
-        case (.night, true): hex = [0x0B0D24, 0x150E2E, 0x1E0F33, 0x0C1330, 0x14123A, 0x1A1034, 0x080C1E, 0x10102E, 0x170D2A]
-        }
-        return hex.map { Color(hex: $0) }
-    }
 }
 
-/// A soft, slowly moving mesh gradient that shifts colour with the time of day.
-/// One per screen; cheap (GPU mesh) and paused with Reduce Motion.
+/// The canvas. It used to be an animated mesh gradient redrawn 15 times a
+/// second on every screen; now it's a flat colour (nothing to redraw).
 struct AmbientBackdrop: View {
-    @Environment(\.colorScheme) private var scheme
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var phase: DayPhase? = nil
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 15, paused: reduceMotion)) { context in
-            let t = context.date.timeIntervalSinceReferenceDate
-            let colors = (phase ?? DayPhase.at(context.date)).colors(dark: scheme == .dark)
-            MeshGradient(width: 3, height: 3, points: Self.points(t), colors: colors, smoothsColors: true)
-                .overlay {
-                    // A faint veil keeps text readable on every colour.
-                    (scheme == .dark ? Color.black.opacity(0.18) : Color.white.opacity(0.22))
-                }
-        }
-        .accessibilityHidden(true)
-    }
-
-    /// Corners and edges stay put; the middle points drift in slow loops.
-    static func points(_ t: TimeInterval) -> [SIMD2<Float>] {
-        func wobble(_ speed: Double, _ offset: Double, _ amount: Double) -> Float {
-            Float(0.5 + sin(t * speed + offset) * amount)
-        }
-        func p(_ x: Float, _ y: Float) -> SIMD2<Float> { SIMD2<Float>(x, y) }
-        let top = wobble(0.11, 0, 0.12)
-        let left = wobble(0.09, 1, 0.12)
-        let midX = wobble(0.13, 2, 0.16)
-        let midY = wobble(0.1, 3, 0.16)
-        let right = wobble(0.08, 4, 0.12)
-        let bottom = wobble(0.12, 5, 0.12)
-        return [
-            p(0, 0), p(top, 0), p(1, 0),
-            p(0, left), p(midX, midY), p(1, right),
-            p(0, 1), p(bottom, 1), p(1, 1),
-        ]
+        Theme.background.accessibilityHidden(true)
     }
 }
 
 // MARK: - Icons
 
-/// A rounded-square colour tile with a white symbol (macOS Settings style).
+/// A soft rounded tile: pastel tint with a coloured symbol.
 struct IconTile: View {
     var symbol: String
     var color: Color
@@ -273,23 +211,20 @@ struct IconTile: View {
 
     var body: some View {
         Image(systemName: symbol)
-            .font(.system(size: size * 0.52, weight: .semibold))
+            .font(.system(size: size * 0.5, weight: .semibold))
             .symbolRenderingMode(.hierarchical)
-            .foregroundStyle(.white)
+            .foregroundStyle(color)
             .frame(width: size, height: size)
             .background(
-                RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-                    .fill(LinearGradient(colors: [color.opacity(0.85), color], startPoint: .top, endPoint: .bottom))
+                RoundedRectangle(cornerRadius: size * 0.32, style: .continuous).fill(color.opacity(0.16))
             )
-            .overlay(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-                .strokeBorder(.white.opacity(0.22), lineWidth: 0.5))
-            .shadow(color: color.opacity(0.35), radius: 3, y: 1)
+            .accessibilityHidden(true)
     }
 }
 
 // MARK: - Rings
 
-/// One ring: a gradient arc with round caps; glows when complete.
+/// One ring: an arc with round caps.
 struct RingArc: View {
     var progress: Double
     var start: Color
@@ -299,27 +234,24 @@ struct RingArc: View {
     var body: some View {
         let p = max(0, progress)
         ZStack {
-            Circle().stroke(start.opacity(0.16), lineWidth: lineWidth)
+            Circle().stroke(start.opacity(0.18), lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: max(0.0001, min(1, p)))
-                .stroke(AngularGradient(colors: [start, end], center: .center,
-                                        startAngle: .degrees(0), endAngle: .degrees(360 * max(0.05, min(1, p)))),
+                .stroke(LinearGradient(colors: [start, end], startPoint: .top, endPoint: .bottom),
                         style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .shadow(color: p >= 1 ? end.opacity(0.6) : .clear, radius: lineWidth * 0.5)
             if p > 1 {
-                // Second lap: a short overlay arc so going past the goal shows.
                 Circle()
                     .trim(from: 0, to: min(1, p - 1))
                     .stroke(end, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .shadow(color: .black.opacity(0.25), radius: 2)
             }
         }
     }
 }
 
-/// Fitness-style concentric rings: study minutes, to-dos, reviews.
+/// Concentric rings: study minutes, to-dos, reviews. Bounce when they move and
+/// pop once when all three close.
 struct ActivityRings: View {
     var study: Double
     var tasks: Double
@@ -327,6 +259,9 @@ struct ActivityRings: View {
     var size: CGFloat = 132
     var lineWidth: CGFloat? = nil
     @State private var shown = false
+    @State private var closedPop = false
+
+    private var allClosed: Bool { study >= 1 && tasks >= 1 && reviews >= 1 }
 
     var body: some View {
         let w = lineWidth ?? size * 0.12
@@ -340,10 +275,16 @@ struct ActivityRings: View {
                 .frame(width: size - gap * 4, height: size - gap * 4)
         }
         .frame(width: size, height: size)
+        .scaleEffect(closedPop ? 1.08 : 1)
         .animation(Motion.bouncy, value: study)
         .animation(Motion.bouncy, value: tasks)
         .animation(Motion.bouncy, value: reviews)
-        .onAppear { withAnimation(.spring(response: 1.1, dampingFraction: 0.8).delay(0.15)) { shown = true } }
+        .onAppear { withAnimation(.spring(response: 1.0, dampingFraction: 0.72).delay(0.1)) { shown = true } }
+        .onChange(of: allClosed) { _, closed in
+            guard closed else { return }
+            withAnimation(Motion.bouncy) { closedPop = true }
+            withAnimation(Motion.bouncy.delay(0.35)) { closedPop = false }
+        }
         .accessibilityElement()
         .accessibilityLabel("Study \(Int(study * 100))%, to-dos \(Int(tasks * 100))%, reviews \(Int(reviews * 100))%")
     }
@@ -351,7 +292,7 @@ struct ActivityRings: View {
 
 // MARK: - Heatmap
 
-/// GitHub-style heatmap of the last weeks (columns = weeks, Monday on top).
+/// GitHub-style heatmap of the last weeks (columns = weeks, Monday on top), in sage.
 struct ActivityHeatmap: View {
     var cells: [[HeatCell?]]
     var cell: CGFloat = 11
@@ -371,16 +312,17 @@ struct ActivityHeatmap: View {
                 }
             }
         }
+        .drawingGroup()
     }
 
     private func color(_ level: Int?) -> Color {
         guard let level else { return .clear }
         switch level {
         case 0: return Theme.hover
-        case 1: return Theme.accent.opacity(0.3)
-        case 2: return Theme.accent.opacity(0.55)
-        case 3: return Theme.violet.opacity(0.85)
-        default: return Theme.pink
+        case 1: return Theme.sageInk.opacity(0.25)
+        case 2: return Theme.sageInk.opacity(0.45)
+        case 3: return Theme.sageInk.opacity(0.7)
+        default: return Theme.sageInk
         }
     }
 
@@ -391,7 +333,7 @@ struct ActivityHeatmap: View {
 
 // MARK: - Motion
 
-/// Cards arrive with a staggered fade, rise and scale.
+/// Cards arrive with a short staggered fade and rise (skipped with Reduce Motion).
 struct StaggeredAppear: ViewModifier {
     var index: Int
     @State private var shown = false
@@ -399,24 +341,23 @@ struct StaggeredAppear: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .opacity(shown ? 1 : 0)
-            .offset(y: shown || reduceMotion ? 0 : 14)
-            .scaleEffect(shown || reduceMotion ? 1 : 0.98)
+            .opacity(shown || reduceMotion ? 1 : 0)
+            .offset(y: shown || reduceMotion ? 0 : 10)
             .onAppear {
-                withAnimation(Motion.arrive.delay(Double(min(index, 14)) * 0.045)) { shown = true }
+                guard !shown, !reduceMotion else { return }
+                withAnimation(Motion.arrive.delay(Double(min(index, 8)) * 0.035)) { shown = true }
             }
     }
 }
 
-/// Hover: lifts slightly with a stronger shadow.
+/// Hover: a gentle lift (no shadow animation, which is expensive on big cards).
 struct HoverLift: ViewModifier {
-    var amount: CGFloat = 1.012
+    var amount: CGFloat = 1.006
     @State private var hovering = false
 
     func body(content: Content) -> some View {
         content
             .scaleEffect(hovering ? amount : 1)
-            .shadow(color: Theme.glassShadow.opacity(hovering ? 1 : 0), radius: hovering ? 22 : 0, y: hovering ? 10 : 0)
             .onHover { hovering = $0 }
             .animation(Motion.snappy, value: hovering)
     }
@@ -424,23 +365,23 @@ struct HoverLift: ViewModifier {
 
 extension View {
     func staggeredAppear(_ index: Int) -> some View { modifier(StaggeredAppear(index: index)) }
-    func hoverLift(_ amount: CGFloat = 1.012) -> some View { modifier(HoverLift(amount: amount)) }
+    func hoverLift(_ amount: CGFloat = 1.006) -> some View { modifier(HoverLift(amount: amount)) }
 }
 
-/// A small burst of dots (confetti-lite) each time `trigger` changes.
+/// A small burst of pastel dots each time `trigger` changes (the checkbox tick).
 struct CheckBurst: View {
     var trigger: Int
-    var colors: [Color] = [Theme.pink, Theme.violet, Theme.cyan, Theme.success, Theme.warning]
+    var colors: [Color] = [Theme.ringStudy, Theme.ringTasks, Theme.ringReviews, Theme.butterInk, Theme.skyInk]
     @State private var fired = false
 
     var body: some View {
         ZStack {
-            ForEach(0..<10, id: \.self) { i in
-                let angle = Double(i) / 10 * 2 * .pi
+            ForEach(0..<8, id: \.self) { i in
+                let angle = Double(i) / 8 * 2 * .pi
                 Circle()
                     .fill(colors[i % colors.count])
                     .frame(width: 5, height: 5)
-                    .offset(x: fired ? cos(angle) * 22 : 0, y: fired ? sin(angle) * 22 : 0)
+                    .offset(x: fired ? cos(angle) * 20 : 0, y: fired ? sin(angle) * 20 : 0)
                     .opacity(fired ? 0 : 1)
                     .scaleEffect(fired ? 0.4 : 1)
             }
@@ -449,14 +390,86 @@ struct CheckBurst: View {
         .opacity(trigger == 0 ? 0 : 1)
         .onChange(of: trigger) { _, _ in
             fired = false
-            withAnimation(.easeOut(duration: 0.6)) { fired = true }
+            withAnimation(.easeOut(duration: 0.55)) { fired = true }
         }
     }
 }
 
-// MARK: - Glass segmented control
+/// Subtle confetti: ~36 pastel pieces fall and fade once per `trigger` change.
+/// Drawn in one Canvas (cheap), gone after ~1.8 s, skipped with Reduce Motion.
+struct ConfettiView: View {
+    var trigger: Int
+    @State private var start: Date?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private static let colors: [Color] = [
+        Color(hex: 0xE8849A), Color(hex: 0x6FB47E), Color(hex: 0x8C7FD9), Color(hex: 0xE9C24A),
+        Color(hex: 0x6FA3D8), Color(hex: 0xF0A36E),
+    ]
+    private let duration = 1.8
 
-/// A capsule segmented control with a sliding glass thumb.
+    var body: some View {
+        Group {
+            if let start, !reduceMotion {
+                TimelineView(.animation) { context in
+                    let t = context.date.timeIntervalSince(start)
+                    Canvas { ctx, size in
+                        guard t < duration else { return }
+                        for i in 0..<36 {
+                            let seed = Double(i) * 12.9898
+                            let r1 = abs(sin(seed) * 43758.5453).truncatingRemainder(dividingBy: 1)
+                            let r2 = abs(sin(seed * 1.7) * 24634.6345).truncatingRemainder(dividingBy: 1)
+                            let x = size.width * (0.1 + 0.8 * r1) + sin(t * 3 + seed) * 12
+                            let y = -10 + (size.height * 0.75) * (t / duration) * (0.6 + 0.6 * r2) + 40 * r2
+                            let rect = CGRect(x: x, y: y, width: 7, height: 4)
+                            var piece = ctx
+                            piece.opacity = max(0, 1 - t / duration)
+                            piece.translateBy(x: rect.midX, y: rect.midY)
+                            piece.rotate(by: .radians(t * 4 + seed))
+                            piece.fill(Path(roundedRect: CGRect(x: -3.5, y: -2, width: 7, height: 4), cornerRadius: 1.5),
+                                       with: .color(Self.colors[i % Self.colors.count]))
+                        }
+                    }
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .onChange(of: trigger) { _, _ in
+            start = Date()
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(duration + 0.1))
+                start = nil
+            }
+        }
+    }
+}
+
+// MARK: - Sounds
+
+/// Small, optional sounds (Settings → General → "Play sounds"; on by default).
+enum OrbitSound {
+    static let enabledKey = "orbit.sounds"
+
+    static var enabled: Bool {
+        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+    }
+
+    /// A soft tick when a to-do is completed.
+    static func tick() { play("Pop", volume: 0.35) }
+    /// All rings closed / a badge earned.
+    static func celebrate() { play("Glass", volume: 0.4) }
+
+    private static func play(_ name: String, volume: Float) {
+        #if os(macOS)
+        guard enabled, let sound = NSSound(named: NSSound.Name(name))?.copy() as? NSSound else { return }
+        sound.volume = volume
+        sound.play()
+        #endif
+    }
+}
+
+// MARK: - Segmented control
+
+/// A capsule segmented control with a sliding white thumb.
 struct GlassSegmented<Value: Hashable>: View {
     var options: [(value: Value, title: String)]
     @Binding var selection: Value
@@ -466,37 +479,40 @@ struct GlassSegmented<Value: Hashable>: View {
     var body: some View {
         HStack(spacing: 2) {
             ForEach(options.indices, id: \.self) { i in
-                let option = options[i]
-                let selected = option.value == selection
-                Button {
-                    withAnimation(Motion.snappy) { selection = option.value }
-                } label: {
-                    HStack(spacing: 5) {
-                        Text(option.title)
-                        if let n = counts[option.value], n > 0 {
-                            Text("\(n)")
-                                .font(Theme.caption.monospacedDigit().weight(.semibold))
-                                .foregroundStyle(selected ? Theme.accent : Theme.textTertiary)
-                        }
-                    }
-                    .font(Theme.body.weight(selected ? .semibold : .medium))
-                    .foregroundStyle(selected ? Theme.textPrimary : Theme.textSecondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background {
-                        if selected {
-                            Capsule()
-                                .fill(Theme.surface)
-                                .shadow(color: Theme.glassShadow, radius: 6, y: 2)
-                                .matchedGeometryEffect(id: "thumb", in: ns)
-                        }
-                    }
-                    .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
+                segment(options[i])
             }
         }
         .padding(3)
-        .orbitGlass(in: Capsule())
+        .background(Capsule().fill(Theme.hover))
+    }
+
+    private func segment(_ option: (value: Value, title: String)) -> some View {
+        let selected = option.value == selection
+        return Button {
+            withAnimation(Motion.snappy) { selection = option.value }
+        } label: {
+            HStack(spacing: 5) {
+                Text(option.title)
+                if let n = counts[option.value], n > 0 {
+                    Text("\(n)")
+                        .font(Theme.caption.monospacedDigit().weight(.semibold))
+                        .foregroundStyle(selected ? Theme.textPrimary : Theme.textTertiary)
+                }
+            }
+            .font(Theme.body.weight(selected ? .semibold : .medium))
+            .foregroundStyle(selected ? Theme.textPrimary : Theme.textSecondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background {
+                if selected {
+                    Capsule()
+                        .fill(Theme.surface)
+                        .shadow(color: Theme.glassShadow, radius: 3, y: 1)
+                        .matchedGeometryEffect(id: "thumb", in: ns)
+                }
+            }
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }

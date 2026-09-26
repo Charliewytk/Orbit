@@ -14,6 +14,7 @@
 		06047ADACB0CD2C46026B14B /* Brain+NotesLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7104344EC937C3A0D9BC7C7 /* Brain+NotesLibrary.swift */; };
 		063DDDF73F2C9BCAB3A5CD4F /* MacOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3DCEE85A3D93E1AA03CEE7 /* MacOnboardingView.swift */; };
 		069E649DF51D25F8DB5C21BF /* ELEDocumentText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A26E953E9B6E92FE92FD2D2 /* ELEDocumentText.swift */; };
+		0760D339354C0E3B90A4D046 /* SelfImproveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4970CBC0A8EB231E3D31D7A2 /* SelfImproveService.swift */; };
 		07DE17DE903E9379A2C9EDD4 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE13C7AC804A7A563E656418 /* Components.swift */; };
 		0EE44503582AEFCF085F709D /* FocusViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FE7BC90FC12EBAD73203D4 /* FocusViews.swift */; };
 		1564CC7CE5B99DCD13A8CCE4 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD4FB9EA79578991D116059 /* Controls.swift */; };
@@ -27,6 +28,7 @@
 		238EF43D8AED70E88359BD73 /* TasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F6D69211B0C93923225A9A /* TasksView.swift */; };
 		23F5E725C6A43732C5656B62 /* CompanionCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89C349842E12B36AE72F0646 /* CompanionCards.swift */; };
 		2631B6D96625BAD4F99E078B /* OrbitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367D1E3D8E9FAE8BB55D57DF /* OrbitIntents.swift */; };
+		296A123DA9FC00DC6C83B061 /* Brain+NotesBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F734F5E8FA7AE026586517A0 /* Brain+NotesBrowser.swift */; };
 		2B356576B9999457C8257336 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */; };
 		2BA06FE5488569FFF9477B35 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A6EBF54AED01206D4E4790 /* HomeView.swift */; };
 		2D5E26DE9D444A96CCB14CDF /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
@@ -112,6 +114,7 @@
 		978D5624C824C13A134CD35A /* Brain+OpenCodeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76EC91B69FFE40138F3957A9 /* Brain+OpenCodeModel.swift */; };
 		97E3E203B3D13D9703FACC51 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06293A056AFC21454B132509 /* AppGroup.swift */; };
 		9975F1D3FD12F3DC78912B73 /* OllamaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47344532D9E718667F731637 /* OllamaManager.swift */; };
+		9AA3B0D1414787497DCED7BC /* SelfImproveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F8677A0E84DA9FA97E313A /* SelfImproveView.swift */; };
 		9B3FD4BE13915A3A59B069F6 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
 		9D3D3D48076F777ACBEF21E6 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1FA03B8D3B4486A5BC8549 /* Notifier.swift */; };
 		9D9F3C5525C482D77C11B10F /* EdLoginWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1756AF37FA5BBD75BDA8E07C /* EdLoginWindow.swift */; };
@@ -292,12 +295,14 @@
 		47344532D9E718667F731637 /* OllamaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaManager.swift; sourceTree = "<group>"; };
 		483D1EEF8194DD643CA40634 /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
 		483F20CCE0DA465ACBB75655 /* EdViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdViews.swift; sourceTree = "<group>"; };
+		4970CBC0A8EB231E3D31D7A2 /* SelfImproveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfImproveService.swift; sourceTree = "<group>"; };
 		4A26E953E9B6E92FE92FD2D2 /* ELEDocumentText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELEDocumentText.swift; sourceTree = "<group>"; };
 		4B39745D2DAFB6C2A86B81B0 /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
 		4C13598698F53CAB05EFF2D4 /* Agenda.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Agenda.swift; sourceTree = "<group>"; };
 		4E14149F17FD58E9DCA9E1FD /* CareersService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareersService.swift; sourceTree = "<group>"; };
 		4F52C507EADC6AE6C338F2BB /* Brain+Notes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Notes.swift"; sourceTree = "<group>"; };
 		552BE448F98D6F67E57F8AD7 /* AcademicHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcademicHooks.swift; sourceTree = "<group>"; };
+		58F8677A0E84DA9FA97E313A /* SelfImproveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfImproveView.swift; sourceTree = "<group>"; };
 		5B529C662890D4025D22DE38 /* Orbit.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Orbit.xcconfig; sourceTree = "<group>"; };
 		5FAC8DE69AD778FBF7DA6524 /* FocusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusController.swift; sourceTree = "<group>"; };
 		6256515A892AE09D0AC8E76F /* Brain+Chat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Chat.swift"; sourceTree = "<group>"; };
@@ -371,6 +376,7 @@
 		E9145F461AFAAAC8AC38E92B /* ELEWebSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELEWebSession.swift; sourceTree = "<group>"; };
 		E916CC1D9F77632A8CA8529C /* Orbit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Orbit; path = .; sourceTree = SOURCE_ROOT; };
 		EDC5CCEB9635476ACF541A90 /* OrbitWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitWidgets.swift; sourceTree = "<group>"; };
+		F734F5E8FA7AE026586517A0 /* Brain+NotesBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+NotesBrowser.swift"; sourceTree = "<group>"; };
 		F8913482F683D3C72287B6D4 /* Brain+Calendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Calendar.swift"; sourceTree = "<group>"; };
 		F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
 		FD9EAA5BFCBCC35C729EF232 /* OrbitWidgets-macOS.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "OrbitWidgets-macOS.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -412,6 +418,7 @@
 				98E9EC0114D13B65D6CA56A5 /* Companion */,
 				62BA3A8A427846F6E07A8E18 /* ELE */,
 				634707236FF69AECEB3B0ECF /* Features */,
+				72A275C69F0BBA6CC676EE1F /* SelfImprove */,
 				9AEFE66792C9F91D41B29B73 /* Study */,
 				BB89356E8D959DA0F256DAF9 /* Views */,
 			);
@@ -560,6 +567,15 @@
 				01F6D69211B0C93923225A9A /* TasksView.swift */,
 			);
 			path = Tasks;
+			sourceTree = "<group>";
+		};
+		72A275C69F0BBA6CC676EE1F /* SelfImprove */ = {
+			isa = PBXGroup;
+			children = (
+				4970CBC0A8EB231E3D31D7A2 /* SelfImproveService.swift */,
+				58F8677A0E84DA9FA97E313A /* SelfImproveView.swift */,
+			);
+			path = SelfImprove;
 			sourceTree = "<group>";
 		};
 		73ECFE08259F0EF5C66DD054 /* Home */ = {
@@ -764,6 +780,7 @@
 				E6EF5153F35AC0F6B83AD866 /* Brain+Mail.swift */,
 				129617BC2BF2814F433D0541 /* Brain+Messages.swift */,
 				4F52C507EADC6AE6C338F2BB /* Brain+Notes.swift */,
+				F734F5E8FA7AE026586517A0 /* Brain+NotesBrowser.swift */,
 				D7104344EC937C3A0D9BC7C7 /* Brain+NotesLibrary.swift */,
 				76EC91B69FFE40138F3957A9 /* Brain+OpenCodeModel.swift */,
 				292C45DFEBC84F0CC29F16EB /* Brain+Setup.swift */,
@@ -1129,6 +1146,7 @@
 				F5E6AEA3FB825AA32CC5AD69 /* Brain+Mail.swift in Sources */,
 				9DFD2CF5EEF4A2A0D1ED64E9 /* Brain+Messages.swift in Sources */,
 				C19924F34C22CD2581D700C5 /* Brain+Notes.swift in Sources */,
+				296A123DA9FC00DC6C83B061 /* Brain+NotesBrowser.swift in Sources */,
 				06047ADACB0CD2C46026B14B /* Brain+NotesLibrary.swift in Sources */,
 				978D5624C824C13A134CD35A /* Brain+OpenCodeModel.swift in Sources */,
 				763957B0935E642515D757C9 /* Brain+Setup.swift in Sources */,
@@ -1210,6 +1228,8 @@
 				F99F47F270203AB177BD00F4 /* RootView.swift in Sources */,
 				2E2D5D6106870337AE710A74 /* RoutineService.swift in Sources */,
 				A64FC2A43CCE564FD54D001E /* RoutineSettingsViews.swift in Sources */,
+				0760D339354C0E3B90A4D046 /* SelfImproveService.swift in Sources */,
+				9AA3B0D1414787497DCED7BC /* SelfImproveView.swift in Sources */,
 				E2A588DB73AB704622CADA33 /* SettingsView.swift in Sources */,
 				A5D17A60CBB18D8BA4452A2C /* ShutdownSheet.swift in Sources */,
 				E942466933AFD23C0BE8810B /* StatsService.swift in Sources */,

@@ -1,28 +1,175 @@
 import SwiftUI
 
 // Basic building blocks. This file is also compiled into the widget and share
-// extensions, so it only depends on SwiftUI and Theme.swift. The glass
-// modifiers (`orbitGlass`, `GlassCard`, the ambient backdrop) live in
-// Glass.swift, which only the apps compile.
+// extensions, so it only depends on SwiftUI and Theme.swift. App-only pieces
+// (glass toolbars, the icon rail, rings) live in Glass.swift.
 
-/// A translucent card with a soft rim. In the apps prefer `GlassCard`, which
-/// uses real Liquid Glass on macOS 26.
+// MARK: - Cards
+
+/// A solid rounded card: white (charcoal in dark mode) or a pastel fill,
+/// radius 28, a faint edge and a very soft shadow. No materials, so it's cheap
+/// to draw and scrolls smoothly.
 struct Card<Content: View>: View {
-    var padding: CGFloat = Theme.padding
+    var padding: CGFloat = Theme.Space.l
+    var fill: Color = Theme.surface
+    var radius: CGFloat = Theme.Radius.card
     @ViewBuilder var content: Content
 
     var body: some View {
         content
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
-                .strokeBorder(Theme.glassRim, lineWidth: 0.75))
-            .shadow(color: Theme.glassShadow, radius: 18, y: 8)
+            .softCard(fill: fill, radius: radius)
     }
 }
 
-/// Section heading: 13 pt semibold, optional count and action.
+/// A pastel card (sage, blush, butter, lavender…), the dashboard's hero tiles.
+struct PastelCard<Content: View>: View {
+    var fill: Color
+    var padding: CGFloat = 20
+    var radius: CGFloat = Theme.Radius.card
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        content
+            .padding(padding)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .softCard(fill: fill, radius: radius, shadow: false)
+    }
+}
+
+extension View {
+    /// The solid card look: fill, continuous corners, faint edge, soft shadow.
+    func softCard(fill: Color = Theme.surface, radius: CGFloat = Theme.Radius.card, shadow: Bool = true) -> some View {
+        background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(fill))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Theme.glassRim, lineWidth: 1))
+            .shadow(color: shadow ? Theme.glassShadow : .clear, radius: 14, y: 4)
+    }
+}
+
+// MARK: - Round buttons and icons
+
+/// A symbol in a white circle (list rows, card headers).
+struct IconCircle: View {
+    var symbol: String
+    var size: CGFloat = 36
+    var fill: Color = Theme.surface
+    var ink: Color = Theme.textPrimary
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: size * 0.42, weight: .semibold))
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(ink)
+            .frame(width: size, height: size)
+            .background(Circle().fill(fill))
+            .accessibilityHidden(true)
+    }
+}
+
+/// The round white "↗" button on stat tiles and cards.
+struct ArrowButton: View {
+    var symbol: String = "arrow.up.right"
+    var size: CGFloat = 34
+    var help: String = "Open"
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: size * 0.38, weight: .bold))
+                .foregroundStyle(Theme.textPrimary)
+                .frame(width: size, height: size)
+                .background(Circle().fill(Theme.surface))
+                .shadow(color: Theme.glassShadow, radius: 4, y: 1)
+                .contentShape(Circle())
+        }
+        .buttonStyle(PressScaleStyle())
+        .help(help)
+        .accessibilityLabel(help)
+    }
+}
+
+/// Shrinks a little while pressed.
+struct PressScaleStyle: ButtonStyle {
+    var scale: CGFloat = 0.92
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? scale : 1)
+            .animation(Motion.snappy, value: configuration.isPressed)
+    }
+}
+
+/// A big-number tile: "Completed 18", "Your score 72", "Active 11".
+struct StatTile: View {
+    var title: String
+    var value: String
+    var symbol: String
+    var fill: Color
+    var caption: String? = nil
+    var action: (() -> Void)? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Space.s) {
+            HStack(alignment: .top) {
+                IconCircle(symbol: symbol, size: 32)
+                Spacer(minLength: Theme.Space.s)
+                if let action { ArrowButton(size: 30, help: "Open \(title)", action: action) }
+            }
+            Spacer(minLength: Theme.Space.xs)
+            Text(value)
+                .font(Theme.number(36))
+                .foregroundStyle(Theme.textPrimary)
+                .contentTransition(.numericText())
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Theme.textPrimary)
+                if let caption {
+                    Text(caption).font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                }
+            }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, minHeight: 148, alignment: .topLeading)
+        .softCard(fill: fill, shadow: false)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// The pill search field ("Search…" with a magnifier), top-right of a page.
+struct PillSearchField: View {
+    var placeholder: String = "Search"
+    @Binding var text: String
+    var width: CGFloat? = 240
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "magnifyingglass").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.textTertiary)
+            TextField(placeholder, text: $text)
+                .textFieldStyle(.plain)
+                .font(Theme.body)
+            if !text.isEmpty {
+                Button { text = "" } label: {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.textTertiary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear search")
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .frame(maxWidth: width)
+        .background(Capsule().fill(Theme.surface))
+        .overlay(Capsule().strokeBorder(Theme.border, lineWidth: 1))
+    }
+}
+
+// MARK: - Headings
+
+/// Section heading: rounded semibold, optional count and action.
 struct SectionHeader: View {
     var title: String
     var subtitle: String? = nil
@@ -38,10 +185,10 @@ struct SectionHeader: View {
             if let count {
                 Text("\(count)")
                     .font(Theme.caption.monospacedDigit().weight(.semibold))
-                    .foregroundStyle(Theme.accent)
-                    .padding(.horizontal, 6)
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.horizontal, 7)
                     .padding(.vertical, 1)
-                    .background(Theme.accent.opacity(0.14), in: Capsule())
+                    .background(Theme.hover, in: Capsule())
                     .contentTransition(.numericText())
             }
             if let subtitle {
@@ -51,42 +198,64 @@ struct SectionHeader: View {
             if let actionTitle, let action {
                 Button(actionTitle, action: action)
                     .buttonStyle(.plain)
-                    .font(Theme.caption.weight(.medium))
-                    .foregroundStyle(Theme.accent)
+                    .font(Theme.caption.weight(.semibold))
+                    .foregroundStyle(Theme.textSecondary)
             }
         }
     }
 }
 
-/// A small coloured dot for a module (with a soft glow).
+// MARK: - Modules
+
+/// Turns a module code into a plain-English title. The apps point this at
+/// OrbitCore's `ModuleNames` at launch; the widgets (no OrbitCore) show the code.
+enum ModuleLabel {
+    nonisolated(unsafe) static var resolve: (String) -> String = { $0 }
+    nonisolated(unsafe) static var symbol: (String?) -> String = { _ in "book.closed.fill" }
+
+    static func title(_ code: String?) -> String {
+        guard let code, !code.isEmpty else { return "" }
+        return resolve(code)
+    }
+}
+
+/// A small coloured dot for a module.
 struct ModuleDot: View {
     var code: String?
     var size: CGFloat = 8
 
     var body: some View {
         Circle()
-            .fill(Theme.moduleColor(code).gradient)
+            .fill(Theme.moduleColor(code))
             .frame(width: size, height: size)
-            .shadow(color: Theme.moduleColor(code).opacity(0.5), radius: size * 0.4)
     }
 }
 
-/// Module code as a tinted capsule.
+/// A module as a tinted capsule with its icon and English title
+/// ("Introduction to Statistics"); the code is in the tooltip.
 struct ModuleChip: View {
     var code: String?
+    var showIcon = true
+
     var body: some View {
         if let code, !code.isEmpty {
+            let color = Theme.moduleColor(code)
             HStack(spacing: 5) {
-                ModuleDot(code: code, size: 6)
-                Text(code)
-                    .font(Theme.caption.weight(.semibold))
-                    .foregroundStyle(Theme.moduleColor(code))
+                if showIcon {
+                    Image(systemName: ModuleLabel.symbol(code)).imageScale(.small)
+                } else {
+                    ModuleDot(code: code, size: 6)
+                }
+                Text(ModuleLabel.title(code))
                     .lineLimit(1)
             }
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2)
-            .background(Theme.moduleColor(code).opacity(0.14), in: Capsule())
+            .font(Theme.caption.weight(.semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(color.opacity(0.13), in: Capsule())
             .fixedSize()
+            .help(code)
         }
     }
 }
@@ -106,14 +275,16 @@ struct Tag: View {
         }
         .font(Theme.caption.weight(.medium))
         .foregroundStyle(color)
-        .padding(.horizontal, 7)
-        .padding(.vertical, 2)
-        .background(color.opacity(0.13), in: Capsule())
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(color.opacity(0.12), in: Capsule())
         .fixedSize()
     }
 }
 
-/// A rounded progress bar with a gradient fill and an optional target marker.
+// MARK: - Progress
+
+/// A rounded progress bar with an optional target marker.
 struct ThinProgressBar: View {
     var value: Double
     var target: Double? = nil
@@ -125,9 +296,8 @@ struct ThinProgressBar: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Theme.hover)
                 Capsule()
-                    .fill(LinearGradient(colors: [color.opacity(0.75), color], startPoint: .leading, endPoint: .trailing))
+                    .fill(color)
                     .frame(width: max(value > 0 ? height : 0, geo.size.width * max(0, min(1, value))))
-                    .shadow(color: color.opacity(0.35), radius: 4)
                 if let target {
                     Capsule()
                         .fill(Theme.textSecondary)
@@ -141,7 +311,7 @@ struct ThinProgressBar: View {
     }
 }
 
-/// A progress ring with a gradient stroke and round caps.
+/// A progress ring with round caps.
 struct ProgressRing: View {
     var progress: Double
     var color: Color = Theme.accent
@@ -153,9 +323,7 @@ struct ProgressRing: View {
             Circle().stroke(color.opacity(0.16), lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: max(0.001, min(1, progress)))
-                .stroke(AngularGradient(colors: [color.opacity(0.7), color], center: .center,
-                                        startAngle: .degrees(0), endAngle: .degrees(360 * max(0.01, min(1, progress)))),
-                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(Motion.bouncy, value: progress)
             if let label {
@@ -165,7 +333,9 @@ struct ProgressRing: View {
     }
 }
 
-/// Friendly empty state: a tinted icon, a line of text and at most one action.
+// MARK: - Empty state
+
+/// Friendly empty state: an icon in a soft circle, a line of text and at most one action.
 struct EmptyState: View {
     var systemImage: String? = nil
     var title: String
@@ -185,15 +355,11 @@ struct EmptyState: View {
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Space.m) {
             if let systemImage, !systemImage.isEmpty {
-                Image(systemName: systemImage)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
-                    .frame(width: 34, height: 34)
-                    .background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                IconCircle(symbol: systemImage, size: 36, fill: Theme.lavender)
             }
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
                 Text(title)
-                    .font(Theme.body.weight(.medium))
+                    .font(Theme.body.weight(.semibold))
                     .foregroundStyle(Theme.textSecondary)
                 if let message {
                     Text(message)
@@ -203,9 +369,7 @@ struct EmptyState: View {
                 }
                 if let actionTitle, let action {
                     Button(actionTitle, action: action)
-                        .buttonStyle(.plain)
-                        .font(Theme.body.weight(.semibold))
-                        .foregroundStyle(Theme.accent)
+                        .buttonStyle(PillButtonStyle())
                         .padding(.top, Theme.Space.xs)
                 }
             }
@@ -215,20 +379,21 @@ struct EmptyState: View {
     }
 }
 
-/// Primary action: a gradient capsule with a soft glow.
+// MARK: - Buttons
+
+/// Primary action: a solid ink capsule (black in light mode).
 struct PillButtonStyle: ButtonStyle {
     var color: Color = Theme.accent
+    var foreground: Color? = nil
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(Theme.body.weight(.semibold))
             .padding(.horizontal, Theme.Space.l)
-            .padding(.vertical, 7)
-            .foregroundStyle(.white)
-            .background(
-                Capsule().fill(LinearGradient(colors: [color.opacity(0.85), color], startPoint: .top, endPoint: .bottom))
-            )
-            .overlay(Capsule().strokeBorder(.white.opacity(0.25), lineWidth: 0.75))
-            .shadow(color: color.opacity(configuration.isPressed ? 0.15 : 0.35), radius: 10, y: 4)
+            .padding(.vertical, 8)
+            .foregroundStyle(foreground ?? Theme.onAccent)
+            .background(Capsule().fill(color))
+            .opacity(configuration.isPressed ? 0.85 : 1)
             .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .animation(Motion.snappy, value: configuration.isPressed)
     }
@@ -251,7 +416,7 @@ struct SoftButtonStyle: ButtonStyle {
             configuration.label
                 .font(Theme.body.weight(.medium))
                 .padding(.horizontal, Theme.Space.m)
-                .padding(.vertical, 5)
+                .padding(.vertical, 6)
                 .foregroundStyle(enabled ? color : Theme.textTertiary)
                 .background(configuration.isPressed ? Theme.pressed : (hovering && enabled ? Theme.hover : Color.clear),
                             in: Capsule())

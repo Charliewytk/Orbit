@@ -158,7 +158,7 @@ public struct MessageIntentClassifier: Sendable {
     /// True when the rules are sure enough that the AI can't overrule them.
     public static func isVeto(_ c: MessageClassification) -> Bool { c.intent == .ticketDrop && c.confidence >= 0.75 }
 
-    static let titleNoise = PlanRegex(#"\b(?:new|event|events|on sale|now|tickets?|are|is|live|out|available|just announced|announced|announcing|early ?bird|limited|get|your|ur|here|buy|grab|selling fast|final release)\b|[—–\-:!|•🚨🎟🔥✨]+"#)
+    static let titleNoise = PlanRegex(#"\b(?:new|event|events|on sale|now|tickets?|are|is|live|out|available|just announced|announced|announcing|early ?bird|limited|get|your|ur|here|buy|grab|selling fast|final release|tonight|tomorrow|(?:mon|tues?|wed(?:nes)?|thu(?:rs?)?|fri|sat(?:ur)?|sun)(?:day)?|\d{1,2}(?:[:.]\d{2})?\s*(?:am|pm)?)\b|[—–\-:!|•🚨🎟🔥✨]+"#)
 
     func ticketDrop(from message: ChatMessage, signals s: Signals) -> TicketDrop {
         let clean = MessageText.clean(message.text)

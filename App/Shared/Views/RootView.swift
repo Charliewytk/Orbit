@@ -17,7 +17,7 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .home: "Home"
         case .today: "Today"
         case .calendar: "Calendar"
-        case .inbox: "Inbox"
+        case .inbox: "Mail"
         case .tasks: "Tasks"
         case .uni: "Uni"
         case .notes: "Notes"
@@ -42,7 +42,7 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .home: "house.fill"
         case .today: "sun.max.fill"
         case .calendar: "calendar"
-        case .inbox: "tray.full.fill"
+        case .inbox: "envelope.fill"
         case .tasks: "checklist"
         case .uni: "graduationcap.fill"
         case .notes: "note.text"
@@ -52,44 +52,45 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .review: "rectangle.on.rectangle.angled.fill"
         case .progress: "chart.bar.xaxis"
         case .focus: "timer"
-        case .money: "sterlingsign"
+        case .money: "sterlingsign.circle.fill"
         case .careers: "briefcase.fill"
-        case .study: "point.3.connected.trianglepath.dotted"
+        case .study: "flask.fill"
         case .grades: "chart.line.uptrend.xyaxis"
-        case .lectures: "play.rectangle.on.rectangle.fill"
+        case .lectures: "play.rectangle.fill"
         case .groups: "person.3.fill"
         case .briefing: "sunrise.fill"
         }
     }
 
-    /// The icon tile colour (macOS Settings style).
+    /// The pastel family for the screen's icon tiles and cards (ink colour).
     var color: Color {
         switch self {
-        case .home: Theme.accent
-        case .today: Color(hex: 0xFF9F0A)
-        case .calendar: Color(hex: 0xFF3B5C)
-        case .inbox: Color(hex: 0x0A84FF)
-        case .tasks: Color(hex: 0xFF8A00)
-        case .uni: Color(hex: 0x8B5CF6)
-        case .notes: Color(hex: 0xF5B400)
-        case .plans: Color(hex: 0x30C75E)
-        case .chat: Color(hex: 0xEC4899)
-        case .settings: Color(hex: 0x8E8E93)
-        case .review: Color(hex: 0x06B6D4)
-        case .progress: Color(hex: 0x14B8A6)
-        case .focus: Color(hex: 0x5E5CE6)
-        case .money: Color(hex: 0x22C55E)
-        case .careers: Color(hex: 0xB7791F)
-        case .study: Color(hex: 0x6366F1)
-        case .grades: Color(hex: 0x0EA5E9)
-        case .lectures: Color(hex: 0xE11D48)
-        case .groups: Color(hex: 0xD97706)
-        case .briefing: Color(hex: 0xF59E0B)
+        case .home, .settings: Theme.textSecondary
+        case .today, .briefing, .notes: Theme.butterInk
+        case .calendar, .lectures: Theme.blushInk
+        case .inbox, .grades: Theme.skyInk
+        case .tasks, .money, .plans: Theme.sageInk
+        case .uni, .study, .review, .chat: Theme.lavenderInk
+        case .progress, .focus: Theme.skyInk
+        case .careers, .groups: Theme.peachInk
         }
     }
 
-    /// The Mac sidebar order; ⌘1…⌘8 follow it.
-    static let macSidebar: [Destination] = [.home, .calendar, .inbox, .tasks, .uni, .study, .notes, .plans, .chat]
+    /// The matching pastel fill.
+    var pastel: Color {
+        switch self {
+        case .home, .settings: Theme.surface
+        case .today, .briefing, .notes: Theme.butter
+        case .calendar, .lectures: Theme.blush
+        case .inbox, .grades, .progress, .focus: Theme.sky
+        case .tasks, .money, .plans: Theme.sage
+        case .uni, .study, .review, .chat: Theme.lavender
+        case .careers, .groups: Theme.peach
+        }
+    }
+
+    /// The Mac rail order; ⌘1…⌘8 follow it. (Ask Orbit lives on Home now.)
+    static let macSidebar: [Destination] = [.home, .calendar, .tasks, .inbox, .uni, .study, .notes, .review]
 
     /// The screen's content. Callers wrap it in a `NavigationStack`
     /// (or push it onto an existing one), so screens never nest stacks.
@@ -128,27 +129,57 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+/// Light (default), dark or following the system.
+enum AppAppearance: String, CaseIterable, Identifiable {
+    case light, dark, system
+    static let key = "orbit.appearance"
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .light: "Light"
+        case .dark: "Dark"
+        case .system: "Automatic"
+        }
+    }
+    var scheme: ColorScheme? {
+        switch self {
+        case .light: .light
+        case .dark: .dark
+        case .system: nil
+        }
+    }
+}
+
+/// The onboarding shown once per redesign: bump `version` to show it again.
+enum OnboardingFlow {
+    static let versionKey = "onboardingVersion"
+    static let version = 2
+}
+
 struct RootView: View {
     @Environment(AppModel.self) private var app
     @AppStorage("onboardingDone") private var onboardingDone = false
+    @AppStorage(OnboardingFlow.versionKey) private var onboardingVersion = 0
+    @AppStorage(AppAppearance.key) private var appearance = AppAppearance.light.rawValue
 
     var body: some View {
         Group {
-            if onboardingDone {
-                #if os(macOS)
+            #if os(macOS)
+            if onboardingVersion >= OnboardingFlow.version {
                 MacRootView()
-                #else
-                PhoneRootView()
-                #endif
             } else {
-                #if os(macOS)
-                MacOnboardingView { withAnimation(Motion.smooth) { onboardingDone = true } }
-                #else
-                OnboardingView { withAnimation(Motion.quick) { onboardingDone = true } }
-                #endif
+                WelcomeFlow { withAnimation(Motion.smooth) { onboardingVersion = OnboardingFlow.version; onboardingDone = true } }
             }
+            #else
+            if onboardingDone {
+                PhoneRootView()
+            } else {
+                OnboardingView { withAnimation(Motion.quick) { onboardingDone = true } }
+            }
+            #endif
         }
         .tint(Theme.accent)
+        .preferredColorScheme((AppAppearance(rawValue: appearance) ?? .light).scheme)
         .toastOverlay()
     }
 }
@@ -161,29 +192,39 @@ struct MacRootView: View {
     @State private var showPalette = false
     @State private var showQuickAdd = false
     @Query private var plans: [StoredPlan]
+    @Query private var modules: [StoredModule]
     @Query(filter: #Predicate<StoredTask> { $0.completedAt == nil }) private var openTasks: [StoredTask]
     @Query(filter: #Predicate<StoredEmailDigest> { !$0.handled }) private var unhandledMail: [StoredEmailDigest]
 
     var body: some View {
-        NavigationSplitView {
-            GlassSidebar(selection: $selection, counts: counts)
-                .navigationSplitViewColumnWidth(min: 210, ideal: 232, max: 290)
-        } detail: {
+        HStack(spacing: 0) {
+            IconRail(selection: $selection, counts: counts)
             NavigationStack {
                 (selection ?? .home).screen
             }
             .id(selection ?? .home)
-            .transition(.opacity.combined(with: .scale(scale: 0.995)))
+            .transition(.opacity)
             .environment(\.dedicatedTaskIDs, homeworkTaskIDs)
-            .frame(minWidth: 620, minHeight: 520)
+            .frame(minWidth: 560, maxWidth: .infinity, minHeight: 520, maxHeight: .infinity)
             .toolbar { toolbarContent }
         }
+        .background(Theme.background)
         .animation(Motion.fade, value: selection)
         .overlay { paletteOverlay }
+        .task(id: moduleNamesKey) { registerModuleNames() }
         .onReceive(NotificationCenter.default.publisher(for: .orbitNavigate)) { note in
             guard let d = note.object as? Destination, d != .settings else { return }
-            // Today lives on the Home dashboard on the Mac.
-            selection = d == .today ? .home : d
+            switch d {
+            case .today:
+                // Today lives on the Home dashboard on the Mac.
+                selection = .home
+            case .chat:
+                // Ask Orbit lives in Home's "Ask or tell" bar.
+                selection = .home
+                DispatchQueue.main.async { NotificationCenter.default.post(name: .orbitOpenAsk, object: nil) }
+            default:
+                selection = d
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .orbitCommandPalette)) { _ in
             withAnimation(Motion.quick) { showPalette.toggle() }
@@ -202,28 +243,47 @@ struct MacRootView: View {
         Set(brain.academic.homework.map { $0.taskID.uuidString })
     }
 
+    private var moduleNamesKey: String { modules.map { "\($0.id)=\($0.name)" }.sorted().joined(separator: "|") }
+
+    /// Teaches ModuleNames the ELE course names (English titles everywhere).
+    private func registerModuleNames() {
+        var names: [String: String] = [:]
+        for m in modules where !m.id.isEmpty && !m.name.isEmpty { names[m.id] = m.name }
+        ModuleNames.register(names)
+    }
+
     private var counts: [Destination: Int] {
         let now = Date()
         let cal = app.calendar
         let dueToday = openTasks.filter { t in t.deadline.map { cal.days(from: now, to: $0) <= 0 } ?? false }.count
         let recentMail = unhandledMail.filter { $0.date > now.addingTimeInterval(-7 * 86400) && $0.category != .ignore }.count
         let pendingPlans = plans.filter { $0.status == .pending && $0.start > now }.count
-        let dueCards = FeatureHub.shared.dailyReviewPlan(now: now).dueCount
-        return [.inbox: recentMail, .tasks: dueToday, .plans: pendingPlans, .review: dueCards]
+        return [.inbox: recentMail, .tasks: dueToday, .plans: pendingPlans]
     }
 
     // MARK: Toolbar
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
+        ToolbarItem(placement: .primaryAction) {
             Button {
                 withAnimation(Motion.quick) { showPalette = true }
             } label: {
-                Label("Search", systemImage: "magnifyingglass")
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass")
+                    Text("Search")
+                    Text("⌘K").foregroundStyle(Theme.textTertiary)
+                }
+                .font(Theme.body)
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 5)
+                .frame(minWidth: 150, alignment: .leading)
             }
+            .buttonStyle(.plain)
             .help("Search and commands (⌘K)")
-
+        }
+        ToolbarItem(placement: .primaryAction) {
             Button {
                 showQuickAdd = true
             } label: {
@@ -231,7 +291,7 @@ struct MacRootView: View {
             }
             .help("Add a task (⌘N)")
             .popover(isPresented: $showQuickAdd, arrowEdge: .bottom) {
-                QuickAddField(placeholder: "Add a task, e.g. “essay plan BEM2031 2h by Fri”", autofocus: true) { _ in
+                QuickAddField(placeholder: "Add a task, e.g. “essay plan 2h by Fri”", autofocus: true) { _ in
                     showQuickAdd = false
                 }
                 .frame(width: 440)
@@ -246,120 +306,215 @@ struct MacRootView: View {
     private var paletteOverlay: some View {
         if showPalette {
             ZStack(alignment: .top) {
-                Color.black.opacity(0.12)
+                Color.black.opacity(0.08)
                     .ignoresSafeArea()
                     .onTapGesture { withAnimation(Motion.quick) { showPalette = false } }
                 CommandPalette(isPresented: $showPalette)
                     .padding(.top, 88)
-                    .transition(.scale(scale: 0.96, anchor: .top).combined(with: .opacity))
+                    .transition(.scale(scale: 0.97, anchor: .top).combined(with: .opacity))
             }
             .transition(.opacity)
         }
     }
 }
 
-/// The Mac sidebar: grouped rows with colour icon tiles and a sliding glass
-/// capsule for the selection (no heavy accent-filled row).
-struct GlassSidebar: View {
+/// The slim icon-only rail: the Orbit mark, the main screens as round icons
+/// (selected = a black circle), a "More" popover for the rest, then sync
+/// status and Settings at the bottom. Hover for names; ↑/↓ move.
+struct IconRail: View {
     @Binding var selection: Destination?
     var counts: [Destination: Int]
-    @Namespace private var ns
+    @State private var showMore = false
     @FocusState private var focused: Bool
 
-    static let sections: [(title: String?, items: [Destination])] = [
-        (nil, [.home, .calendar, .inbox, .tasks]),
-        ("University", [.uni, .notes, .review, .progress, .grades, .lectures, .groups]),
-        ("Focus and life", [.briefing, .focus, .plans, .money, .careers]),
-        ("Assistant", [.chat]),
-    ]
-
-    private var flat: [Destination] { Self.sections.flatMap(\.items) }
+    static let primary: [Destination] = [.home, .calendar, .tasks, .inbox, .uni, .study, .notes]
+    static let more: [Destination] = [.review, .grades, .lectures, .groups, .progress, .focus, .briefing, .plans, .money, .careers]
+    static let width: CGFloat = 76
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 2) {
-                ForEach(Self.sections.indices, id: \.self) { i in
-                    let section = Self.sections[i]
-                    if let title = section.title {
-                        Text(title.uppercased())
-                            .font(.system(size: 10, weight: .bold))
-                            .tracking(0.6)
-                            .foregroundStyle(Theme.textTertiary)
-                            .padding(.horizontal, 12)
-                            .padding(.top, Theme.Space.l)
-                            .padding(.bottom, 4)
+        VStack(spacing: 0) {
+            OrbitMark(size: 34)
+                .padding(.top, Theme.Space.m)
+                .padding(.bottom, Theme.Space.l)
+                .onTapGesture { select(.home) }
+            ScrollView(.vertical) {
+                VStack(spacing: 8) {
+                    ForEach(Self.primary) { d in
+                        RailButton(symbol: d.symbol, title: d.title, selected: selection == d, badge: counts[d] ?? 0) { select(d) }
                     }
-                    ForEach(section.items) { d in row(d) }
+                    moreButton
                 }
+                .padding(.vertical, 2)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 10)
-            .padding(.top, Theme.Space.s)
+            .scrollIndicators(.never)
+            Spacer(minLength: Theme.Space.s)
+            RailStatusDot()
+                .padding(.bottom, Theme.Space.s)
+            SettingsLink {
+                RailIcon(symbol: "gearshape.fill", selected: false)
+            }
+            .buttonStyle(.plain)
+            .help("Settings (⌘,)")
+            .padding(.bottom, Theme.Space.m)
         }
-        .scrollIndicators(.never)
+        .frame(width: Self.width)
+        .frame(maxHeight: .infinity)
+        .background(Theme.sidebar)
+        .overlay(alignment: .trailing) { Rectangle().fill(Theme.border).frame(width: 1) }
         .focusable()
         .focused($focused)
         .focusEffectDisabled()
         .onKeyPress(.upArrow) { move(-1); return .handled }
         .onKeyPress(.downArrow) { move(1); return .handled }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            BrainStatusFooter()
-                .padding(.horizontal, Theme.Space.m)
-                .padding(.vertical, 8)
-                .orbitGlass(in: Capsule())
-                .padding(.horizontal, Theme.Space.m)
-                .padding(.bottom, Theme.Space.m)
-        }
     }
 
-    private func row(_ d: Destination) -> some View {
-        let selected = selection == d
-        return Button {
-            withAnimation(Motion.snappy) { selection = d }
-        } label: {
-            SidebarItem(title: d.title, systemImage: d.symbol, color: d.color, count: counts[d] ?? 0, selected: selected)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background {
-                    if selected {
-                        Color.clear
-                            .orbitGlass(in: Capsule(), tint: d.color)
-                            .matchedGeometryEffect(id: "selection", in: ns)
-                    }
+    private var moreButton: some View {
+        let current = selection.flatMap { Self.more.contains($0) ? $0 : nil }
+        return RailButton(symbol: current?.symbol ?? "square.grid.2x2.fill", title: current?.title ?? "More",
+                          selected: current != nil, badge: 0) { showMore.toggle() }
+            .popover(isPresented: $showMore, arrowEdge: .trailing) {
+                RailMoreGrid(items: Self.more, selection: selection) { d in
+                    showMore = false
+                    select(d)
                 }
-                .contentShape(Capsule())
-        }
-        .buttonStyle(SidebarRowStyle(selected: selected))
-        .help(d.title)
+            }
+    }
+
+    private func select(_ d: Destination) {
+        withAnimation(Motion.snappy) { selection = d }
     }
 
     private func move(_ delta: Int) {
-        let list = flat
+        let list = Self.primary + Self.more
         let index = list.firstIndex(of: selection ?? .home) ?? 0
-        let next = min(max(0, index + delta), list.count - 1)
-        withAnimation(Motion.snappy) { selection = list[next] }
+        select(list[min(max(0, index + delta), list.count - 1)])
     }
 }
 
-/// Hover fill for sidebar rows that aren't selected.
-private struct SidebarRowStyle: ButtonStyle {
+/// One round rail icon (black circle when selected).
+struct RailIcon: View {
+    var symbol: String
     var selected: Bool
-    func makeBody(configuration: Configuration) -> some View {
-        SidebarRowBody(configuration: configuration, selected: selected)
+    var hovering = false
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(selected ? Theme.onAccent : Theme.textSecondary)
+            .frame(width: 44, height: 44)
+            .background(Circle().fill(selected ? Theme.accent : (hovering ? Theme.hover : Color.clear)))
+            .contentShape(Circle())
     }
+}
 
-    private struct SidebarRowBody: View {
-        var configuration: ButtonStyleConfiguration
-        var selected: Bool
-        @State private var hovering = false
+struct RailButton: View {
+    var symbol: String
+    var title: String
+    var selected: Bool
+    var badge: Int
+    var action: () -> Void
+    @State private var hovering = false
 
-        var body: some View {
-            configuration.label
-                .background(Capsule().fill(!selected && hovering ? Theme.hover : .clear))
-                .scaleEffect(configuration.isPressed ? 0.98 : 1)
-                .onHover { hovering = $0 }
-                .animation(Motion.fade, value: hovering)
+    var body: some View {
+        Button(action: action) {
+            RailIcon(symbol: symbol, selected: selected, hovering: hovering)
+                .overlay(alignment: .topTrailing) {
+                    if badge > 0 {
+                        Text(badge > 99 ? "99+" : "\(badge)")
+                            .font(.system(size: 9, weight: .bold, design: .rounded).monospacedDigit())
+                            .foregroundStyle(Theme.textPrimary)
+                            .padding(.horizontal, 4)
+                            .frame(minWidth: 16, minHeight: 16)
+                            .background(Capsule().fill(Theme.blush))
+                            .overlay(Capsule().strokeBorder(Theme.sidebar, lineWidth: 1.5))
+                            .offset(x: 2, y: -2)
+                    }
+                }
         }
+        .buttonStyle(PressScaleStyle(scale: 0.9))
+        .onHover { hovering = $0 }
+        .animation(Motion.fade, value: hovering)
+        .animation(Motion.snappy, value: selected)
+        .help(title)
+        .accessibilityLabel(title + (badge > 0 ? ", \(badge)" : ""))
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
+}
+
+/// The "More" popover: every other screen as a pastel tile.
+struct RailMoreGrid: View {
+    var items: [Destination]
+    var selection: Destination?
+    var onSelect: (Destination) -> Void
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.fixed(120), spacing: 10), GridItem(.fixed(120), spacing: 10)], spacing: 10) {
+            ForEach(items) { d in
+                Button { onSelect(d) } label: {
+                    VStack(alignment: .leading, spacing: 10) {
+                        IconCircle(symbol: d.symbol, size: 32)
+                        Text(d.title)
+                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Theme.textPrimary)
+                            .lineLimit(1)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(d.pastel))
+                    .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .strokeBorder(selection == d ? Theme.accent : .clear, lineWidth: 1.5))
+                }
+                .buttonStyle(PressScaleStyle(scale: 0.96))
+            }
+        }
+        .padding(14)
+    }
+}
+
+/// A small status dot for sync and the assistant (details on hover).
+struct RailStatusDot: View {
+    @Environment(OrbitBrain.self) private var brain
+
+    var body: some View {
+        let ok = brain.openCodeUp || brain.ollama.available
+        let syncing = brain.running.first
+        ZStack {
+            if syncing != nil {
+                ProgressView().controlSize(.small)
+            } else {
+                Circle().fill(ok ? Theme.success : Theme.danger).frame(width: 8, height: 8)
+            }
+        }
+        .frame(width: 20, height: 20)
+        .help(syncing.map { "Syncing \($0.title.lowercased())…" }
+              ?? (brain.openCodeUp ? "OpenCode ready" : brain.ollama.available ? "Ollama ready" : "Assistant offline"))
+    }
+}
+
+/// The Orbit mark: a pastel squircle with a planet and its orbit (matches the app icon).
+struct OrbitMark: View {
+    var size: CGFloat = 34
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.3, style: .continuous).fill(Theme.pastelGradient)
+            Ellipse()
+                .stroke(Color(hex: 0x151515), lineWidth: size * 0.06)
+                .frame(width: size * 0.72, height: size * 0.3)
+                .rotationEffect(.degrees(-24))
+            Circle().fill(Color(hex: 0x151515)).frame(width: size * 0.32, height: size * 0.32)
+            Circle().fill(Color(hex: 0xE8849A)).frame(width: size * 0.12, height: size * 0.12)
+                .offset(x: size * 0.3, y: -size * 0.14)
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel("Orbit")
+    }
+}
+
+extension Notification.Name {
+    /// Open Home's Ask Orbit panel (object: an optional String to send).
+    static let orbitOpenAsk = Notification.Name("orbitOpenAsk")
 }
 
 extension Notification.Name {

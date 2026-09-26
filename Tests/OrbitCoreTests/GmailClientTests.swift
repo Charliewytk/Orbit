@@ -161,4 +161,45 @@ final class GmailClientTests: XCTestCase {
         let body = try XCTUnwrap(stub.requests(matching: "/modify").first?.httpBody)
         XCTAssertEqual(String(decoding: body, as: UTF8.self), #"{"removeLabelIds":["UNREAD"]}"#)
     }
+
+    // MARK: Archive / Trash
+
+    func testArchiveRemovesInboxLabelInOneBatch() async throws {
+        stub.on("POST", "/messages/batchModify", json: "{}")
+        try await client.apply(.archive, ids: ["m2", "m1", "m1"])
+        let reqs = stub.requests(matching: "/messages/batchModify")
+        XCTAssertEqual(reqs.count, 1)
+        let body = try XCTUnwrap(reqs.first?.httpBody)
+        XCTAssertEqual(String(decoding: body, as: UTF8.self), #"{"ids":["m1","m2"],"removeLabelIds":["INBOX"]}"#)
+    }
+
+    func testUnarchivePutsInboxBack() async throws {
+        stub.on("POST", "/messages/batchModify", json: "{}")
+        try await client.apply(MailboxAction.archive.inverse, ids: ["m1"])
+        let body = try XCTUnwrap(stub.requests(matching: "/messages/batchModify").first?.httpBody)
+        XCTAssertEqual(String(decoding: body, as: UTF8.self), #"{"addLabelIds":["INBOX"],"ids":["m1"]}"#)
+    }
+
+    func testTrashMovesEachMessageToTrashAndUndoRestores() async throws {
+        stub.on("POST", "/trash", json: #"{"id":"x"}"#)
+        stub.on("POST", "/untrash", json: #"{"id":"x"}"#)
+        try await client.apply(.trash, ids: ["m1", "m2"])
+        XCTAssertEqual(Set(stub.requests(matching: "/trash").compactMap { $0.url?.path }),
+                       ["/gmail/v1/users/me/messages/m1/trash", "/gmail/v1/users/me/messages/m2/trash"])
+        try await client.apply(.untrash, ids: ["m1"])
+        XCTAssertEqual(stub.requests(matching: "/untrash").count, 1)
+        // Never a permanent delete, never a send.
+        XCTAssertTrue(stub.requests(matching: "/send").isEmpty)
+        XCTAssertFalse(stub.requests(matching: "").contains { $0.httpMethod == "DELETE" })
+    }
+
+    func testTrashIgnoresMessagesAlreadyGone() async throws {
+        stub.on("POST", "/trash", status: 404, json: #"{"error":{"code":404}}"#)
+        try await client.apply(.trash, ids: ["gone"])
+    }
+
+    func testModifyScopeIsRequested() {
+        XCTAssertTrue(GmailClient.scopes.contains(GmailClient.modifyScope))
+        XCTAssertTrue(OAuthConfig.googleScopes.contains(GmailClient.modifyScope))
+    }
 }

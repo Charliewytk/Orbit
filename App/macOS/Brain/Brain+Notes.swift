@@ -3,10 +3,10 @@ import SwiftData
 import OrbitCore
 
 extension OrbitBrain {
-    /// "graph" (OneNote via Microsoft Graph), "folder" (exported PDFs/Markdown) or "none".
+    /// "folder" (the Notability backup: Google Drive folder or Drive API mirror), "graph"
+    /// (OneNote via Microsoft Graph — only when picked explicitly) or "none".
     var noteSource: String {
-        MacPrefs.string(MacPrefs.noteSource)
-            ?? (accounts.microsoftConnected ? "graph" : MacPrefs.string(MacPrefs.notesFolderPath) != nil ? "folder" : "none")
+        MacPrefs.string(MacPrefs.noteSource) ?? (effectiveNotesFolder() != nil ? "folder" : "none")
     }
 
     func syncNotes() async {
@@ -15,7 +15,9 @@ extension OrbitBrain {
         loadNotesLibraryIfNeeded()
         switch noteSource {
         case "graph": await syncOneNote()
-        case "folder": await syncNotesFolder()
+        case "folder":
+            await syncDriveNotes()
+            await syncNotesFolder()
         default: break
         }
         // Orbit's own typed notes (~/Documents/Orbit Notes) are read whatever the source.
@@ -84,11 +86,13 @@ extension OrbitBrain {
     // MARK: Exported folder (PDF / Markdown / images)
 
     private func syncNotesFolder() async {
-        guard let path = MacPrefs.string(MacPrefs.notesFolderPath) else {
-            record(.notes, error: "Choose your exported notes folder in Settings.")
+        guard let folder = effectiveNotesFolder() else {
+            record(.notes, error: "Choose your Notability backup folder (Google Drive → My Drive → Notability) in Notes.")
             return
         }
-        let scanner = NotesFolderScanner(root: URL(fileURLWithPath: path))
+        notesCursorMatches(folder)
+        let path = folder.path
+        let scanner = NotesFolderScanner(root: folder)
         // GoodNotes auto-backups: one PDF per notebook, one note per page.
         let pageMode = GoodNotesBackup.isGoodNotesPath(path)
         // Notability auto-backups: one PDF per note (Subject/Week 3.pdf), one note per file.
@@ -123,8 +127,8 @@ extension OrbitBrain {
 
     private func note(from item: NotesFolderScanner.Item, pipeline: HandwritingPipeline) async throws -> LectureNote? {
         switch item.kind {
-        case .markdown, .text:
-            let text = try String(contentsOf: item.url, encoding: .utf8)
+        case .markdown, .text, .richText:
+            guard let text = RichNoteFile.markdown(at: item.url) else { return nil }
             return NotesFolderScanner.note(fromText: text, item: item)
         case .pdf:
             // Text layer first (typed boxes, text an app already recognised); OCR only
@@ -174,6 +178,8 @@ extension OrbitBrain {
             if local.note(id: typed.id) != nil {
                 local.deleteNote(id: typed.id)
                 noteIndex.remove(noteID: typed.id)
+                academicLoadIfNeeded()
+                academic.knowledge.remove(documentID: "note:" + typed.id)
                 if let s = context.record(StoredNote.self, id: typed.id) { context.delete(s) }
             }
             return merged.note

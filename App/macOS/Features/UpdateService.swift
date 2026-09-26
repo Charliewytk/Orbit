@@ -90,6 +90,8 @@ final class UpdateService {
 
     func install() async {
         guard case .available(let sha, let zipURL, _) = status else { return }
+        // Improve Orbit: don't silently overwrite a locally built app.
+        if SelfImproveService.shared.interceptReleaseInstall() { return }
         phase = .downloading
         OrbitLog.log("update", "downloading \(zipURL.absoluteString) (\(sha ?? "no sha"))")
         do {

@@ -53,6 +53,16 @@ public struct OAuthConfig: Codable, Hashable, Sendable {
                     extraAuthorizeParameters: ["access_type": "offline", "prompt": "consent", "include_granted_scopes": "true"])
     }
 
+    /// Incremental authorization: asks only for `scopes` (plus the sign-in ones), with
+    /// `include_granted_scopes=true` so Google returns a token covering old and new scopes.
+    public func incremental(adding scopes: [String]) -> OAuthConfig {
+        var copy = self
+        let base = provider == .google ? ["openid", "email"] : ["offline_access"]
+        copy.scopes = scopes + base.filter { !scopes.contains($0) }
+        if provider == .google { copy.extraAuthorizeParameters["include_granted_scopes"] = "true" }
+        return copy
+    }
+
     /// Exeter Microsoft 365 (work/school accounts): mail, OneNote, calendar.
     public static func microsoft(clientID: String, redirectURI: String, tenant: String = "organizations",
                                  scopes: [String] = OAuthConfig.microsoftScopes) -> OAuthConfig {
@@ -78,6 +88,19 @@ public struct OAuthTokens: Codable, Hashable, Sendable {
                 scope: String? = nil, idToken: String? = nil, tokenType: String? = "Bearer") {
         self.accessToken = accessToken; self.refreshToken = refreshToken; self.expiry = expiry
         self.scope = scope; self.idToken = idToken; self.tokenType = tokenType
+    }
+
+    /// Scopes Google/Microsoft said were granted (space-separated `scope`). Empty when unknown.
+    public var grantedScopes: Set<String> {
+        Set((scope ?? "").split(separator: " ").map(String.init))
+    }
+
+    /// Which of `required` weren't granted. When the provider didn't say (`scope` nil)
+    /// nothing is reported missing; the API call itself will fail with 403 instead.
+    public func missingScopes(_ required: [String]) -> [String] {
+        guard scope != nil else { return [] }
+        let granted = grantedScopes
+        return required.filter { !granted.contains($0) }
     }
 
     /// True when the access token expires within `leeway` seconds of `now`.
