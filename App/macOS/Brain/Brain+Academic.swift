@@ -147,7 +147,10 @@ struct AcademicState: Codable {
 }
 
 extension LocalStore {
-    var knowledgeURL: URL { root.appendingPathComponent("course-knowledge.json") }
+    /// Application Support/Orbit/Knowledge — the long-term knowledge store (see `KnowledgeStore`).
+    var knowledgeStore: KnowledgeStore { KnowledgeStore(directory: root.appendingPathComponent("Knowledge", isDirectory: true)) }
+    var knowledgeURL: URL { knowledgeStore.url(.courseKnowledge) }
+    var legacyKnowledgeURL: URL { root.appendingPathComponent("course-knowledge.json") }
 }
 
 extension OrbitBrain {
@@ -160,6 +163,7 @@ extension OrbitBrain {
         guard !academicLoaded else { return }
         academicLoaded = true
         academic.context = context
+        local.knowledgeStore.migrateLegacy(local.legacyKnowledgeURL, to: .courseKnowledge)
         if let kb = try? CourseKnowledgeBase.load(from: local.knowledgeURL) { academic.knowledge = kb }
         academic.knowledge.calendarConfig = prefs.academicCalendar ?? .exeter2026
         academic.state = local.load(AcademicState.self, "academic-state.json") ?? AcademicState()

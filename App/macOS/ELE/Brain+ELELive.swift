@@ -167,7 +167,9 @@ extension OrbitBrain {
 
     /// Puts a released mark on the matching stored assessment (by its ELE link) if it has none.
     private func applyMark(_ g: ELEGradeItem, moduleCode: String) {
-        guard let pct = g.percentage, let cmid = g.cmid else { return }
+        guard let pct = g.percentage else { return }
+        StudyHub.shared.recordGrade(moduleCode: moduleCode, title: g.name, mark: pct, date: g.gradedAt ?? Date())
+        guard let cmid = g.cmid else { return }
         for a in context.all(StoredAssessment.self) where a.moduleCode == moduleCode && a.mark == nil {
             if let url = a.eleURL, url.contains("id=\(cmid)") {
                 a.mark = pct

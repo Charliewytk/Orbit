@@ -208,7 +208,9 @@ public struct ConceptGraph: Codable, Hashable, Sendable {
             let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
             guard n.count >= 3 else { return nil }
             if let c = concepts.values.first(where: { $0.name.caseInsensitiveCompare(n) == .orderedSame }) { return c.id }
-            if let c = match(n, limit: 1).first { return c.id }
+            // Loose match only when a keyword covers most of the name ("OLS regression" → Regression).
+            if let c = match(n, limit: 1).first,
+               c.keywords.contains(where: { Self.contains(n.lowercased(), $0) && Double($0.count) >= Double(n.count) * 0.5 }) { return c.id }
             let strand = module.flatMap { EconStrand(rawValue: $0.lowercased()) ?? EconStrand.classify(name: $0) } ?? .economics
             let id = "ai-" + Self.slug(n)
             if concepts[id] == nil { concepts[id] = Concept(id, n, strand, [n.lowercased()]) }

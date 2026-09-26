@@ -119,7 +119,10 @@ public struct DailyReadingPlan: Hashable, Sendable {
             return (base, when, e.week ?? 99)
         }
         let queue = library.entries.values.filter { !$0.read && ($0.week == nil || $0.week! >= cw - 1) }
-            .sorted { (priority($0), $0.title) < (priority($1), $1.title) }
+            .sorted { a, b in
+                let pa = priority(a), pb = priority(b)
+                return (pa.0, pa.1, pa.2, a.title) < (pb.0, pb.1, pb.2, b.title)
+            }
 
         // Split each reading into slot-sized parts.
         var parts: [Item] = []

@@ -5,17 +5,26 @@ import UserNotifications
 /// Local notifications. The Mac posts them as it finds things; the iPhone
 /// posts the same alerts when the matching `StoredNotification` records sync in.
 enum Notifier {
+    /// Whether notifications are allowed (for the health check).
+    static func authorizationStatus() async -> UNAuthorizationStatus {
+        await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+    }
+
     @discardableResult
     static func requestAuthorization() async -> Bool {
         (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
     }
 
-    static func post(id: String, title: String, body: String, category: String = "general") async {
+    static func post(id: String, title: String, body: String, category: String = "general",
+                     categoryIdentifier: String? = nil, userInfo: [String: String] = [:]) async {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.sound = .default
         content.threadIdentifier = category
+        // Action buttons (Start focus / Snooze / Not now) come from the registered category.
+        if let categoryIdentifier { content.categoryIdentifier = categoryIdentifier }
+        if !userInfo.isEmpty { content.userInfo = userInfo }
         let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }

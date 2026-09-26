@@ -131,6 +131,14 @@ enum MacPrefs {
     static let useExeterCalendar = "useExeterCalendar"
     /// "provider/model" for OpenCode; empty = OpenCode's default.
     static let openCodeModel = "openCodeModel"
+    /// Reasoning variant sent to OpenCode ("xhigh" default; "none" = model default).
+    static let openCodeVariant = "openCodeVariant"
+    /// The model picked automatically (Muse Spark 1.3) when `openCodeModel` is empty.
+    static let openCodeResolvedModel = "openCodeResolvedModel"
+    /// Study Lab delivery: upload PDFs to Google Drive (default on), export folder for Notability, auto-export.
+    static let practiceDriveUpload = "practiceDriveUpload"
+    static let notabilityFolder = "notabilityFolder"
+    static let notabilityAutoExport = "notabilityAutoExport"
     static let ollamaModel = "ollamaModel"
     static let ollamaVisionModel = "ollamaVisionModel"
     static let shareAIWithPhone = "shareAIWithPhone"
