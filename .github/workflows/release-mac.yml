@@ -79,7 +79,10 @@ jobs:
           # Re-sign the whole bundle ad hoc so macOS accepts it.
           codesign --force --deep --sign - dist/Orbit.app
           ditto -c -k --sequesterRsrc --keepParent dist/Orbit.app dist/Orbit-mac.zip
-          hdiutil create -volname Orbit -srcfolder dist/Orbit.app -ov -format UDZO dist/Orbit-mac.dmg
+          # Free the build intermediates and size the image explicitly (hdiutil's guess can be too small).
+          rm -rf build/Build/Intermediates.noindex
+          SIZE_MB=$(( $(du -sm dist/Orbit.app | cut -f1) * 2 + 50 ))
+          hdiutil create -volname Orbit -srcfolder dist/Orbit.app -fs HFS+ -size ${SIZE_MB}m -ov -format UDZO dist/Orbit-mac.dmg
           echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Publish release
