@@ -53,6 +53,10 @@
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Orbit reads the calendars on your Mac (like your Exeter timetable) so it can plan study time around your lectures and events.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Orbit reads the calendars on your Mac (like your Exeter timetable) so it can plan study time around your lectures and events.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Personal use.</string>
 	<key>OrbitAppGroup</key>

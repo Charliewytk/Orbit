@@ -16,6 +16,8 @@
 	<array>
 		<string>group.$(ORBIT_BUNDLE_PREFIX).orbit</string>
 	</array>
+	<key>com.apple.security.personal-information.calendars</key>
+	<true/>
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(AppIdentifierPrefix)$(ORBIT_BUNDLE_PREFIX).orbit</string>

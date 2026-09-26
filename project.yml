@@ -139,6 +139,8 @@ targets:
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
         ITSAppUsesNonExemptEncryption: false
         NSHumanReadableCopyright: Personal use.
+        NSCalendarsFullAccessUsageDescription: Orbit reads the calendars on your Mac (like your Exeter timetable) so it can plan study time around your lectures and events.
+        NSCalendarsUsageDescription: Orbit reads the calendars on your Mac (like your Exeter timetable) so it can plan study time around your lectures and events.
         CFBundleURLTypes:
           - CFBundleURLName: Google sign-in
             CFBundleURLSchemes: [$(GOOGLE_REVERSED_CLIENT_ID)]
@@ -154,6 +156,7 @@ targets:
     entitlements:
       path: App/Supporting/macOS/Orbit.entitlements
       properties:
+        com.apple.security.personal-information.calendars: true
         com.apple.developer.aps-environment: development
         com.apple.developer.icloud-container-identifiers:
           - iCloud.$(ORBIT_BUNDLE_PREFIX).orbit

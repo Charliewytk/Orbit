@@ -49,6 +49,8 @@
 		6EB19880CAF059A9D3F878C8 /* PreferencesForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D823B103CAB0715EAC2BEAE6 /* PreferencesForm.swift */; };
 		7140CC47114B5E33C254D427 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD7A44B1680FD84ECB59F588 /* Assets.xcassets */; };
 		73494CD0C7EDFEA37C76E75E /* UniView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9BB158FF8A480EA9CA3998 /* UniView.swift */; };
+		763957B0935E642515D757C9 /* Brain+Setup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292C45DFEBC84F0CC29F16EB /* Brain+Setup.swift */; };
+		7C67D2C0AED82936578DD238 /* MacCalendarAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E220B2B34402F49F3CE2F4 /* MacCalendarAccess.swift */; };
 		7C9072205525F8A4B25A49E2 /* OrbitCore in Frameworks */ = {isa = PBXBuildFile; productRef = D4CDA32BAAD2F7D5656EA6DB /* OrbitCore */; };
 		7F6615D226AB78B3D2EBAAC5 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06293A056AFC21454B132509 /* AppGroup.swift */; };
 		7F9A2D8A95FD596D6DDCF0DB /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCDDB8ECAA5080A37878F031 /* Helpers.swift */; };
@@ -175,9 +177,11 @@
 		129617BC2BF2814F433D0541 /* Brain+Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Messages.swift"; sourceTree = "<group>"; };
 		14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		1E8FC039385EDD7686A0B83C /* OrbitShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = OrbitShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		21E220B2B34402F49F3CE2F4 /* MacCalendarAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCalendarAccess.swift; sourceTree = "<group>"; };
 		272D403AD2470E69BBD096C0 /* OrbitIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitIOSApp.swift; sourceTree = "<group>"; };
 		274FECF61DA10B767D5A132C /* Brain+ELE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+ELE.swift"; sourceTree = "<group>"; };
 		2789015C9A4150ED5727F9C3 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		292C45DFEBC84F0CC29F16EB /* Brain+Setup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Setup.swift"; sourceTree = "<group>"; };
 		2F4DC07C2D54DF82512F861B /* OrbitBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitBackend.swift; sourceTree = "<group>"; };
 		303B379BEDA23F2539284A6A /* AccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountManager.swift; sourceTree = "<group>"; };
 		35EDC351CA53115D018529A4 /* PlanImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanImporter.swift; sourceTree = "<group>"; };
@@ -468,8 +472,10 @@
 				E6EF5153F35AC0F6B83AD866 /* Brain+Mail.swift */,
 				129617BC2BF2814F433D0541 /* Brain+Messages.swift */,
 				4F52C507EADC6AE6C338F2BB /* Brain+Notes.swift */,
+				292C45DFEBC84F0CC29F16EB /* Brain+Setup.swift */,
 				069805F40B399A2BD824C5C6 /* GoogleEventWriter.swift */,
 				D0FB6F9DEA2C69650C0AFAC0 /* LocalStore.swift */,
+				21E220B2B34402F49F3CE2F4 /* MacCalendarAccess.swift */,
 				47344532D9E718667F731637 /* OllamaManager.swift */,
 				79FC77D5F642657D896E16E5 /* OpenCodeLauncher.swift */,
 				E0E7F528960B8DE484704617 /* OrbitBrain.swift */,
@@ -800,6 +806,7 @@
 				F5E6AEA3FB825AA32CC5AD69 /* Brain+Mail.swift in Sources */,
 				9DFD2CF5EEF4A2A0D1ED64E9 /* Brain+Messages.swift in Sources */,
 				C19924F34C22CD2581D700C5 /* Brain+Notes.swift in Sources */,
+				763957B0935E642515D757C9 /* Brain+Setup.swift in Sources */,
 				4F6A6EC8949A08B8A428061F /* ChatView.swift in Sources */,
 				9419F7C1945F552A8E6FFACF /* Components.swift in Sources */,
 				6B619BA1FB736D4EE25E940B /* DayTimeline.swift in Sources */,
@@ -809,6 +816,7 @@
 				807DFDA7886F58DA9358FB10 /* InboxView.swift in Sources */,
 				34D85362811C30D4664F9D32 /* KeychainBlob.swift in Sources */,
 				85A594542E0DBFC958028154 /* LocalStore.swift in Sources */,
+				7C67D2C0AED82936578DD238 /* MacCalendarAccess.swift in Sources */,
 				B9E401B30AD6B592B7153438 /* MacSettingsSections.swift in Sources */,
 				607669605B0D63CA8FFF2DC8 /* MenuBarView.swift in Sources */,
 				B0A15F16A3AE3B785488E11D /* NotesView.swift in Sources */,
