@@ -42,7 +42,7 @@ struct MacOnboardingView: View {
             case .ed: "Posts from staff, announcements and deadline mentions from your Ed courses."
             case .google: "Orbit writes only to its own “Orbit” calendar and saves replies as drafts. It never sends email."
             case .exeter: "Three quick steps on this Mac. No IT tickets, no app registration."
-            case .notes: "GoodNotes auto-backup is best: Orbit reads every page, handwriting too, checks it against the slides and makes flashcards."
+            case .notes: "Notability auto-backup is best: one note per week, read handwriting and all, checked against the slides and turned into flashcards."
             case .ai: "OpenCode answers first; Ollama runs fully offline as the backup. Both free."
             case .money: "Connect Monzo or Trading 212 to see what's safe to spend. Skip it if you like."
             case .careers: "Spring weeks, internships and insight days from Trackr, with alerts the moment they open."
@@ -526,34 +526,38 @@ struct OnboardingUniStep: View {
     }
 }
 
-/// Notes: GoodNotes auto-backup (recommended), OneNote, or (not) Apple Notes.
+/// Notes: Notability auto-backup (recommended), GoodNotes, OneNote, or (not) Apple Notes.
 struct OnboardingNotesStep: View {
     enum Source: String, CaseIterable, Identifiable {
-        case goodnotes, onenote, apple
+        case notability, goodnotes, onenote, apple
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .goodnotes: "GoodNotes (recommended)"
+            case .notability: "Notability (recommended)"
+            case .goodnotes: "GoodNotes"
             case .onenote: "OneNote"
             case .apple: "Apple Notes"
             }
         }
     }
 
-    @State private var source: Source = .goodnotes
+    @State private var source: Source = .notability
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.m) {
             GlassSegmented(options: Source.allCases.map { ($0, $0.title) }, selection: $source)
             switch source {
+            case .notability:
+                explainer("Notebook → sections → one note per week, like OneNote. Make a subject per module (e.g. “Introduction to Statistics”) and a note per week (“Week 1”, “Week 2”…).")
+                GoodNotesFolderPicker(app: .notability)
             case .goodnotes:
-                GoodNotesFolderPicker()
+                GoodNotesFolderPicker(app: .goodNotes)
             case .onenote:
                 explainer("Sign in with Microsoft to read OneNote directly (Exeter may block it), or export notebooks as PDF into a folder and pick it.")
                 MicrosoftConnectRow()
                 NotesSourcePicker()
             case .apple:
-                explainer("Not supported: Apple Notes has no export Orbit can read. Use GoodNotes auto-backup instead.")
+                explainer("Not supported: Apple Notes has no export Orbit can read. Use Notability or GoodNotes auto-backup instead.")
             }
         }
     }
@@ -566,9 +570,10 @@ struct OnboardingNotesStep: View {
     }
 }
 
-/// Finds GoodNotes auto-backup folders in OneDrive / Google Drive and lets the
-/// student pick one (or any folder).
+/// Finds Notability / GoodNotes auto-backup folders in OneDrive / Google Drive /
+/// Dropbox and lets the student pick one (or any folder). `app` nil shows both.
 struct GoodNotesFolderPicker: View {
+    var app: GoodNotesBackup.App? = nil
     @Environment(OrbitBrain.self) private var brain
     @AppStorage(MacPrefs.noteSource) private var noteSource = ""
     @AppStorage(MacPrefs.notesFolderPath) private var folderPath = ""
@@ -578,24 +583,24 @@ struct GoodNotesFolderPicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Space.m) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("In GoodNotes: Settings → Auto-backup → OneDrive (or Google Drive), format PDF.")
+                Text(instruction)
                     .font(Theme.body.weight(.semibold))
                     .foregroundStyle(Theme.textPrimary)
-                Text("OneDrive (Exeter) or Google Drive both work. Orbit watches the folder, reads each page (handwriting too), matches notebooks to modules and only re-reads pages that changed.")
+                Text(detail)
                     .font(Theme.caption)
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if found.isEmpty {
-                Label("No GoodNotes backup folder found yet in OneDrive or Google Drive on this Mac.", systemImage: "magnifyingglass")
+                Label("No \(appName) backup folder found yet in Google Drive, OneDrive or Dropbox on this Mac.", systemImage: "magnifyingglass")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.textTertiary)
             }
             ForEach(found) { f in
                 let selected = folderPath == f.url.path
                 HStack(spacing: Theme.Space.m) {
-                    IconTile(symbol: f.service == .googleDrive ? "externaldrive.fill.badge.icloud" : "cloud.fill",
-                             color: f.service == .googleDrive ? Color(hex: 0x1FA463) : Color(hex: 0x0A6CD6), size: 30)
+                    IconTile(symbol: f.service == .googleDrive ? "externaldrive.fill.badge.icloud" : f.service == .dropbox ? "shippingbox.fill" : "cloud.fill",
+                             color: f.service == .googleDrive ? Color(hex: 0x1FA463) : f.service == .dropbox ? Color(hex: 0x0061FE) : Color(hex: 0x0A6CD6), size: 30)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(f.label).font(Theme.body.weight(.semibold)).foregroundStyle(Theme.textPrimary)
                         Text(f.url.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
@@ -636,9 +641,33 @@ struct GoodNotesFolderPicker: View {
     }
 
     private func refresh() {
-        found = GoodNotesBackup.candidateFolders()
+        found = GoodNotesBackup.candidateFolders().filter { app == nil || $0.app == app }
         // Exactly one backup folder and nothing chosen yet: use it.
         if folderPath.isEmpty, found.count == 1 { use(found[0].url) }
+    }
+
+    private var appName: String {
+        switch app {
+        case .notability: "Notability"
+        case .goodNotes: "GoodNotes"
+        case nil: "Notability or GoodNotes"
+        }
+    }
+
+    private var instruction: String {
+        switch app {
+        case .goodNotes: "In GoodNotes: Settings → Auto-backup → OneDrive (or Google Drive), format PDF."
+        case .notability: "In Notability: Settings → Auto-backup → Google Drive (or OneDrive / Dropbox), format PDF."
+        case nil: "In Notability (recommended) or GoodNotes: Settings → Auto-backup → Google Drive / OneDrive, format PDF."
+        }
+    }
+
+    private var detail: String {
+        switch app {
+        case .goodNotes: "OneDrive (Exeter) or Google Drive both work. Orbit watches the folder, reads each page (handwriting too), matches notebooks to modules and only re-reads pages that changed."
+        case .notability: "Each note is one PDF. Orbit matches the subject to a module, takes the week from the note's name (“Week 3”), reads handwriting too and only re-reads notes that changed."
+        case nil: "Orbit watches the folder, reads handwriting too, matches subjects or notebooks to modules and only re-reads what changed."
+        }
     }
 
     private func use(_ url: URL) {

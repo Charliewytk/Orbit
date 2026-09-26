@@ -86,13 +86,18 @@ extension OrbitBrain {
         let scanner = NotesFolderScanner(root: URL(fileURLWithPath: path))
         // GoodNotes auto-backups: one PDF per notebook, one note per page.
         let pageMode = GoodNotesBackup.isGoodNotesPath(path)
+        // Notability auto-backups: one PDF per note (Subject/Week 3.pdf), one note per file.
+        // The scanner's mtime cursor means a PDF is only re-read when it changes.
+        let notabilityMode = !pageMode && GoodNotesBackup.isNotabilityPath(path)
         do {
             let result = try scanner.scan(since: state.notesFolderCursor)
             let pipeline = HandwritingPipeline.standard(router: router, profile: handwritingProfile)
             var failed = 0
             for item in result.items {
                 do {
-                    if pageMode && item.kind == .pdf {
+                    if notabilityMode && item.kind == .pdf {
+                        if let note = try await notabilityNote(from: item, pipeline: pipeline) { await store(note: note) }
+                    } else if pageMode && item.kind == .pdf {
                         for note in try await pageNotes(from: item, pipeline: pipeline) { await store(note: note) }
                     } else if let note = try await note(from: item, pipeline: pipeline) {
                         await store(note: note)
@@ -133,6 +138,29 @@ extension OrbitBrain {
             let region = try await pipeline.transcribe(image: data, regionID: item.relativePath)
             return Self.makeNote(item, segments: region.segments)
         }
+    }
+
+    /// Module names Orbit knows (ELE + stored), for matching notebook / subject names.
+    private func notebookMatcher() -> NotebookModuleMatcher {
+        var modules = academic.modules.map { (code: $0.code, name: $0.name) }
+        for m in context.all(StoredModule.self) where !modules.contains(where: { $0.code == m.id }) {
+            modules.append((code: m.id, name: m.name))
+        }
+        return NotebookModuleMatcher(modules: modules)
+    }
+
+    /// A Notability note PDF → one lecture note. The nearest subject folder picks the
+    /// module ("Introduction to Statistics" → BEE1022); the filename gives the week
+    /// ("Week 3"), else the academic calendar week of the file's date.
+    private func notabilityNote(from item: NotesFolderScanner.Item, pipeline: HandwritingPipeline) async throws -> LectureNote? {
+        guard var note = try await note(from: item, pipeline: pipeline) else { return nil }
+        let meta = NotabilityNote.metadata(relativePath: item.relativePath, matcher: notebookMatcher())
+        note.title = meta.title
+        note.notebook = "Notability"
+        note.section = meta.subject ?? "Notability"
+        note.moduleCode = meta.moduleCode ?? note.moduleCode
+        note.week = meta.week ?? academic.calendar.week(for: item.modified)?.week
+        return note
     }
 
     /// A GoodNotes notebook PDF → one note per page. The notebook name picks the

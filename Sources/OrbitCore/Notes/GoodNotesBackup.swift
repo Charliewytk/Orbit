@@ -18,15 +18,22 @@ public enum GoodNotesBackup {
         /// "OneDrive (University of Exeter)", "Google Drive (me@gmail.com)".
         public var label: String
         public var service: Service
+        /// Which note app wrote the backup.
+        public var app: App = .goodNotes
         public var id: String { url.path }
     }
 
     public enum Service: String, Sendable {
-        case oneDrive, googleDrive, other
+        case oneDrive, googleDrive, dropbox, other
+    }
+
+    public enum App: String, Sendable {
+        case goodNotes, notability
     }
 
     /// Every "GoodNotes" folder (any case, also "Goodnotes 6") up to three levels
-    /// inside ~/Library/CloudStorage/OneDrive-* and GoogleDrive-*.
+    /// inside ~/Library/CloudStorage/OneDrive-* and GoogleDrive-*, plus every
+    /// "Notability" folder there and in Dropbox. Notability folders come first.
     public static func candidateFolders(home: URL = FileManager.default.homeDirectoryForCurrentUser,
                                         fileManager: FileManager = .default) -> [Folder] {
         let storage = home.appendingPathComponent("Library/CloudStorage", isDirectory: true)
@@ -36,12 +43,26 @@ public enum GoodNotesBackup {
         for root in roots.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             let name = root.lastPathComponent
             let service: Service
-            if name.hasPrefix("OneDrive") { service = .oneDrive } else if name.hasPrefix("GoogleDrive") { service = .googleDrive } else { continue }
-            for folder in find(in: root, depth: 3, fileManager: fileManager) {
-                out.append(Folder(url: folder, label: label(forRoot: name, service: service), service: service))
+            if name.hasPrefix("OneDrive") { service = .oneDrive } else if name.hasPrefix("GoogleDrive") { service = .googleDrive }
+            else if name.hasPrefix("Dropbox") { service = .dropbox } else { continue }
+            for (folder, app) in find(in: root, depth: 3, fileManager: fileManager) {
+                // GoodNotes backups are only looked for in OneDrive / Google Drive (unchanged).
+                if app == .goodNotes && service == .dropbox { continue }
+                let where_ = label(forRoot: name, service: service)
+                let label = app == .notability ? "Notability (\(where_))" : where_
+                out.append(Folder(url: folder, label: label, service: service, app: app))
             }
         }
-        return out
+        return out.filter { $0.app == .notability } + out.filter { $0.app == .goodNotes }
+    }
+
+    /// Whether a notes folder path looks like a Notability backup (one note per PDF).
+    public static func isNotabilityPath(_ path: String) -> Bool {
+        path.lowercased().contains("notability")
+    }
+
+    static func isNotabilityName(_ name: String) -> Bool {
+        name.lowercased().trimmingCharacters(in: .whitespaces) == "notability"
     }
 
     /// Whether a notes folder path looks like a GoodNotes backup (turns on page-by-page notes).
@@ -54,14 +75,16 @@ public enum GoodNotesBackup {
         return n == "goodnotes" || n.hasPrefix("goodnotes")
     }
 
-    private static func find(in dir: URL, depth: Int, fileManager: FileManager) -> [URL] {
+    private static func find(in dir: URL, depth: Int, fileManager: FileManager) -> [(URL, App)] {
         guard depth > 0, let children = try? fileManager.contentsOfDirectory(
             at: dir, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) else { return [] }
-        var found: [URL] = []
+        var found: [(URL, App)] = []
         for child in children.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
             guard (try? child.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else { continue }
             if isGoodNotesName(child.lastPathComponent) {
-                found.append(child)
+                found.append((child, .goodNotes))
+            } else if isNotabilityName(child.lastPathComponent) {
+                found.append((child, .notability))
             } else {
                 found += find(in: child, depth: depth - 1, fileManager: fileManager)
             }
@@ -71,11 +94,43 @@ public enum GoodNotesBackup {
 
     /// "OneDrive-UniversityofExeter" → "OneDrive (University of Exeter)".
     static func label(forRoot name: String, service: Service) -> String {
-        let prefix = service == .oneDrive ? "OneDrive" : "GoogleDrive"
+        let prefix: String, title: String
+        switch service {
+        case .oneDrive: (prefix, title) = ("OneDrive", "OneDrive")
+        case .dropbox: (prefix, title) = ("Dropbox", "Dropbox")
+        default: (prefix, title) = ("GoogleDrive", "Google Drive")
+        }
         var rest = String(name.dropFirst(prefix.count)).trimmingCharacters(in: CharacterSet(charactersIn: "-_ "))
         if rest == "UniversityofExeter" { rest = "University of Exeter" }
-        let title = service == .oneDrive ? "OneDrive" : "Google Drive"
         return rest.isEmpty ? title : "\(title) (\(rest))"
+    }
+}
+
+/// Notability auto-backup: Notability/<divider?>/<Subject>/<Note>.pdf, one PDF per
+/// note. Each PDF is one lecture note: subject folder → module, filename → week.
+public enum NotabilityNote {
+    public struct Metadata: Hashable, Sendable {
+        public var title: String
+        public var subject: String?
+        public var moduleCode: String?
+        public var week: Int?
+    }
+
+    /// `relativePath` is relative to the Notability folder,
+    /// e.g. "Year 1 Economics/Introduction to Statistics/Week 1.pdf".
+    public static func metadata(relativePath: String, matcher: NotebookModuleMatcher) -> Metadata {
+        let parts = relativePath.split(separator: "/").map(String.init)
+        let file = parts.last ?? relativePath
+        let title = (file as NSString).deletingPathExtension
+        let folders = Array(parts.dropLast())
+        // Nearest ancestor folder that names a module.
+        var module: String?
+        for f in folders.reversed() {
+            if let code = matcher.moduleCode(forNotebook: f) { module = code; break }
+        }
+        if module == nil { module = NoteMetadataDetector.moduleCode(in: [title]) }
+        return Metadata(title: title, subject: folders.last, moduleCode: module,
+                        week: NoteMetadataDetector.week(in: [title]))
     }
 }
 
