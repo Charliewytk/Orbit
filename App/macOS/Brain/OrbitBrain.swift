@@ -214,6 +214,7 @@ final class OrbitBrain: OrbitBackend {
             entry.lastSuccess = Date()
         }
         if let detail { entry.detail = detail }
+        OrbitLog.log("sync", "\(source.title): \(error.map { "ERROR \($0)" } ?? "ok")\(detail.map { " · \($0)" } ?? "")")
         all[source.rawValue] = entry
         settings.syncStatus = all
         context.saveQuietly()

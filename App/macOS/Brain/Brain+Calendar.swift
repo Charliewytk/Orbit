@@ -70,6 +70,18 @@ extension OrbitBrain {
             }
         }
 
+        // Every calendar in the Mac's Calendar app (Exeter via Internet Accounts, iCloud, …).
+        let macCalendars = MacCalendarAccess.shared
+        if macCalendars.granted {
+            let usingGraphCalendar = accounts.microsoftConnected
+                && (MacPrefs.defaults.object(forKey: MacPrefs.useExeterCalendar) as? Bool ?? true)
+            let result = macCalendars.events(from: from, to: to, skipGoogle: accounts.googleConnected,
+                                             skipExchange: usingGraphCalendar)
+            fetched += result.events
+            covered.formUnion(result.calendarIDs)
+            OrbitLog.log("calendar", "Mac calendars: \(result.events.count) events from \(result.calendarIDs.count) calendars")
+        }
+
         if let s = MacPrefs.string(MacPrefs.timetableURL),
            let url = URL(string: s.replacingOccurrences(of: "webcal://", with: "https://")) {
             do {

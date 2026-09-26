@@ -5,7 +5,8 @@ import OrbitCore
 extension OrbitBrain {
     /// "graph" (OneNote via Microsoft Graph), "folder" (exported PDFs/Markdown) or "none".
     var noteSource: String {
-        MacPrefs.string(MacPrefs.noteSource) ?? (accounts.microsoftConnected ? "graph" : "none")
+        MacPrefs.string(MacPrefs.noteSource)
+            ?? (accounts.microsoftConnected ? "graph" : MacPrefs.string(MacPrefs.notesFolderPath) != nil ? "folder" : "none")
     }
 
     func syncNotes() async {
@@ -24,7 +25,7 @@ extension OrbitBrain {
 
     private func syncOneNote() async {
         guard accounts.microsoftConnected, let session = accounts.microsoft else {
-            record(.notes, error: "Connect your Exeter account in Settings, or switch notes to an exported PDF folder.")
+            record(.notes, error: "Pick your OneNote export folder in Settings (Read notes from → Exported PDF folder).")
             return
         }
         let client = OneNoteClient(tokens: session)

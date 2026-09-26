@@ -5,7 +5,8 @@ import OrbitCore
 extension OrbitBrain {
     /// "graph" (Microsoft Graph), "appleMail" (the Mac's Mail app) or "none".
     var exeterMailSource: String {
-        MacPrefs.string(MacPrefs.exeterMailSource) ?? (accounts.microsoftConnected ? "graph" : "none")
+        MacPrefs.string(MacPrefs.exeterMailSource)
+            ?? (accounts.microsoftConnected ? "graph" : AppleMailReader.canReadMailFolder() ? "appleMail" : "none")
     }
 
     func mailProviders() -> [MailProvider] {
