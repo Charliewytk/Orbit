@@ -10,6 +10,7 @@ enum SecretVault {
         case trading212 = "money.trading212"
         case monzoClient = "money.monzo.client"
         case monzoToken = "money.monzo.token"
+        case edToken = "ed.token"
     }
 
     private static var fileDir: URL {

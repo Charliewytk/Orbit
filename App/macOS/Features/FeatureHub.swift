@@ -24,6 +24,8 @@ final class FeatureHub {
     let money = MoneyService()
     let updates = UpdateService()
     let capture = QuickCaptureController()
+    let careers = CareersService()
+    let ed = EdService()
 
     // UI status
     var flashcardStatus = ""
@@ -56,6 +58,10 @@ final class FeatureHub {
         money.hub = self
         updates.hub = self
         capture.hub = self
+        careers.hub = self
+        ed.hub = self
+        careers.load()
+        ed.load()
         focus.restore(state.activeFocus)
         capture.registerFromSettings()
         money.load()
@@ -81,6 +87,8 @@ final class FeatureHub {
         focus.appWillTerminate()
         save()
         money.save()
+        careers.save()
+        ed.save()
     }
 
     /// Every minute. Each job decides for itself whether it's due.
@@ -96,6 +104,9 @@ final class FeatureHub {
         await generateFlashcardsIfDue(now: now)
         await money.syncIfDue(now: now)
         await updates.checkIfDue(now: now)
+        // Network polls run on their own so a slow site never holds up the other jobs.
+        Task { @MainActor in await self.careers.syncIfDue(now: now) }
+        Task { @MainActor in await self.ed.syncIfDue(now: now) }
         save()
     }
 

@@ -11,6 +11,9 @@ struct UniView: View {
     @Query private var allAnnouncements: [StoredAnnouncement]
     @Query(sort: \StoredBrief.createdAt, order: .reverse) private var briefs: [StoredBrief]
     @Query private var tasks: [StoredTask]
+    #if os(macOS)
+    @State private var showEd = false
+    #endif
 
     private var assessments: [StoredAssessment] {
         allAssessments.sorted { ($0.due ?? .distantFuture) < ($1.due ?? .distantFuture) }
@@ -47,6 +50,21 @@ struct UniView: View {
             }
         }
         .navigationTitle("Uni")
+        #if os(macOS)
+        .toolbar {
+            ToolbarItem {
+                Button { showEd = true } label: { Label("Ed Discussion", systemImage: "bubble.left.and.bubble.right") }
+                    .help("Ed Discussion: new threads, staff posts and replies")
+            }
+        }
+        .sheet(isPresented: $showEd) {
+            NavigationStack {
+                EdView()
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showEd = false } } }
+            }
+            .frame(minWidth: 640, minHeight: 560)
+        }
+        #endif
     }
 }
 

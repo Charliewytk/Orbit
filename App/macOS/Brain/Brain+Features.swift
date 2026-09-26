@@ -33,10 +33,27 @@ struct HubToolsProvider: FeatureToolsProvider {
     }
 }
 
+/// Careers (Trackr) and Ed Discussion tools.
+struct HubCareersEdProvider: CareersEdToolsProvider {
+    func careersOpenText(watchedOnly: Bool) async -> String {
+        await MainActor.run { FeatureHub.shared.careers.openText(watchedOnly: watchedOnly) }
+    }
+    func careersUpcomingText(days: Int, watchedOnly: Bool) async -> String {
+        await MainActor.run { FeatureHub.shared.careers.upcomingText(days: days, watchedOnly: watchedOnly) }
+    }
+    func careersSearchText(query: String) async -> String {
+        await MainActor.run { FeatureHub.shared.careers.searchText(query) }
+    }
+    func edActivityText(since: Date?, course: String?) async -> String {
+        await MainActor.run { FeatureHub.shared.ed.activityText(since: since, course: course) }
+    }
+}
+
 extension OrbitBrain {
     /// Adds the feature tools to the assistant's tool list (names stay unique).
     func withFeatureTools(_ base: [AssistantTool]) -> [AssistantTool] {
-        FeatureTools.merge(base, featureTools(existing: base))
+        let features = FeatureTools.merge(base, featureTools(existing: base))
+        return FeatureTools.merge(features, CareersEdTools.make(HubCareersEdProvider()))
     }
 
     /// Feature tools that don't clash with tools the app already has, except

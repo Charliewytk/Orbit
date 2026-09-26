@@ -24,6 +24,7 @@
 		2631B6D96625BAD4F99E078B /* OrbitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367D1E3D8E9FAE8BB55D57DF /* OrbitIntents.swift */; };
 		2B356576B9999457C8257336 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */; };
 		2D5E26DE9D444A96CCB14CDF /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
+		2FEB16A9A9EA75A29A601218 /* CareersService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E14149F17FD58E9DCA9E1FD /* CareersService.swift */; };
 		31E057151BF272BCADE62561 /* MoneySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E3FA2E51163D76BFFD2261 /* MoneySettingsView.swift */; };
 		34D85362811C30D4664F9D32 /* KeychainBlob.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B881BB0A811614CD380F1F /* KeychainBlob.swift */; };
 		352CB0984B94C13C9DDC0EDD /* TasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F6D69211B0C93923225A9A /* TasksView.swift */; };
@@ -37,6 +38,7 @@
 		3F92513EEE1B6515DCB0F24B /* TimeGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347D83D603F97FA460D89A54 /* TimeGrid.swift */; };
 		3FCB79447AC1B7F15E0743AD /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
 		40FE35C6FF7ED86E94D020F8 /* Brain+Chat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6256515A892AE09D0AC8E76F /* Brain+Chat.swift */; };
+		414A2FB47301A7FD4FE6223E /* CareersViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2801564622A3E493F68DB5AE /* CareersViews.swift */; };
 		45E1595CB306233C0215AED3 /* Hub+Feedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03C1CD84E571061075A58683 /* Hub+Feedback.swift */; };
 		464FFE7D844F44B3E68433D0 /* AcademicHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 552BE448F98D6F67E57F8AD7 /* AcademicHooks.swift */; };
 		4B0C685BA439102C0F5207AC /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483D1EEF8194DD643CA40634 /* CommandPalette.swift */; };
@@ -89,6 +91,7 @@
 		9975F1D3FD12F3DC78912B73 /* OllamaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47344532D9E718667F731637 /* OllamaManager.swift */; };
 		9B3FD4BE13915A3A59B069F6 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
 		9D3D3D48076F777ACBEF21E6 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1FA03B8D3B4486A5BC8549 /* Notifier.swift */; };
+		9D9F3C5525C482D77C11B10F /* EdLoginWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1756AF37FA5BBD75BDA8E07C /* EdLoginWindow.swift */; };
 		9DD2464879277499547D33DE /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1484C73FE06C80C80628AC /* NotesView.swift */; };
 		9DFD2CF5EEF4A2A0D1ED64E9 /* Brain+Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 129617BC2BF2814F433D0541 /* Brain+Messages.swift */; };
 		A6F10C276BDAAE5A2B6A1A5A /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63BB3124ED0C8CE330DE1B4 /* InboxView.swift */; };
@@ -99,10 +102,12 @@
 		AE21C29E60BC7F62028B6F83 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F3340339C2F5BF8E04F79F /* Theme.swift */; };
 		B016E3222B8B6E501752B2FC /* Agenda.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C13598698F53CAB05EFF2D4 /* Agenda.swift */; };
 		B0A15F16A3AE3B785488E11D /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1484C73FE06C80C80628AC /* NotesView.swift */; };
+		B0D36EC98A9BF90C5A4C2AB4 /* EdViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483F20CCE0DA465ACBB75655 /* EdViews.swift */; };
 		B24C75CB7EC1A927BC4108E5 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9885A5F21A55C1668290C1EF /* AppModel.swift */; };
 		B345DCDB63E3C334ADF33272 /* OrbitIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272D403AD2470E69BBD096C0 /* OrbitIOSApp.swift */; };
 		B60EA9B1FA5B7718294EF903 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F3340339C2F5BF8E04F79F /* Theme.swift */; };
 		B6B92D70CE39211693E4B6FA /* FeatureSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC62F23B9607BA16C754857 /* FeatureSettingsView.swift */; };
+		B6FAC0D02BC94F249EBD625B /* EdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28F6F425169C92F78F2B2CB /* EdService.swift */; };
 		B890C85795C3BB6D4603E4EC /* StoredModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FB6CB77005B953A6DF69EC9 /* StoredModels.swift */; };
 		B9E401B30AD6B592B7153438 /* MacSettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = E558DC43ECDB0AFF34621965 /* MacSettingsSections.swift */; };
 		BA28FB76033D747C7CEF530C /* StoredModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FB6CB77005B953A6DF69EC9 /* StoredModels.swift */; };
@@ -217,6 +222,7 @@
 		0F1FA03B8D3B4486A5BC8549 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
 		129617BC2BF2814F433D0541 /* Brain+Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Messages.swift"; sourceTree = "<group>"; };
 		14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		1756AF37FA5BBD75BDA8E07C /* EdLoginWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdLoginWindow.swift; sourceTree = "<group>"; };
 		18E3FA2E51163D76BFFD2261 /* MoneySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneySettingsView.swift; sourceTree = "<group>"; };
 		1A395425995D72856A79463F /* Brain+ELELive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+ELELive.swift"; sourceTree = "<group>"; };
 		1A60EF6A4BA6C98243AAE38C /* MonzoLoopback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonzoLoopback.swift; sourceTree = "<group>"; };
@@ -226,6 +232,7 @@
 		272D403AD2470E69BBD096C0 /* OrbitIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitIOSApp.swift; sourceTree = "<group>"; };
 		274FECF61DA10B767D5A132C /* Brain+ELE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+ELE.swift"; sourceTree = "<group>"; };
 		2789015C9A4150ED5727F9C3 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		2801564622A3E493F68DB5AE /* CareersViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareersViews.swift; sourceTree = "<group>"; };
 		292C45DFEBC84F0CC29F16EB /* Brain+Setup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Setup.swift"; sourceTree = "<group>"; };
 		2F4DC07C2D54DF82512F861B /* OrbitBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitBackend.swift; sourceTree = "<group>"; };
 		303B379BEDA23F2539284A6A /* AccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountManager.swift; sourceTree = "<group>"; };
@@ -241,8 +248,10 @@
 		470D7E22DEA73246CD278B14 /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
 		47344532D9E718667F731637 /* OllamaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaManager.swift; sourceTree = "<group>"; };
 		483D1EEF8194DD643CA40634 /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
+		483F20CCE0DA465ACBB75655 /* EdViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdViews.swift; sourceTree = "<group>"; };
 		4A26E953E9B6E92FE92FD2D2 /* ELEDocumentText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELEDocumentText.swift; sourceTree = "<group>"; };
 		4C13598698F53CAB05EFF2D4 /* Agenda.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Agenda.swift; sourceTree = "<group>"; };
+		4E14149F17FD58E9DCA9E1FD /* CareersService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareersService.swift; sourceTree = "<group>"; };
 		4F52C507EADC6AE6C338F2BB /* Brain+Notes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Notes.swift"; sourceTree = "<group>"; };
 		552BE448F98D6F67E57F8AD7 /* AcademicHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcademicHooks.swift; sourceTree = "<group>"; };
 		5B529C662890D4025D22DE38 /* Orbit.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Orbit.xcconfig; sourceTree = "<group>"; };
@@ -269,6 +278,7 @@
 		9C1484C73FE06C80C80628AC /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		9D9754FC33E1FBF076358A9B /* Fmt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fmt.swift; sourceTree = "<group>"; };
 		A0F3340339C2F5BF8E04F79F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A28F6F425169C92F78F2B2CB /* EdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdService.swift; sourceTree = "<group>"; };
 		A70D03E522EF6F73571AF253 /* Brain+Briefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Briefs.swift"; sourceTree = "<group>"; };
 		A89AD2355C8939D1FCC914A9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AAEF66827FCB480CA1F8BE2F /* QuickCaptureField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureField.swift; sourceTree = "<group>"; };
@@ -393,6 +403,7 @@
 			children = (
 				1A395425995D72856A79463F /* Brain+ELELive.swift */,
 				3AC695A9C69AE1ECAAAEBBD3 /* Brain+ELEWeb.swift */,
+				1756AF37FA5BBD75BDA8E07C /* EdLoginWindow.swift */,
 				4A26E953E9B6E92FE92FD2D2 /* ELEDocumentText.swift */,
 				E9145F461AFAAAC8AC38E92B /* ELEWebSession.swift */,
 			);
@@ -402,6 +413,8 @@
 		634707236FF69AECEB3B0ECF /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				4E14149F17FD58E9DCA9E1FD /* CareersService.swift */,
+				A28F6F425169C92F78F2B2CB /* EdService.swift */,
 				7374C19F57F0B9B73AEAE76C /* FeatureHub.swift */,
 				E451B7ABD36EC234117AA11E /* FeatureSecrets.swift */,
 				5FAC8DE69AD778FBF7DA6524 /* FocusController.swift */,
@@ -648,6 +661,8 @@
 		EE6773F95381208E4EE74E5A /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				2801564622A3E493F68DB5AE /* CareersViews.swift */,
+				483F20CCE0DA465ACBB75655 /* EdViews.swift */,
 				1FC62F23B9607BA16C754857 /* FeatureSettingsView.swift */,
 				3E6457D26BF981F625976AB2 /* FlashcardViews.swift */,
 				91FE7BC90FC12EBAD73203D4 /* FocusViews.swift */,
@@ -951,12 +966,17 @@
 				C19924F34C22CD2581D700C5 /* Brain+Notes.swift in Sources */,
 				763957B0935E642515D757C9 /* Brain+Setup.swift in Sources */,
 				D4138D08E97D5FA749FFAEC3 /* CalendarView.swift in Sources */,
+				2FEB16A9A9EA75A29A601218 /* CareersService.swift in Sources */,
+				414A2FB47301A7FD4FE6223E /* CareersViews.swift in Sources */,
 				4F6A6EC8949A08B8A428061F /* ChatView.swift in Sources */,
 				EAB4C03F163C47B90D90E631 /* CommandPalette.swift in Sources */,
 				9419F7C1945F552A8E6FFACF /* Components.swift in Sources */,
 				7764C40366642245083C8725 /* Controls.swift in Sources */,
 				069E649DF51D25F8DB5C21BF /* ELEDocumentText.swift in Sources */,
 				BBC94C9C11672BDDCEDD8037 /* ELEWebSession.swift in Sources */,
+				9D9F3C5525C482D77C11B10F /* EdLoginWindow.swift in Sources */,
+				B6FAC0D02BC94F249EBD625B /* EdService.swift in Sources */,
+				B0D36EC98A9BF90C5A4C2AB4 /* EdViews.swift in Sources */,
 				AC49C32207F1B0809A8E4390 /* FeatureHub.swift in Sources */,
 				17D1948C0000EE89EDC7DD48 /* FeatureSecrets.swift in Sources */,
 				B6B92D70CE39211693E4B6FA /* FeatureSettingsView.swift in Sources */,

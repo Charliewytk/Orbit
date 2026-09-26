@@ -135,6 +135,14 @@ private struct UniSettingsTab: View {
             } footer: {
                 Text("ELE doesn't publish credits. Most modules are 15; year-long ones are often 30.")
             }
+
+            Section {
+                EdConnectRow()
+            } header: {
+                Text("Ed Discussion")
+            } footer: {
+                Text("Staff posts, announcements and replies to your threads on edstem.org, checked every 30 minutes.")
+            }
         }
         .formStyle(.grouped)
     }

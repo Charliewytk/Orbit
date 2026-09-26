@@ -6,7 +6,7 @@ import OrbitCore
 enum Destination: String, CaseIterable, Identifiable, Hashable {
     case today, calendar, inbox, tasks, uni, notes, plans, chat, settings
     // Mac-only feature screens (App/macOS/Features).
-    case review, progress, focus, money
+    case review, progress, focus, money, careers
 
     var id: String { rawValue }
 
@@ -25,6 +25,7 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .progress: "Progress"
         case .focus: "Focus"
         case .money: "Money"
+        case .careers: "Careers"
         }
     }
 
@@ -43,6 +44,7 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .progress: "chart.bar.xaxis"
         case .focus: "timer"
         case .money: "sterlingsign.circle"
+        case .careers: "briefcase"
         }
     }
 
@@ -68,8 +70,9 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .progress: ProgressScreen()
         case .focus: FocusView()
         case .money: MoneyView()
+        case .careers: CareersView()
         #else
-        case .review, .progress, .focus, .money: EmptyState(systemImage: "desktopcomputer", title: "On your Mac", message: "Open Orbit on your Mac for this.")
+        case .review, .progress, .focus, .money, .careers: EmptyState(systemImage: "desktopcomputer", title: "On your Mac", message: "Open Orbit on your Mac for this.")
         #endif
         }
     }
@@ -169,6 +172,7 @@ struct MacRootView: View {
             }
             Section("Life") {
                 item(.money)
+                item(.careers)
             }
         }
         .listStyle(.sidebar)
