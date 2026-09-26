@@ -112,6 +112,11 @@ Orbit never pays for AI. It uses **OpenCode** (which you already have) as its ma
 
 ## 6. Building Orbit yourself (developers only)
 
+The Google client ID is already in `Config/Orbit.xcconfig` (an iOS-type OAuth client; its redirect is
+`com.googleusercontent.apps.<id>:/oauth2redirect`). To use your own, put `GOOGLE_CLIENT_ID` and
+`GOOGLE_REVERSED_CLIENT_ID` in `Config/Secrets.xcconfig`. `MICROSOFT_CLIENT_ID` is optional; leave it
+empty and the Microsoft sign-in stays hidden.
+
 1. Install **Xcode 16 or later** from the Mac App Store and open it once to finish installing.
    Go to **Xcode → Settings → Accounts** and add the Apple ID that has your Developer Program membership.
 2. Find your **Team ID**: <https://developer.apple.com/account> → **Membership details** → *Team ID*
