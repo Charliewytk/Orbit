@@ -1,64 +1,74 @@
 # Setting up Orbit
 
-This guide takes you from "the code is on GitHub" to "Orbit is running on my Mac and my iPhone".
-Do the steps in order. Each one says what to click and what to copy. Budget about an hour and a half,
-most of it waiting for downloads.
-
-**You'll need**
-
-- A Mac with macOS 15 (Sequoia) or later, ideally 16 GB of memory (for the offline AI models).
-- Xcode 16 or later (free, from the Mac App Store).
-- A paid Apple Developer Program membership (needed for iCloud sync, TestFlight and widgets).
-- Your Google account (for Gmail and Google Calendar) and your Exeter account.
-- The Orbit code on your Mac: `git clone` the repository, or pull the latest branch.
-
-Throughout this guide the bundle ID is **`com.charliewytk.orbit`**. If you ever change
-`ORBIT_BUNDLE_PREFIX` in `Config/Orbit.xcconfig`, use your new value everywhere it appears below.
+Most people only need steps 1 to 5. None of it needs a developer account, and you never have to
+register an app with Google or Microsoft.
 
 ---
 
-## 1. Google Cloud (Gmail + Google Calendar)
+## 1. Install Orbit
 
-Orbit needs its own "OAuth client" so Google lets it read your mail and calendar. It's free and
-stays private to you.
+1. Download **Orbit-mac.dmg** from the repository's **Releases** page ("Orbit for Mac (latest)").
+2. Open it and drag **Orbit** into **Applications**.
+3. The first time: right-click Orbit in Applications → **Open** → **Open**. (macOS warns because Orbit
+   isn't from the App Store. After this, open it normally.)
+4. Orbit opens with a short welcome tour. You can skip any step and come back in **Settings**.
 
-1. Go to <https://console.cloud.google.com> and sign in with the Google account you use for Gmail.
-2. At the top left, click the project picker, then **New project**. Name it `Orbit` and click **Create**.
-   When it's ready, make sure `Orbit` is selected in the project picker.
-3. Turn on the two APIs:
-   1. Open the menu (☰) → **APIs & Services** → **Library**.
-   2. Search for **Gmail API**, open it, click **Enable**.
-   3. Go back to the Library, search for **Google Calendar API**, open it, click **Enable**.
-4. Set up the consent screen (Google sometimes calls this section **Google Auth Platform**):
-   1. Menu → **APIs & Services** → **OAuth consent screen** → **Get started**.
-   2. App name: `Orbit`. User support email: your Gmail address. Click **Next**.
-   3. Audience: choose **External**. Click **Next**.
-   4. Contact information: your Gmail address. Click **Next**, tick the agreement, click **Create**.
-   5. Open **Audience** (or **Test users**) → **Add users** → type your Gmail address → **Save**.
-      Leave the publishing status on **Testing**. You are the only user, so no Google review is needed.
-5. Create the client ID:
-   1. Menu → **APIs & Services** → **Credentials** → **Create credentials** → **OAuth client ID**.
-   2. Application type: **iOS**. (Yes, iOS, even for the Mac. Both Orbit apps share this one client.)
-   3. Name: `Orbit`. Bundle ID: `com.charliewytk.orbit`. Leave the App Store ID and Team ID empty.
-   4. Click **Create**. A box shows your **Client ID** (ends in `.apps.googleusercontent.com`) and,
-      on the client's page, the **iOS URL scheme** (starts with `com.googleusercontent.apps.`).
-6. Put them into Orbit's config:
-   1. In Finder, open the Orbit folder, then `Config`.
-   2. Duplicate `Secrets.example.xcconfig` and rename the copy to exactly `Secrets.xcconfig`.
-      (This file is ignored by git, so your IDs never get uploaded.)
-   3. Open `Secrets.xcconfig` in TextEdit or Xcode and fill in:
-      ```
-      GOOGLE_CLIENT_ID = 1234567890-abcdefg.apps.googleusercontent.com
-      GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.1234567890-abcdefg
-      ```
-      Don't add quotes, and don't paste any `https://` links into this file (`//` starts a comment there).
+## 2. Google (Gmail + Google Calendar)
 
-> **Heads-up:** while the Google project is in "Testing", Google makes you sign in again about once a
-> week. If that gets annoying, see "Google asks me to sign in every week" in Troubleshooting.
+1. Click **Connect** next to Google.
+2. A Google sign-in window opens. Sign in and click **Allow**.
+3. Orbit shows **Connected as you@gmail.com**, syncs straight away, and tells you how many emails and
+   events it found.
+
+If it says something went wrong, the message appears right under the button. See Troubleshooting.
+
+## 3. Your Exeter email and timetable
+
+Orbit doesn't sign in to Exeter itself. Your Mac does, and Orbit reads from there.
+
+1. **Add your Exeter account to your Mac.** Click **Open Internet Accounts** (or open **System
+   Settings → Internet Accounts**), click **Add Account… → Microsoft Exchange**, and sign in with
+   your `@exeter.ac.uk` email and password. When it asks which apps to use, tick **Mail** and
+   **Calendars**.
+2. **Open the Mail app once** so it downloads your Exeter email.
+3. **Let Orbit read your mail.** Click **Grant Full Disk Access**. In the list, switch **Orbit** on
+   (if it isn't there, click **+** and pick Orbit from Applications). Come back to Orbit.
+4. **Let Orbit see your calendars.** Click **Allow calendar access** and then **OK**.
+5. Click **Check again**. You should see ✓ *Exeter mail found* and ✓ *Exeter calendar found*.
+
+This also brings in any other calendars on your Mac (iCloud and so on), so Orbit works for calendars
+even without Google.
+
+**OneNote:** in OneNote, choose **File → Export**, pick **PDF**, and save into one folder (for example
+`Documents/Orbit Notes`). Putting the module code in the folder or file name helps. Then in Orbit click
+**Pick your OneNote export folder…**. Export again whenever you add notes; Orbit notices new files.
+
+> **Advanced (optional):** builds that include a Microsoft client ID also show a Microsoft sign-in
+> under **Settings → University of Exeter → Advanced**, for syncing OneNote directly. You don't need it.
+
+## 4. ELE (Exeter's Moodle)
+
+Nothing to set up in advance. In Orbit, click **Settings → Sign in to ELE**. A sign-in
+window opens exactly like the Moodle mobile app's (Exeter's Microsoft login). Orbit then fetches your
+modules, deadlines, grades, announcements and reading lists every hour.
+
+**If that doesn't work** (the window loops, or Orbit says the Moodle app is switched off), use the
+calendar export instead:
+
+1. In a browser, open ELE → **Calendar** (<https://ele.exeter.ac.uk/calendar/view.php>).
+2. Click **Import or export calendars** → **Export calendar**.
+3. Choose **All events** and **Recent and next 60 days**, then click **Get calendar URL**.
+4. Copy the long link it shows and paste it into Orbit: **Settings → ELE → "Or paste your ELE
+   calendar export link"**, then press Return.
+
+This gives Orbit all your deadlines (but not grades or reading lists).
+
+**Module credits:** ELE doesn't publish credits. Check them in **Settings → Module credits** (most
+modules are 15; year-long ones are often 30). Orbit uses them for "what do I need for a First?".
 
 ---
 
-## 2. The AI on your Mac (OpenCode + Ollama)
+## 5. The AI on your Mac (OpenCode + Ollama)
 
 Orbit never pays for AI. It uses **OpenCode** (which you already have) as its main brain and
 **Ollama** as an offline backup that also reads your handwriting.
@@ -100,76 +110,7 @@ Orbit never pays for AI. It uses **OpenCode** (which you already have) as its ma
 
 ---
 
-## 3. Microsoft / your Exeter account (Exeter email, calendar, OneNote)
-
-Orbit signs in to your Exeter Microsoft 365 account the same way any mail app does. First it needs
-an "app registration" (free).
-
-1. Go to <https://entra.microsoft.com> and sign in. Use a **personal** Microsoft account
-   (outlook.com / hotmail.com; make one free if you need to). If it says you don't have access to a
-   directory, try signing in with your Exeter account instead; if neither works, create a free Azure
-   account at <https://azure.microsoft.com/free> (no charge), which gives you a directory.
-2. Go to **Applications** → **App registrations** → **New registration**.
-   - Name: `Orbit`.
-   - Supported account types: **Accounts in any organizational directory (Any Microsoft Entra ID
-     tenant – Multitenant) and personal Microsoft accounts**.
-   - Redirect URI: choose the platform **Public client/native (mobile & desktop)** and enter
-     ```
-     msauth.com.charliewytk.orbit://auth
-     ```
-   - Click **Register**.
-3. On the app's Overview page, copy the **Application (client) ID** and add it to
-   `Config/Secrets.xcconfig`:
-   ```
-   MICROSOFT_CLIENT_ID = 11111111-2222-3333-4444-555555555555
-   ```
-4. Click **API permissions** → **Add a permission** → **Microsoft Graph** → **Delegated permissions**,
-   tick these and click **Add permissions**:
-   `offline_access`, `User.Read`, `Mail.Read`, `Mail.ReadWrite`, `Notes.Read`, `Calendars.Read`.
-   Don't click "Grant admin consent"; you can't for Exeter and don't need to try.
-5. Later, in Orbit (step 5), click **Settings → Connect** next to *Exeter (Microsoft 365)* and sign in
-   with your `@exeter.ac.uk` account.
-
-### If Exeter says "Need admin approval"
-
-Some universities block third-party apps. That's fine; Orbit has fallbacks that need no approval:
-
-- **Exeter email → Apple Mail.** Open the Mail app on your Mac → **Mail** → **Add Account…** →
-  **Microsoft Exchange** → sign in with your Exeter account. Then in Orbit: **Settings → Read Exeter
-  email from → Apple Mail on this Mac**, and give Orbit Full Disk Access (step 5.9).
-- **OneNote → exported PDFs.** In OneNote, export or "Save as PDF" each section (or page) into one
-  folder, for example `Documents/Orbit Notes/BEM2031/Week 5.pdf`. Putting the module code and week
-  in folder or file names helps Orbit sort them. Then in Orbit: **Settings → Read notes from →
-  Exported PDF / Markdown folder → Choose folder…**. Re-export whenever you add notes; Orbit picks up
-  new files automatically.
-- **Exeter calendar / timetable → calendar link.** If your timetable offers an iCal/"subscribe" link,
-  paste it into **Settings → Timetable calendar link**.
-
----
-
-## 4. ELE (Exeter's Moodle)
-
-Nothing to set up in advance. In Orbit (step 5), click **Settings → Sign in to ELE**. A sign-in
-window opens exactly like the Moodle mobile app's (Exeter's Microsoft login). Orbit then fetches your
-modules, deadlines, grades, announcements and reading lists every hour.
-
-**If that doesn't work** (the window loops, or Orbit says the Moodle app is switched off), use the
-calendar export instead:
-
-1. In a browser, open ELE → **Calendar** (<https://ele.exeter.ac.uk/calendar/view.php>).
-2. Click **Import or export calendars** → **Export calendar**.
-3. Choose **All events** and **Recent and next 60 days**, then click **Get calendar URL**.
-4. Copy the long link it shows and paste it into Orbit: **Settings → ELE → "Or paste your ELE
-   calendar export link"**, then press Return.
-
-This gives Orbit all your deadlines (but not grades or reading lists).
-
-**Module credits:** ELE doesn't publish credits. Check them in **Settings → Module credits** (most
-modules are 15; year-long ones are often 30). Orbit uses them for "what do I need for a First?".
-
----
-
-## 5. Xcode: build and run
+## 6. Building Orbit yourself (developers only)
 
 1. Install **Xcode 16 or later** from the Mac App Store and open it once to finish installing.
    Go to **Xcode → Settings → Accounts** and add the Apple ID that has your Developer Program membership.
@@ -238,7 +179,7 @@ Quicker for testing: plug your iPhone into the Mac, pick it as the destination a
 
 ---
 
-## 6. Optional extras
+## 7. Optional extras
 
 ### Instant chat from your iPhone (Tailscale)
 
@@ -273,68 +214,47 @@ or *Due this week*.
 
 ## Troubleshooting
 
-**Clicking Connect for Google/Microsoft says "isn't set up yet"**
-`Config/Secrets.xcconfig` is missing, misnamed, or has a typo. Check the file name exactly, then in
-Xcode **Product → Clean Build Folder** (⇧⌘K) and run again.
+**First: get the log.** **Settings → Diagnostics → Copy log** copies Orbit's log (what it tried and
+any errors; never passwords). Paste it to us. **Reveal log in Finder** shows the file
+(`~/Library/Logs/Orbit/orbit.log`).
 
-**Google: "Access blocked: Orbit has not completed the Google verification process"**
-Add your Gmail address as a test user (step 1.4.5).
+**Google: I click Connect and nothing seems to happen**
+Look for a sign-in window behind other windows. Orbit now shows "Waiting for Google…" while that
+window is open and any error under the button. If there's still nothing, copy the log and send it.
 
-**Google: "Error 400: invalid_request" or a redirect/URI error**
-The client must be of type **iOS** with bundle ID exactly `com.charliewytk.orbit`, and
-`GOOGLE_REVERSED_CLIENT_ID` must match the client's iOS URL scheme.
+**Google: "Access blocked" or "This app isn't verified"**
+Click **Advanced → Go to Orbit**. If it says access is blocked, the Google account isn't on Orbit's
+test-user list yet; tell us which address you use.
 
-**Google asks me to sign in every week**
-That's Google's rule for apps in "Testing". To stop it: Google Cloud → **OAuth consent screen /
-Audience** → **Publish app**. You'll then see a "Google hasn't verified this app" warning when signing
-in; click **Advanced → Go to Orbit (unsafe)**. It's your own app, so that's expected.
+**macOS keeps asking "Orbit wants to use your confidential information"**
+Click **Always Allow**. That's Orbit saving your Google sign-in in your Mac's keychain. (If the
+keychain refuses, Orbit keeps the sign-in in a private file instead, so you stay signed in.)
 
-**Microsoft: "AADSTS50011: redirect URI mismatch"**
-In the app registration → **Authentication**, the redirect URI must be exactly
-`msauth.com.charliewytk.orbit://auth` under *Mobile and desktop applications*.
+**No ✓ next to "Exeter mail found"**
+- Full Disk Access must be switched on for Orbit (step 3.3). After switching it on, quit and reopen
+  Orbit if it still says no.
+- Open the Mail app and check your Exeter inbox is there and has downloaded.
 
-**Microsoft: "Need admin approval" / "Approval required"**
-Exeter blocks third-party apps for your account. Use the fallbacks in step 3.
+**No ✓ next to "Exeter calendar found"**
+In **System Settings → Internet Accounts → Exchange**, make sure **Calendars** is ticked, then open the
+Calendar app once. If you said no to calendar access, turn Orbit on in **System Settings → Privacy &
+Security → Calendars**.
 
 **ELE sign-in loops or fails**
-Use the ELE calendar export link (step 4). Reconnect ELE from Settings if it says your sign-in expired.
+Use the ELE calendar export link (step 4).
 
 **"No AI available" / the chat can't answer**
 - **Settings → AI** shows OpenCode and Ollama status. Press **Restart** next to OpenCode.
 - `opencode --version` must work in Terminal. Orbit looks in `~/.opencode/bin`, `/opt/homebrew/bin`,
   `/usr/local/bin` and `~/.local/bin`.
-- **Settings → Diagnostics → OpenCode log** shows what went wrong. If port 4096 is busy, quit any
-  other `opencode serve` you started yourself (Orbit will happily use it if it's on port 4096).
+- **Settings → Diagnostics → OpenCode log** shows what went wrong.
 - Open the Ollama app so its menu bar icon is visible.
-
-**Handwriting isn't being read, or summaries are missing**
-Both need Ollama with `qwen2.5vl:7b` and `qwen3:8b` downloaded. Local-only mode also needs Ollama.
-
-**The iPhone shows nothing**
-- Same Apple ID on both devices, and iCloud turned on (Settings → your name → iCloud).
-- **Settings → Diagnostics → Storage** should say "iCloud sync". If it says "This device only", the
-  iCloud capability or container isn't set up (step 5.5).
-- TestFlight builds use the production iCloud database: deploy the schema (step 5.10).
-- The Mac must have run at least once and be signed in to your accounts.
-
-**Exeter mail via Apple Mail isn't showing up**
-Check Full Disk Access (step 5.9), that the Exeter account is in the Mail app and has downloaded mail,
-and that **Settings → Read Exeter email from** says **Apple Mail on this Mac**.
 
 **Widgets are empty**
 Open Orbit once; widgets show the snapshot the app writes after each sync.
 
-**"Orbit would like to access data from other apps" on the Mac**
-Click **Allow**. That's Orbit reading its own shared App Group folder (used by the widgets).
-
-**Build errors about signing, team, App Groups or iCloud**
-Make sure `DEVELOPMENT_TEAM` is set (step 5.3), your Apple ID is in Xcode's Accounts, and click
-**Try Again** in *Signing & Capabilities*. If a capability is red, remove it and add it back with **+
-Capability**.
-
 **Where does Orbit keep things?**
-- Synced (iCloud, private to you): to-dos, plans, calendar summaries, email *summaries*, note
-  *summaries and key points*, flashcards, chat.
-- Mac only (`~/Library/Application Support/Orbit`): full email text, full handwriting transcriptions,
-  the note search index, your handwriting profile, sync cursors and the OpenCode log.
-- Keychain: your Google, Microsoft and ELE sign-ins.
+- Mac only (`~/Library/Application Support/Orbit`): full email text, note transcriptions, the search
+  index, sync cursors and logs.
+- Keychain: your Google and ELE sign-ins.
+- Log: `~/Library/Logs/Orbit/orbit.log`.

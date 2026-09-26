@@ -10,7 +10,7 @@ Everything is free to run: the AI comes from **OpenCode** (`opencode serve`) on 
 private iCloud.
 
 - **Plan and design:** [docs/PLAN.md](docs/PLAN.md)
-- **Step-by-step setup (Google, Microsoft, ELE, Xcode, TestFlight):** [docs/SETUP.md](docs/SETUP.md)
+- **Step-by-step setup (Google, Exeter, ELE, AI):** [docs/SETUP.md](docs/SETUP.md)
 
 ## What it does
 
