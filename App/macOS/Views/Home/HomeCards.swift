@@ -596,7 +596,8 @@ struct UniWeekCard: View {
         let doneIDs = Set(doneTasks.map(\.id))
         var codes = brain.academic.modules.map { ($0.code, $0.name) }
         if codes.isEmpty { codes = modules.sorted { $0.id < $1.id }.map { ($0.id, $0.name) } }
-        return codes.prefix(6).compactMap { code, name in
+        return codes.prefix(6).compactMap { entry -> Row? in
+            let (code, name) = entry
             let hw = brain.academic.homework.filter { $0.moduleCode == code && (week == nil || $0.week == week) }
             let hwDone = hw.filter { doneIDs.contains($0.taskID.uuidString) }.count
             let rd = readings.filter { $0.moduleCode == code && (week == nil || $0.week == week) }

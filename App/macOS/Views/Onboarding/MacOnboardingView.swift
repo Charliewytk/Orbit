@@ -716,7 +716,8 @@ struct OnboardingCareersStep: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Star the firms you care about").font(Theme.caption.weight(.semibold)).foregroundStyle(Theme.textSecondary)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 8)], spacing: 8) {
-                    ForEach(FirmDomains.popular, id: \.name) { firm in
+                    ForEach(FirmDomains.popular.indices, id: \.self) { i in
+                        let firm = FirmDomains.popular[i]
                         let on = prefs.starredCompanies.contains(firm.name.lowercased())
                         Button {
                             withAnimation(Motion.bouncy) { careers.toggleCompanyStar(firm.name) }

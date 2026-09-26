@@ -246,12 +246,19 @@ struct AmbientBackdrop: View {
     /// Corners and edges stay put; the middle points drift in slow loops.
     static func points(_ t: TimeInterval) -> [SIMD2<Float>] {
         func wobble(_ speed: Double, _ offset: Double, _ amount: Double) -> Float {
-            Float(sin(t * speed + offset) * amount)
+            Float(0.5 + sin(t * speed + offset) * amount)
         }
+        func p(_ x: Float, _ y: Float) -> SIMD2<Float> { SIMD2<Float>(x, y) }
+        let top = wobble(0.11, 0, 0.12)
+        let left = wobble(0.09, 1, 0.12)
+        let midX = wobble(0.13, 2, 0.16)
+        let midY = wobble(0.1, 3, 0.16)
+        let right = wobble(0.08, 4, 0.12)
+        let bottom = wobble(0.12, 5, 0.12)
         return [
-            [0, 0], [0.5 + wobble(0.11, 0, 0.12), 0], [1, 0],
-            [0, 0.5 + wobble(0.09, 1, 0.12)], [0.5 + wobble(0.13, 2, 0.16), 0.5 + wobble(0.1, 3, 0.16)], [1, 0.5 + wobble(0.08, 4, 0.12)],
-            [0, 1], [0.5 + wobble(0.12, 5, 0.12), 1], [1, 1],
+            p(0, 0), p(top, 0), p(1, 0),
+            p(0, left), p(midX, midY), p(1, right),
+            p(0, 1), p(bottom, 1), p(1, 1),
         ]
     }
 }

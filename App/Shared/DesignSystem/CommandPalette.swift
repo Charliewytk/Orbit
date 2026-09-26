@@ -112,11 +112,10 @@ struct CommandPalette: View {
                 }
             }
         }
-        .frame(width: 600)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.Radius.l, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.l, style: .continuous)
-            .strokeBorder(Theme.border, lineWidth: Theme.hairline))
-        .shadow(color: .black.opacity(0.14), radius: 24, y: 12)
+        .frame(width: 620)
+        .background(Theme.surface.opacity(0.5), in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+        .orbitGlass(in: RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+        .shadow(color: Theme.glassShadow, radius: 30, y: 14)
         .onAppear { focused = true }
         .onChange(of: query) { _, _ in selection = 0 }
     }
