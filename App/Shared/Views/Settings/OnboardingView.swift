@@ -99,20 +99,22 @@ struct OnboardingView: View {
         #if os(macOS)
         case .google:
             hero(symbol: "envelope.badge", title: "Connect Google",
-                 text: "Gmail for your personal mail and Google Calendar for your events. Orbit only ever writes to its own “Orbit” calendar, and saves replies as drafts; it never sends email.")
+                 text: "Click Connect and sign in with your Google account in the window that opens. Orbit then brings in your Gmail and Google Calendar. It only ever writes to its own “Orbit” calendar and saves replies as drafts; it never sends email.")
             GoogleConnectRow()
+            Text("No Google account? Skip this: Orbit can use the calendars on your Mac instead (next step).")
+                .font(Theme.caption).foregroundStyle(Theme.textTertiary)
         case .microsoft:
-            hero(symbol: "building.columns", title: "Connect your Exeter account",
-                 text: "Your Exeter Microsoft sign-in gives Orbit your uni email, calendar and OneNote. If Exeter asks for admin approval, skip this: Orbit can read Exeter mail from Apple Mail and notes from exported PDFs instead.")
-            MicrosoftConnectRow()
-            ExeterMailSourcePicker()
+            hero(symbol: "building.columns", title: "Your Exeter email and timetable",
+                 text: "Three quick steps. You don't need to register anything: your Mac signs in to Exeter for you, and Orbit reads from there.")
+            ExeterSetupPanel()
+            ExeterAdvancedOptions()
         case .ele:
             hero(symbol: "graduationcap", title: "Connect ELE",
                  text: "Orbit signs in to ELE the same way the Moodle app does, to fetch your modules, deadlines, grades and reading lists.")
             ELEConnectRow()
         case .notes:
             hero(symbol: "pencil.and.scribble", title: "Your OneNote notes",
-                 text: "Orbit reads your typed notes and your handwriting, and learns your writing from the parts you type up.")
+                 text: "Export your OneNote notes as PDFs into one folder, then pick that folder here. Orbit reads your typed notes and your handwriting.")
             NotesSourcePicker()
         case .ai:
             hero(symbol: "sparkles", title: "Check the AI",
