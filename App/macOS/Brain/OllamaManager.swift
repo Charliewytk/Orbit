@@ -24,16 +24,24 @@ final class OllamaManager {
     private(set) var installed: [String] = []
     private(set) var pulling: Set<String> = []
     var lastError: String?
+    /// Last time Ollama answered (for the health check).
+    private(set) var lastSeen: Date?
+    private(set) var lastChecked: Date?
 
     func refresh() async {
+        lastChecked = Date()
         do {
             installed = try await OllamaProvider(baseURL: baseURL).installedModels().sorted()
             available = true
+            lastSeen = Date()
         } catch {
             installed = []
             available = false
         }
     }
+
+    /// Recommended models that aren't downloaded yet.
+    var missingRecommended: [String] { Self.recommended.map(\.model).filter { !isInstalled($0) } }
 
     func isInstalled(_ model: String) -> Bool {
         installed.contains { $0 == model || $0 == model + ":latest" || $0.hasPrefix(model + ":") && !model.contains(":") }

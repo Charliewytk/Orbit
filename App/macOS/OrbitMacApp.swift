@@ -22,6 +22,7 @@ struct OrbitMacApp: App {
     var body: some Scene {
         Window("Orbit", id: "main") {
             RootView()
+                .modifier(ShutdownPresenter())
                 .environment(app)
                 .environment(brain)
                 .frame(minWidth: 900, minHeight: 600)
@@ -91,6 +92,22 @@ final class MacAppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationC
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated {
             MacAppDelegate.brain?.stop()
+        }
+    }
+
+    /// Notification actions: Start focus / Snooze 30m / Not now on nudges, and the shutdown ritual.
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping () -> Void) {
+        let action = response.actionIdentifier
+        let nudgeID = response.notification.request.content.userInfo[NudgeService.nudgeIDKey] as? String
+        let category = response.notification.request.content.categoryIdentifier
+        completionHandler()
+        Task { @MainActor in
+            if nudgeID != nil || category == NudgeService.shutdownCategory {
+                FeatureHub.shared.nudges.handle(action: action, nudgeID: nudgeID)
+            } else if action == UNNotificationDefaultActionIdentifier {
+                NSApp.activate(ignoringOtherApps: true)
+            }
         }
     }
 

@@ -4,8 +4,10 @@ import OrbitCore
 
 /// The Mac's native Settings window (⌘,): tabs of grouped forms.
 struct MacSettingsView: View {
-    private enum Tab: Hashable { case general, accounts, ai, uni, extras, money, advanced }
-    @State private var tab: Tab = .general
+    enum Tab: String, Hashable { case general, accounts, ai, uni, routine, extras, money, health, backups, advanced }
+    /// UserDefaults key for the selected tab (other screens set it to open Settings on a tab).
+    static let tabKey = "settings.tab"
+    @AppStorage(MacSettingsView.tabKey) private var tab: Tab = .general
 
     var body: some View {
         TabView(selection: $tab) {
@@ -21,17 +23,26 @@ struct MacSettingsView: View {
             UniSettingsTab()
                 .tabItem { Label("Uni", systemImage: "graduationcap") }
                 .tag(Tab.uni)
+            RoutineSettingsTab()
+                .tabItem { Label("Routine", systemImage: "fork.knife") }
+                .tag(Tab.routine)
             FeatureSettingsView()
                 .tabItem { Label("Extras", systemImage: "puzzlepiece.extension") }
                 .tag(Tab.extras)
             MoneySettingsView()
                 .tabItem { Label("Money", systemImage: "sterlingsign.circle") }
                 .tag(Tab.money)
+            HealthSettingsTab()
+                .tabItem { Label("Health", systemImage: "stethoscope") }
+                .tag(Tab.health)
+            BackupSettingsTab()
+                .tabItem { Label("Backups", systemImage: "externaldrive.badge.timemachine") }
+                .tag(Tab.backups)
             AdvancedSettingsTab()
                 .tabItem { Label("Advanced", systemImage: "wrench.and.screwdriver") }
                 .tag(Tab.advanced)
         }
-        .frame(width: 600, height: 640)
+        .frame(width: 720, height: 680)
         .tint(Theme.accent)
     }
 }

@@ -6,7 +6,7 @@ import OrbitCore
 enum Destination: String, CaseIterable, Identifiable, Hashable {
     case home, today, calendar, inbox, tasks, uni, notes, plans, chat, settings
     // Mac-only feature screens (App/macOS/Features).
-    case review, progress, focus, money, careers
+    case review, progress, focus, money, careers, study
 
     var id: String { rawValue }
 
@@ -27,6 +27,7 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .focus: "Focus"
         case .money: "Money"
         case .careers: "Careers"
+        case .study: "Study Lab"
         }
     }
 
@@ -47,6 +48,7 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .focus: "timer"
         case .money: "sterlingsign"
         case .careers: "briefcase.fill"
+        case .study: "point.3.connected.trianglepath.dotted"
         }
     }
 
@@ -68,11 +70,12 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .focus: Color(hex: 0x5E5CE6)
         case .money: Color(hex: 0x22C55E)
         case .careers: Color(hex: 0xB7791F)
+        case .study: Color(hex: 0x6366F1)
         }
     }
 
     /// The Mac sidebar order; ⌘1…⌘8 follow it.
-    static let macSidebar: [Destination] = [.home, .calendar, .inbox, .tasks, .uni, .notes, .plans, .chat]
+    static let macSidebar: [Destination] = [.home, .calendar, .inbox, .tasks, .uni, .study, .notes, .plans, .chat]
 
     /// The screen's content. Callers wrap it in a `NavigationStack`
     /// (or push it onto an existing one), so screens never nest stacks.
@@ -99,8 +102,9 @@ enum Destination: String, CaseIterable, Identifiable, Hashable {
         case .focus: FocusView()
         case .money: MoneyView()
         case .careers: CareersView()
+        case .study: StudyLabView()
         #else
-        case .review, .progress, .focus, .money, .careers: EmptyState(systemImage: "desktopcomputer", title: "On your Mac", message: "Open Orbit on your Mac for this.")
+        case .review, .progress, .focus, .money, .careers, .study: EmptyState(systemImage: "desktopcomputer", title: "On your Mac", message: "Open Orbit on your Mac for this.")
         #endif
         }
     }

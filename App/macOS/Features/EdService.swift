@@ -178,7 +178,10 @@ final class EdService {
         brain.academicLoadIfNeeded()
         _ = brain.academic.knowledge.recordActivity(items.map(EdSync.activityItem))
         for item in items {
-            if let doc = EdSync.document(item) { _ = brain.academic.knowledge.upsert(doc) }
+            // Staff posts and useful student Q&A, tagged with the ELE week they're about.
+            if let doc = EdLinker.document(item, kb: brain.academic.knowledge) ?? EdSync.document(item) {
+                _ = brain.academic.knowledge.upsert(doc)
+            }
         }
         addDeadlineTasks(items, brain: brain, now: now)
         brain.saveAcademic()

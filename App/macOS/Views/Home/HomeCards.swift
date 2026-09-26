@@ -101,7 +101,8 @@ struct TimelineRow: View {
         let origin = ctx.origin(of: item)
         let isNow = isToday && item.contains(ctx.now) && item.kind == .block
         let past = isToday && item.end < ctx.now
-        let color = origin?.color ?? Theme.moduleColor(item.moduleCode)
+        let color = item.kind == .routine ? Theme.routine : (origin?.color ?? Theme.moduleColor(item.moduleCode))
+        let routineID = item.kind == .routine ? String(item.id.dropFirst(2)) : nil
         HStack(spacing: Theme.Space.s) {
             Text(ctx.calendar.time(item.start))
                 .font(Theme.caption.monospacedDigit().weight(.medium))
@@ -126,7 +127,15 @@ struct TimelineRow: View {
             }
             Spacer(minLength: 0)
             if isNow { DoNowBadge() }
+            if let routineID, !routineID.hasPrefix("shutdown") {
+                // "Ate it" / "Read it": quiets the "Dinner closes" nudge.
+                let routine = FeatureHub.shared.routine
+                CircleCheckbox(isOn: routine.state.routineDone.contains(routineID), color: Theme.routine, size: 15) {
+                    if let block = routine.blocks(on: item.start).first(where: { $0.id == routineID }) { routine.toggleDone(block) }
+                }
+            }
         }
+        .opacity(item.kind == .routine ? 0.85 : 1)
         .padding(.vertical, 3)
         .padding(.horizontal, 6)
         .background {

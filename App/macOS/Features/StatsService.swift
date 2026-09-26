@@ -53,7 +53,7 @@ final class StatsService {
         let done = tasks.compactMap(\.completedAt)
         let tz = hub?.prefs.timeZone ?? TimeZone(identifier: "Europe/London")!
         let days = DailyStatsBuilder.build(focus: focus, completedBlocks: ticked, completedTasks: done,
-                                           reviews: ledger.reviews, timeZone: tz)
+                                           reviews: ledger.reviews, timeZone: tz, shutdownDays: hub?.routine.shutdownDays ?? [])
         return Momentum(days: days, goals: ledger.goals, timeZone: tz)
     }
 }

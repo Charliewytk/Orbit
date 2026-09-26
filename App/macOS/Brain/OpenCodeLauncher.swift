@@ -51,8 +51,8 @@ final class OpenCodeLauncher {
     var baseURL: URL { URL(string: "http://127.0.0.1:\(port)")! }
 
     /// The provider Orbit uses on this Mac.
-    func provider(model: OpenCodeProvider.ModelRef?) -> OpenCodeProvider {
-        OpenCodeProvider(baseURL: baseURL, model: model, password: password)
+    func provider(model: OpenCodeProvider.ModelRef?, variant: String? = nil) -> OpenCodeProvider {
+        OpenCodeProvider(baseURL: baseURL, model: model, password: password, variant: variant)
     }
 
     /// Share with the iPhone (listen on all interfaces with a password) or not.

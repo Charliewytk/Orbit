@@ -20,6 +20,8 @@ final class CareersService {
     private(set) var lastSync: Date?
     private(set) var syncing = false
     private(set) var status = ""
+    /// The last sync problem (nil after a clean sync), for the health check.
+    private(set) var lastError: String?
 
     @ObservationIgnored private var state = CareersStore()
     private let fileName = "careers.json"
@@ -96,6 +98,7 @@ final class CareersService {
         }
         guard !fetched.isEmpty else {
             status = "Couldn't reach Trackr. Orbit will try again later."
+            lastError = status
             lastSync = now
             save()
             return
@@ -109,6 +112,7 @@ final class CareersService {
         state.lastReminderCheck = now
         handle(found, now: now)
         status = failures.isEmpty ? "" : "Couldn't read \(failures.joined(separator: ", ")) this time."
+        lastError = failures.isEmpty ? nil : status
         OrbitLog.log("careers", "\(new.count) programmes, \(found.count) new event(s)")
         save()
     }

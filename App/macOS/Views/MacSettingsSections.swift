@@ -420,10 +420,12 @@ struct IMessageToggle: View {
 struct AIStatusPanel: View {
     @Environment(OrbitBrain.self) private var brain
     @AppStorage(MacPrefs.openCodeModel) private var openCodeModel = ""
+    @AppStorage(MacPrefs.openCodeVariant) private var openCodeVariant = OpenCodeModelResolver.preferredVariant
     struct ModelOption: Identifiable, Hashable {
         var id: String
         var name: String
         var free: Bool
+        var variants: [String] = []
     }
 
     @State private var models: [ModelOption] = []
@@ -447,12 +449,18 @@ struct AIStatusPanel: View {
             }
             if !models.isEmpty || loadingModels {
                 Picker("OpenCode model", selection: $openCodeModel) {
-                    Text("OpenCode's default").tag("")
+                    Text("Automatic (\(OpenCodeModelResolver.preferredName))").tag("")
                     ForEach(models) { m in
                         Text("\(m.name)\(m.free ? " · free" : "")").tag(m.id)
                     }
                 }
-                .onChange(of: openCodeModel) { _, _ in brain.rebuildRouter() }
+                .onChange(of: openCodeModel) { _, _ in applyModelChoice() }
+                Picker("Reasoning effort", selection: $openCodeVariant) {
+                    ForEach(variantChoices, id: \.self) { v in
+                        Text(v == "none" ? "Model default" : v).tag(v)
+                    }
+                }
+                .onChange(of: openCodeVariant) { _, _ in applyModelChoice() }
             }
 
             Divider()
@@ -491,13 +499,29 @@ struct AIStatusPanel: View {
         .task { await loadModels() }
     }
 
+    /// Variants the selected model offers (or the usual ones when OpenCode doesn't list them).
+    private var variantChoices: [String] {
+        let id = openCodeModel.isEmpty ? (MacPrefs.string(MacPrefs.openCodeResolvedModel) ?? "") : openCodeModel
+        let listed = models.first { $0.id == id }?.variants ?? []
+        var out = listed.isEmpty ? ["low", "medium", "high", "xhigh"] : listed
+        if !out.contains(openCodeVariant) && openCodeVariant != "none" { out.append(openCodeVariant) }
+        return out + ["none"]
+    }
+
+    private func applyModelChoice() {
+        Task {
+            await brain.resolveOpenCodeModel()
+            brain.rebuildRouter()
+        }
+    }
+
     private func loadModels() async {
         loadingModels = true
         defer { loadingModels = false }
         await brain.checkAI()
         guard brain.openCodeUp else { return }
-        let list = (try? await brain.launcher.provider(model: nil).availableModels()) ?? []
-        models = list.map { ModelOption(id: $0.ref.string, name: "\($0.ref.providerID)/\($0.name)", free: $0.free) }
+        let list = (try? await brain.launcher.provider(model: nil).modelOptions()) ?? []
+        models = list.map { ModelOption(id: $0.ref.string, name: "\($0.ref.providerID)/\($0.name)", free: $0.free, variants: $0.variants) }
     }
 }
 

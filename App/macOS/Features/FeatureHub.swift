@@ -27,6 +27,11 @@ final class FeatureHub {
     let careers = CareersService()
     let ed = EdService()
     let stats = StatsService()
+    let routine = RoutineService()
+    let nudges = NudgeService()
+    let backups = BackupService()
+    let health = HealthService()
+    let exam = ExamService()
 
     // UI status
     var flashcardStatus = ""
@@ -39,6 +44,7 @@ final class FeatureHub {
     @ObservationIgnored private var started = false
     @ObservationIgnored private var loop: Task<Void, Never>?
     @ObservationIgnored private var terminateObserver: NSObjectProtocol?
+    @ObservationIgnored private var commandObserver: NSObjectProtocol?
 
     private init() {
         state = files.load(FeatureState.self, "feature-state.json") ?? FeatureState()
@@ -62,12 +68,23 @@ final class FeatureHub {
         careers.hub = self
         ed.hub = self
         stats.hub = self
+        routine.hub = self
+        nudges.hub = self
+        backups.hub = self
+        health.hub = self
+        exam.hub = self
+        routine.load()
+        NudgeService.registerCategories()
         stats.load()
         careers.load()
         ed.load()
         focus.restore(state.activeFocus)
         capture.registerFromSettings()
         money.load()
+        commandObserver = NotificationCenter.default.addObserver(forName: .orbitRoutineCommand, object: nil, queue: .main) { note in
+            let command = note.object as? String ?? ""
+            MainActor.assumeIsolated { FeatureHub.shared.runCommand(command) }
+        }
         terminateObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { FeatureHub.shared.willTerminate() }
@@ -84,6 +101,30 @@ final class FeatureHub {
             try? await Task.sleep(for: .seconds(30))
             await self.updates.check(reason: "launch")
         }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(20))
+            await self.health.refresh()
+        }
+    }
+
+    /// ⌘K palette commands for the Mac-only features (posted as `.orbitRoutineCommand`).
+    func runCommand(_ command: String) {
+        switch command {
+        case "exam.toggle": routine.toggleExamMode(assessments: exam.assessments())
+        case "shutdown.open": routine.openShutdown()
+        case "backup.now": Task { await backups.backUp() }
+        case "health.open": HealthService.openSettings(tab: "health")
+        case "nudges.check": Task { await nudges.evaluate() }
+        default: break
+        }
+    }
+
+    /// After a restore replaced the feature files on disk.
+    func reloadAfterRestore() {
+        state = files.load(FeatureState.self, "feature-state.json") ?? state
+        stats.load()
+        careers.load()
+        routine.load()
     }
 
     func willTerminate() {
@@ -93,6 +134,7 @@ final class FeatureHub {
         careers.save()
         ed.save()
         stats.save()
+        routine.save()
     }
 
     /// Every minute. Each job decides for itself whether it's due.
@@ -100,6 +142,11 @@ final class FeatureHub {
         guard brain != nil else { return }
         await runDeadlineAlerts(now: now)
         focus.tick(now: now)
+        await routine.tick(now: now)
+        exam.tick(now: now)
+        await nudges.tick(now: now)
+        await backups.tick(now: now)
+        if now.timeIntervalSince(health.checkedAt ?? .distantPast) > 15 * 60 { health.rebuild() }
         learnFromCompletedTasks()
         await ensureDailyFlashcardReview(now: now)
         await planReadingIfNeeded(now: now)

@@ -79,6 +79,7 @@ final class OrbitBrain: OrbitBackend {
         configureAISharing()
         rebuildRouter()
         FeatureHub.shared.start(brain: self)
+        StudyHub.shared.start(brain: self)
         Task { await accounts.refreshStatus() }
 
         every(120, after: 0) { await $0.checkAI() }
@@ -162,6 +163,7 @@ final class OrbitBrain: OrbitBackend {
         configureAISharing()
         await launcher.ensureRunning()
         openCodeUp = await launcher.isAnswering()
+        if openCodeUp { await resolveOpenCodeModel() }
         await ollama.refresh()
         rebuildRouter()
         var parts: [String] = []
@@ -174,8 +176,9 @@ final class OrbitBrain: OrbitBackend {
 
     /// Rebuilds the provider list from the current settings.
     func rebuildRouter() {
-        let model = MacPrefs.string(MacPrefs.openCodeModel).flatMap(OpenCodeProvider.ModelRef.init)
-        let openCode = launcher.provider(model: model)
+        let model = (MacPrefs.string(MacPrefs.openCodeModel) ?? MacPrefs.string(MacPrefs.openCodeResolvedModel))
+            .flatMap(OpenCodeProvider.ModelRef.init)
+        let openCode = launcher.provider(model: model, variant: openCodeVariant())
         let ollamaProvider = OllamaProvider(baseURL: ollama.baseURL,
                                             model: MacPrefs.string(MacPrefs.ollamaModel) ?? "qwen3:8b",
                                             visionModel: MacPrefs.string(MacPrefs.ollamaVisionModel) ?? "qwen2.5vl:7b")
@@ -184,6 +187,7 @@ final class OrbitBrain: OrbitBackend {
         Task {
             await router.setProviders([openCode, ollamaProvider])
             await router.setLocalOnly(localOnly)
+            await router.setContextProvider { request in await StudyHub.shared.knowledgeContext(for: request) }
         }
         assistant = nil // picks up new settings next time
     }

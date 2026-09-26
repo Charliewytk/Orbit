@@ -105,6 +105,13 @@ final class RoutinePlacementTests: XCTestCase {
         }
     }
 
+    func testMorningBriefRoutineLines() {
+        let lines = MorningBrief.routineLines(prefs: prefs, events: [], day: d(5, 7))
+        XCTAssertTrue(lines.contains { $0.hasPrefix("Hall meals: Breakfast 07:55") && $0.contains("serving until 09:30") })
+        XCTAssertTrue(lines.contains { $0.hasPrefix("Sleep window tonight: 22:30–07:35") })
+        XCTAssertTrue(lines.contains { $0.contains("shutdown 21:58") })
+    }
+
     func testRoutineSettingsDecodeLeniently() throws {
         let json = #"{"enabled":true,"readingStart":1300}"#
         let r = try JSONDecoder().decode(RoutineSettings.self, from: Data(json.utf8))

@@ -250,6 +250,7 @@ extension OrbitBrain {
         let dueForFull = academic.state.lastResourceRun.map { Date().timeIntervalSince($0) > 2 * 3600 } ?? true
         await fetchCourseResources(snap, recheckKnown: dueForFull)
         detectHomework(snap)
+        await StudyHub.shared.afterELESync(snap, previous: previous)
         saveAcademic()
         academic.publish()
         OrbitLog.log(Self.academicLog, "ELE pipeline done in \(Int(Date().timeIntervalSince(started)))s")
@@ -260,7 +261,8 @@ extension OrbitBrain {
     func fetchCourseResources(_ snap: ELEWebSnapshot, recheckKnown: Bool, maxDownloads: Int = 80) async {
         guard accounts.eleWebSignedIn else { return }
         let web = accounts.eleWeb
-        let targets = academic.knowledge.resourceTargets(from: snap)
+        // Everything on the course pages: files, pages, folders, books, assignments, quizzes, forums.
+        let targets = ELECoverage.targets(kb: academic.knowledge, snap: snap)
         var downloaded = 0, unchanged = 0, skipped = 0, failed = 0
         let now = Date()
         for target in targets {
@@ -271,8 +273,8 @@ extension OrbitBrain {
             academic.status = "Reading \(target.moduleCode): \(target.name)"
             do {
                 switch target.itemKind {
-                case .page:
-                    guard let url = URL(string: target.url) else { continue }
+                case .page, .book, .assign, .quiz, .forum, .turnitin, .other:
+                    guard let url = ELECoverage.fetchURL(for: target, site: Self.eleSite) else { continue }
                     let html = try await web.fetchText(url)
                     let text = Self.mainContent(html)
                     index(target, text: text, head: nil)

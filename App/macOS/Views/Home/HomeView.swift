@@ -16,6 +16,8 @@ struct HomeView: View {
     @Query(sort: \StoredBrief.createdAt, order: .reverse) private var briefs: [StoredBrief]
     @State private var width: CGFloat = 1000
     @State private var showLighten = false
+    @State private var showEverything = false
+    private var hub: FeatureHub { .shared }
 
     var body: some View {
         TimelineView(.everyMinute) { context in
@@ -53,6 +55,10 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: Theme.Space.l) {
                 HomeHeader(now: now, brief: briefLine(now: now, ctx: ctx), momentum: ctx.momentum)
                     .staggeredAppear(0)
+                if let nudge = hub.nudges.banner {
+                    NudgeBanner(nudge: nudge)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
                 HomeQuickAddBar()
                     .staggeredAppear(1)
                 OriginLegend()
@@ -61,13 +67,24 @@ struct HomeView: View {
                 Color.clear
                     .frame(maxWidth: .infinity, maxHeight: 0)
                     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
-                BentoGrid(width: width, tiles: tiles, ctx: ctx)
+                if hub.exam.isActive(now: now) {
+                    ExamDashboard(width: width, now: now)
+                    DisclosureGroup(isExpanded: $showEverything) {
+                        BentoGrid(width: width, tiles: tiles, ctx: ctx)
+                            .padding(.top, Theme.Space.m)
+                    } label: {
+                        Text("Everything else").font(Theme.headline).foregroundStyle(Theme.textSecondary)
+                    }
+                } else {
+                    BentoGrid(width: width, tiles: tiles, ctx: ctx)
+                }
             }
             .padding(.horizontal, Theme.Space.xl)
             .padding(.top, Theme.Space.m)
             .padding(.bottom, Theme.Space.xxxl)
             .frame(maxWidth: 1480)
             .frame(maxWidth: .infinity)
+            .animation(Motion.smooth, value: hub.nudges.banner?.id)
         }
         .scrollIndicators(.automatic)
     }
@@ -131,8 +148,15 @@ struct HomeContext {
          assessments: [StoredAssessment]) {
         self.now = now
         self.calendar = calendar
-        today = Agenda.items(events: events, blocks: blocks, on: now, calendar: calendar)
-        tomorrow = Agenda.items(events: events, blocks: blocks, on: calendar.addingDays(1, to: now), calendar: calendar)
+        // The routine (hall meals, reading, shutdown) sits alongside, in its neutral colour.
+        let prefs = FeatureHub.shared.prefs
+        let tomorrowDay = calendar.addingDays(1, to: now)
+        today = (Agenda.items(events: events, blocks: blocks, on: now, calendar: calendar)
+            + Agenda.routineItems(prefs: prefs, events: events, on: now, calendar: calendar))
+            .sorted { ($0.isAllDay ? 0 : 1, $0.start, $0.title) < ($1.isAllDay ? 0 : 1, $1.start, $1.title) }
+        tomorrow = (Agenda.items(events: events, blocks: blocks, on: tomorrowDay, calendar: calendar)
+            + Agenda.routineItems(prefs: prefs, events: events, on: tomorrowDay, calendar: calendar))
+            .sorted { ($0.isAllDay ? 0 : 1, $0.start, $0.title) < ($1.isAllDay ? 0 : 1, $1.start, $1.title) }
         next = Agenda.nextUp(events: events, blocks: blocks, now: now, calendar: calendar)
         due = Agenda.dueSoon(tasks: tasks, assessments: assessments, now: now, days: 14)
         var byID: [String: StoredTask] = [:]
@@ -284,7 +308,10 @@ struct HomeHeader: View {
                     .frame(maxWidth: 720, alignment: .leading)
             }
             Spacer(minLength: 0)
-            StreakBadge(streak: streak, todayCounts: momentum.todayCounts(now: now))
+            VStack(alignment: .trailing, spacing: Theme.Space.s) {
+                StreakBadge(streak: streak, todayCounts: momentum.todayCounts(now: now))
+                HealthPill()
+            }
         }
         .padding(.top, Theme.Space.l)
     }

@@ -192,6 +192,17 @@ struct CommandPalette: View {
         #if os(macOS)
         out.append(PaletteCommand(id: "settings", title: "Settings…", symbol: "gearshape", section: "Actions",
                                   shortcut: "⌘,", keywords: "preferences accounts") { openSettings() })
+        let routineCommands: [(String, String, String, String)] = [
+            ("exam.toggle", "Toggle exam mode", "graduationcap.circle", "exams revision dashboard countdown"),
+            ("shutdown.open", "Start shutdown ritual", "moon.stars", "end of day review rollover journal"),
+            ("backup.now", "Back up now", "externaldrive.badge.timemachine", "backup drive zip"),
+            ("health.open", "Health check", "stethoscope", "status connections sync broken fix"),
+        ]
+        for (id, title, symbol, words) in routineCommands {
+            out.append(PaletteCommand(id: id, title: title, symbol: symbol, section: "Actions", keywords: words) {
+                NotificationCenter.default.post(name: .orbitRoutineCommand, object: id)
+            })
+        }
         #endif
         if !q.isEmpty {
             out.append(PaletteCommand(id: "dyn-add", title: "Add task “\(q)”", symbol: "plus.circle", section: "Actions") {
@@ -272,6 +283,8 @@ struct CommandPalette: View {
 extension Notification.Name {
     /// Opens the in-window quick add (⌘N).
     static let orbitQuickAdd = Notification.Name("orbitQuickAdd")
+    /// Mac-only feature commands (exam mode, shutdown, backup, health); `object` is the command string.
+    static let orbitRoutineCommand = Notification.Name("orbitRoutineCommand")
     /// Toggles the command palette (⌘K).
     static let orbitCommandPalette = Notification.Name("orbitCommandPalette")
 }

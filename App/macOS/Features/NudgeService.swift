@@ -19,9 +19,9 @@ final class NudgeService {
     /// Nudges posted recently, so an action can find what it was about.
     @ObservationIgnored private var recent: [String: Nudge] = [:]
 
-    static let category = "orbit.nudge"
-    static let shutdownCategory = "orbit.shutdown"
-    static let nudgeIDKey = "nudgeID"
+    nonisolated static let category = "orbit.nudge"
+    nonisolated static let shutdownCategory = "orbit.shutdown"
+    nonisolated static let nudgeIDKey = "nudgeID"
 
     private var routine: RoutineService? { hub?.routine }
     var settings: NudgeSettings {
@@ -46,7 +46,13 @@ final class NudgeService {
     // MARK: Evaluate
 
     func tick(now: Date) async {
-        guard now.timeIntervalSince(lastRun ?? .distantPast) >= 5 * 60 - 5 else { return }
+        // Every 5 minutes, plus exactly on time for the shutdown (21:58) and reading.
+        var onTheDot = false
+        if let r = routine?.settings, let cal = routine?.cal {
+            let m = cal.minuteOfDay(now)
+            onTheDot = (r.shutdownEnabled && m == r.shutdownTime) || (r.readingEnabled && m == r.readingStart - 1)
+        }
+        guard onTheDot || now.timeIntervalSince(lastRun ?? .distantPast) >= 5 * 60 - 5 else { return }
         await evaluate(now: now)
     }
 

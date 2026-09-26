@@ -55,11 +55,12 @@ extension OrbitBrain {
         let prefs = self.prefs
         let digests = context.all(StoredEmailDigest.self)
             .filter { !$0.handled && $0.date > now.addingTimeInterval(-2 * 86400) }.map(\.value)
-        let brief = MorningBriefBuilder(prefs: prefs).build(
+        var brief = MorningBriefBuilder(prefs: prefs).build(
             now: now, events: context.all(StoredEvent.self).map(\.value),
             blocks: context.all(StoredBlock.self).filter { !$0.skipped }.map(\.value),
             tasks: context.all(StoredTask.self).map(\.value), assessments: context.all(StoredAssessment.self).map(\.value),
             emails: digests, flashcards: context.all(StoredFlashcard.self).map(\.value))
+        brief.routine = MorningBrief.routineLines(prefs: prefs, events: context.all(StoredEvent.self).map(\.value), day: now)
         let narrated = await brief.narrated(using: router)
         let plain = brief.plainSummary()
         upsertBrief(.morning, day: now, narrative: narrated.narrative, plain: plain, payload: StoreCoding.encode(narrated))
