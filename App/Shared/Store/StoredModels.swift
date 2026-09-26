@@ -37,6 +37,8 @@ final class StoredTask {
     var maxBlockMinutes: Int = 120
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
+    /// "Move to later" history (JSON `[DeferralRecord]`), for pushback after repeated moves.
+    var deferralHistoryData: Data?
 
     init(id: String = UUID().uuidString, title: String = "") {
         self.id = id
@@ -235,6 +237,12 @@ final class StoredPlan {
     /// Set once the event is on the calendar.
     var calendarEventID: String?
     var createdAt: Date = Date()
+    /// A "tickets on sale" alert rather than a plan: shown as an info card, never auto-added.
+    var isTicketDrop: Bool = false
+    /// Where to buy (ticket drops).
+    var buyURL: String?
+    /// "Add if I buy": the user wants it on the calendar once a ticket email arrives.
+    var addIfBought: Bool = false
 
     init(id: String = UUID().uuidString) { self.id = id }
 }
