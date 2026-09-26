@@ -10,61 +10,11 @@ struct FlashcardsView: View {
 
     var body: some View {
         let cards = hub.allCards
-        let plan = hub.dailyReviewPlan()
         let modules = Array(Set(cards.compactMap(\.moduleCode))).sorted()
-        let shown = cards.filter { c in
-            (module == nil || c.moduleCode == module)
-                && (search.isEmpty || c.front.localizedCaseInsensitiveContains(search) || c.back.localizedCaseInsensitiveContains(search))
-        }.sorted { $0.due < $1.due }
-
         List {
-            Section {
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(plan.dueCount == 0 ? "Nothing due today" : "\(plan.dueCount) due today")
-                            .font(.system(size: 17, weight: .semibold))
-                        Text(plan.briefLine ?? "New cards appear as your notes and slides sync.")
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Start review") { reviewing = true }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(plan.dueCount == 0)
-                        .keyboardShortcut("r", modifiers: [.command, .shift])
-                }
-                .padding(.vertical, 4)
-                if !plan.byModule.isEmpty {
-                    Text(plan.byModule.sorted { $0.key < $1.key }.map { "\($0.key): \($0.value)" }.joined(separator: "   "))
-                        .font(.system(size: 11)).foregroundStyle(.secondary)
-                }
-            }
-            Section {
-                HStack {
-                    Button(hub.generatingFlashcards ? "Making cards…" : "Make cards from new slides and notes") {
-                        Task { await hub.generateFlashcards() }
-                    }
-                    .disabled(hub.generatingFlashcards)
-                    Spacer()
-                    Text(hub.flashcardStatus).font(.system(size: 11)).foregroundStyle(.secondary)
-                }
-            } footer: {
-                Text("Cards are made on this Mac by the local AI from ELE lecture slides and your notes, de-duplicated per module.")
-            }
-            Section("\(shown.count) card\(shown.count == 1 ? "" : "s")") {
-                ForEach(shown) { card in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(card.front)
-                        Text(card.back).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2)
-                        HStack(spacing: 8) {
-                            if let m = card.moduleCode { Text(m) }
-                            if let w = hub.week(of: card) { Text("Week \(w)") }
-                            Text("Due \(hub.cal.shortDay(card.due))")
-                        }
-                        .font(.system(size: 11)).foregroundStyle(.tertiary)
-                    }
-                    .padding(.vertical, 2)
-                }
-            }
+            todaySection(hub.dailyReviewPlan())
+            generateSection
+            deckSection(filtered(cards))
         }
         .searchable(text: $search, prompt: "Search cards")
         .toolbar {
@@ -75,13 +25,93 @@ struct FlashcardsView: View {
         }
         .navigationTitle("Flashcards")
         .sheet(isPresented: $reviewing) {
-            FlashcardReviewView(module: module).frame(minWidth: 560, minHeight: 420)
+            DeckReviewView(module: module).frame(minWidth: 560, minHeight: 420)
+        }
+    }
+
+    private func filtered(_ cards: [Flashcard]) -> [Flashcard] {
+        cards.filter { c in
+            (module == nil || c.moduleCode == module)
+                && (search.isEmpty || c.front.localizedCaseInsensitiveContains(search)
+                    || c.back.localizedCaseInsensitiveContains(search))
+        }
+        .sorted { $0.due < $1.due }
+    }
+
+    @ViewBuilder
+    private func todaySection(_ plan: DailyReviewPlan) -> some View {
+        Section {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(plan.dueCount == 0 ? "Nothing due today" : "\(plan.dueCount) due today")
+                        .font(.system(size: 17, weight: .semibold))
+                    Text(plan.briefLine ?? "New cards appear as your notes and slides sync.")
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Start review") { reviewing = true }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(plan.dueCount == 0)
+                    .keyboardShortcut("r", modifiers: [.command, .shift])
+            }
+            .padding(.vertical, 4)
+            if !plan.byModule.isEmpty {
+                Text(moduleSummary(plan.byModule))
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func moduleSummary(_ byModule: [String: Int]) -> String {
+        let parts: [String] = byModule.keys.sorted().map { key in "\(key): \(byModule[key] ?? 0)" }
+        return parts.joined(separator: "   ")
+    }
+
+    private var generateSection: some View {
+        Section {
+            HStack {
+                Button(hub.generatingFlashcards ? "Making cards…" : "Make cards from new slides and notes") {
+                    Task { await hub.generateFlashcards() }
+                }
+                .disabled(hub.generatingFlashcards)
+                Spacer()
+                Text(hub.flashcardStatus).font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+        } footer: {
+            Text("Cards are made on this Mac by the local AI from ELE lecture slides and your notes, de-duplicated per module.")
+        }
+    }
+
+    private func deckSection(_ shown: [Flashcard]) -> some View {
+        Section("\(shown.count) card\(shown.count == 1 ? "" : "s")") {
+            ForEach(shown) { card in
+                CardRow(card: card)
+            }
         }
     }
 }
 
+private struct CardRow: View {
+    let card: Flashcard
+    private var hub: FeatureHub { .shared }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(card.front)
+            Text(card.back).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2)
+            HStack(spacing: 8) {
+                if let m = card.moduleCode { Text(m) }
+                if let w = hub.week(of: card) { Text("Week \(w)") }
+                Text("Due \(hub.cal.shortDay(card.due))")
+            }
+            .font(.system(size: 11)).foregroundStyle(.tertiary)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
 /// Review session: front → Space shows the answer → 1 Again · 2 Hard · 3 Good · 4 Easy.
-struct FlashcardReviewView: View {
+struct DeckReviewView: View {
     var module: String?
     @Environment(\.dismiss) private var dismiss
     @State private var queue: [UUID] = []
