@@ -34,6 +34,8 @@ public struct OAuthConfig: Codable, Hashable, Sendable {
     public static let googleScopes = [
         "https://www.googleapis.com/auth/gmail.modify",
         "https://www.googleapis.com/auth/calendar",
+        // Only files Orbit itself creates (practice PDFs uploaded to Drive for Notability on the iPad).
+        "https://www.googleapis.com/auth/drive.file",
         "openid", "email",
     ]
 
@@ -48,7 +50,7 @@ public struct OAuthConfig: Codable, Hashable, Sendable {
                     authorizationEndpoint: URL(string: "https://accounts.google.com/o/oauth2/v2/auth")!,
                     tokenEndpoint: URL(string: "https://oauth2.googleapis.com/token")!,
                     clientID: clientID, clientSecret: clientSecret, redirectURI: redirectURI, scopes: scopes,
-                    extraAuthorizeParameters: ["access_type": "offline", "prompt": "consent"])
+                    extraAuthorizeParameters: ["access_type": "offline", "prompt": "consent", "include_granted_scopes": "true"])
     }
 
     /// Exeter Microsoft 365 (work/school accounts): mail, OneNote, calendar.
