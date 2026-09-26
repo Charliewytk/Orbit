@@ -62,6 +62,7 @@ extension OrbitBrain {
             if let existing = index[digest.id] { existing.apply(digest) } else { context.insert(StoredEmailDigest(digest: digest)) }
         }
         context.saveQuietly()
+        await reconcileGmailInbox()
 
         for n in report.notifications.prefix(5) {
             notify(id: "mail-\(n.id)", title: n.title, body: n.body, category: "mail")
@@ -191,6 +192,20 @@ extension OrbitBrain {
             digest.draftSavedAt = Date()
             context.saveQuietly()
         }
+    }
+
+    /// Hides Gmail messages that were archived or deleted in Gmail itself (and un-hides
+    /// ones moved back to the inbox). Only looks at the last 14 days, which is what's listed.
+    func reconcileGmailInbox() async {
+        guard accounts.googleConnected, let google = accounts.google else { return }
+        guard let inbox = try? await GmailClient(tokens: google).inboxIDs(days: 14) else { return }
+        let cutoff = Date().addingTimeInterval(-13 * 86_400)
+        var changed = false
+        for d in context.all(StoredEmailDigest.self) where d.account == .gmail && d.date > cutoff {
+            let inInbox = inbox.contains(d.id)
+            if !inInbox && !d.handled { d.handled = true; changed = true }
+        }
+        if changed { context.saveQuietly() }
     }
 
     // MARK: Archive / Trash (never send, never delete for good)

@@ -125,7 +125,22 @@ public struct OpenCodeProvider: LLMProvider {
 
     struct PromptResponse: Decodable {
         struct Part: Decodable { let type: String; let text: String? }
+        struct Info: Decodable {
+            struct Failure: Decodable {
+                struct Details: Decodable { let message: String? }
+                let name: String?
+                let data: Details?
+            }
+            let error: Failure?
+        }
         let parts: [Part]
+        let info: Info?
+
+        var replyText: String { parts.filter { $0.type == "text" }.compactMap(\.text).joined() }
+        var errorMessage: String? {
+            guard let e = info?.error else { return nil }
+            return e.data?.message ?? e.name
+        }
     }
 
     /// OpenCode's built-in coding tools, all switched off for Orbit's requests.
@@ -159,12 +174,23 @@ public struct OpenCodeProvider: LLMProvider {
         var parts: [PartInput] = [.text(text)]
         if supportsVision { parts += turns.flatMap(\.images).map(PartInput.image) }
 
+        let url = baseURL.appendingPathComponent("session/\(session.id)/message")
         let body = PromptBody(model: model, variant: variant, system: system.isEmpty ? nil : system,
                               tools: Self.disabledTools, parts: parts)
-        let res = try await http.post(PromptResponse.self,
-                                      baseURL.appendingPathComponent("session/\(session.id)/message"),
-                                      body: body, headers: headers)
-        return res.parts.filter { $0.type == "text" }.compactMap(\.text).joined()
+        let res = try await http.post(PromptResponse.self, url, body: body, headers: headers)
+        let reply = res.replyText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !reply.isEmpty { return reply }
+        // Empty reply: often the reasoning variant isn't accepted or the free model hiccuped.
+        // Retry once without the variant before giving up.
+        let retryBody = PromptBody(model: model, variant: nil, system: system.isEmpty ? nil : system,
+                                   tools: Self.disabledTools, parts: parts)
+        let retry = try await http.post(PromptResponse.self, url, body: retryBody, headers: headers)
+        let retryReply = retry.replyText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !retryReply.isEmpty { return retryReply }
+        if let message = retry.errorMessage ?? res.errorMessage {
+            throw LLMError.providerError("OpenCode: \(message)")
+        }
+        return retryReply
     }
 }
 

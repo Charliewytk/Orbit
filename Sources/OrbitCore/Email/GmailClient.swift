@@ -95,6 +95,24 @@ public struct GmailClient: MailProvider {
         return (try await fetchAll(ids, headers: headers), latest)
     }
 
+    /// IDs of messages currently in the inbox from the last `days` days (ids only, cheap).
+    /// Used to hide mail archived or deleted directly in Gmail.
+    public func inboxIDs(days: Int = 14, limit: Int = 500) async throws -> Set<String> {
+        let headers = try await authHeaders()
+        var ids = Set<String>()
+        var pageToken: String?
+        repeat {
+            var query = [URLQueryItem(name: "q", value: "newer_than:\(days)d"),
+                         URLQueryItem(name: "maxResults", value: "500"),
+                         URLQueryItem(name: "labelIds", value: "INBOX")]
+            if let pageToken { query.append(URLQueryItem(name: "pageToken", value: pageToken)) }
+            let page = try await http.get(ListResponse.self, url("messages", query), headers: headers)
+            for m in page.messages ?? [] { ids.insert(m.id) }
+            pageToken = page.nextPageToken
+        } while pageToken != nil && ids.count < limit
+        return ids
+    }
+
     /// Fetches full messages, skipping any deleted since they were listed.
     func fetchAll(_ ids: [String], headers: [String: String]) async throws -> [EmailMessage] {
         let found = try await EmailConcurrency.map(ids, limit: maxConcurrentFetches) { [self] id -> EmailMessage? in

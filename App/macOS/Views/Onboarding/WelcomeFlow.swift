@@ -365,9 +365,13 @@ private struct WelcomeAccountsStep: View {
                 .buttonStyle(done ? AnyButtonStyle(GlassCapsuleButtonStyle()) : AnyButtonStyle(PillButtonStyle()))
             }
             if open == id {
-                panel()
-                    .padding(.horizontal, Theme.Space.s)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                VStack(alignment: .leading, spacing: 10) {
+                    panel()
+                    Button("Done") { withAnimation(Motion.smooth) { open = nil } }
+                        .buttonStyle(PillButtonStyle())
+                }
+                .padding(.horizontal, Theme.Space.s)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }

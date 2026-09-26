@@ -61,6 +61,7 @@ public enum LLMError: Error, CustomStringConvertible, Sendable {
     case noProviderAvailable([String])
     case invalidJSON(String)
     case emptyResponse
+    case providerError(String)
 
     public var description: String {
         switch self {
@@ -68,6 +69,7 @@ public enum LLMError: Error, CustomStringConvertible, Sendable {
             "No AI available. Is OpenCode or Ollama running? \(errs.joined(separator: "; "))"
         case .invalidJSON(let s): "AI returned invalid JSON: \(s.prefix(200))"
         case .emptyResponse: "AI returned an empty response"
+        case .providerError(let m): m
         }
     }
 }
