@@ -515,6 +515,7 @@ struct OrbitMark: View {
 extension Notification.Name {
     /// Open Home's Ask Orbit panel (object: an optional String to send).
     static let orbitOpenAsk = Notification.Name("orbitOpenAsk")
+    static let orbitOpenPlanner = Notification.Name("orbitOpenPlanner")
 }
 
 extension Notification.Name {

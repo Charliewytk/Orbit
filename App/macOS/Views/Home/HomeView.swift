@@ -385,6 +385,7 @@ struct AskTellBar: View {
     @State private var text = ""
     @State private var added = 0
     @State private var showChat = false
+    @State private var plannerRequest: PlannerRequest?
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -437,6 +438,10 @@ struct AskTellBar: View {
             if let q = note.object as? String { ask(q) } else { showChat = true }
         }
         .sheet(isPresented: $showChat) { AskSheet() }
+        .plannerSheet($plannerRequest)
+        .onReceive(NotificationCenter.default.publisher(for: .orbitOpenPlanner)) { note in
+            if let t = note.object as? String { plannerRequest = PlannerRequest(text: t) }
+        }
     }
 
     private func actionButtons(_ mode: AskOrTell) -> some View {
@@ -462,6 +467,11 @@ struct AskTellBar: View {
     }
 
     private func tell() {
+        if ConversationalPlanner.looksConversational(text) {
+            plannerRequest = PlannerRequest(text: text)
+            text = ""
+            return
+        }
         guard let task = app.addTask(text: text) else { return }
         text = ""
         added += 1

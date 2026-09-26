@@ -49,6 +49,17 @@ struct QuickCaptureField: View {
             }
             return
         }
+        // Several requests or a constraint ("no work today… missed Friday…") → the planner on Home.
+        if ConversationalPlanner.looksConversational(line) {
+            text = ""
+            controller.close()
+            NSApp.activate(ignoringOtherApps: true)
+            NotificationCenter.default.post(name: .orbitNavigate, object: Destination.home)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                NotificationCenter.default.post(name: .orbitOpenPlanner, object: line)
+            }
+            return
+        }
         working = true
         Task { @MainActor in
             let message = await controller.submit(line)
