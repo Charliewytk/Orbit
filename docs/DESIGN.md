@@ -441,3 +441,29 @@ Implement global shortcuts via `.commands { CommandMenu("Go") { … .keyboardSho
 - Linear: "How we redesigned the Linear UI" (2024) and linear.app/method (keyboard-first, speed, restrained colour).
 - Things 3 (Cultured Code) for quick entry, completion animation and calm density. Raycast and Superhuman for command-palette and keyboard-first patterns. Notion Calendar (Cron), Amie and Structured for timeline, time-blocking and the now-line. Fantastical for natural-language parsing with a live token preview. Arc for sidebar-centric navigation and restrained motion.
 - Refactoring UI (Wathan & Schoger) for spacing scales, grey-dominant palettes and hierarchy through colour and weight rather than size.
+
+---
+
+## 0. Owner's direction (overrides anything above)
+
+**Reference apps:** Notion, Notion Calendar (Cron), Fantastical, Apple Calendar/Reminders, Things 3.
+Clean, quiet, typographic, native. It must **not look AI-generated**.
+
+### Avoid (the "AI-generated app" look)
+- No gradients (backgrounds, buttons, text), no glows, no neon.
+- No purple/indigo "AI" accent. Use a restrained accent: **Notion-style blue `#2383E2`** (dark: `#529CCA`) used sparingly, for selection/links/primary actions only.
+- No sparkles ✨, robot or magic-wand icons, and no "AI-powered" labels. The assistant is just "Ask Orbit".
+- No emoji as UI decoration (replace the inbox category emojis with small monochrome SF Symbols or plain text labels).
+- No cards-inside-cards, heavy drop shadows, or everything in rounded "bubbles". Prefer flat surfaces separated by hairline dividers (0.5 pt, `separatorColor`) and whitespace.
+- No oversized rounded pill buttons everywhere; use native `.bordered`/`.borderless` controls and plain text buttons.
+- No filler copy ("Supercharge your productivity!"). Short, plain, human labels.
+- No random colourful badges. Colour only carries meaning (module colour dot, overdue red).
+
+### Do
+- **Typography does the work:** system font, 13 pt body, clear weight hierarchy, generous line height, left-aligned; page titles like Notion (large, bold, lots of top padding).
+- **Neutral palette:** light `#FFFFFF` content on `#F7F7F5` sidebar (Notion); dark `#191919` content on `#202020` sidebar; text `#37352F` / `#FFFFFFCF`; secondary text `#787774` / `#9B9A97`.
+- **Module colours as small dots or thin left bars**, muted Notion-like tones (e.g. `#E03E3E` red, `#D9730D` orange, `#DFAB01` yellow, `#0F7B6C` green, `#0B6E99` blue, `#6940A5` purple, `#AD1A72` pink, `#64473A` brown), never as big filled cards.
+- **Calendar views like Fantastical/Notion Calendar:** a real time grid (hour lines, day columns), events as flat tinted blocks with a coloured left edge, a red "now" line, and a week view as well as day.
+- **Lists like Things/Notion:** rows with hover highlight, circle checkboxes, inline metadata in secondary text, and no boxes around rows.
+- **Native macOS chrome:** a real `NavigationSplitView` sidebar with the standard sidebar material, unified toolbar, SF Symbols (regular weight, monochrome), and standard sheets and popovers.
+- Motion: subtle and quick (≈0.2 s ease-out / snappy spring). Nothing bouncy or showy.

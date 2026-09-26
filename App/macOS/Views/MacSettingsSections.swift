@@ -32,6 +32,29 @@ private struct AccountRow<Actions: View>: View {
     }
 }
 
+/// Status line under a Connect button: progress, then the result or the problem.
+private struct ConnectFeedback: View {
+    var progress: String?
+    var error: String?
+
+    var body: some View {
+        if let progress {
+            HStack(spacing: 6) {
+                ProgressView().controlSize(.small)
+                Text(progress).font(Theme.caption).foregroundStyle(Theme.textSecondary)
+            }
+        } else if let error {
+            Label {
+                Text(error).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "exclamationmark.triangle.fill")
+            }
+            .font(Theme.caption)
+            .foregroundStyle(Theme.danger)
+        }
+    }
+}
+
 struct GoogleConnectRow: View {
     @Environment(OrbitBrain.self) private var brain
 
@@ -39,80 +62,211 @@ struct GoogleConnectRow: View {
         let accounts = brain.accounts
         VStack(alignment: .leading, spacing: 6) {
             AccountRow(title: "Google (Gmail + Calendar)", symbol: "envelope.badge", connected: accounts.googleConnected,
-                       detail: accounts.googleEmail, busy: accounts.busy == "google") {
+                       detail: accounts.googleConnected ? "Connected as \(accounts.googleEmail ?? "your Google account")" : nil,
+                       busy: accounts.busy == "google") {
                 if accounts.googleConnected {
                     Button("Disconnect") { Task { await accounts.disconnectGoogle() } }
                 } else {
-                    Button("Connect") {
-                        Task {
-                            await accounts.connectGoogle()
-                            await brain.syncCalendar()
-                            await brain.syncMail()
-                        }
+                    Button(accounts.busy == "google" ? "Connecting…" : "Connect") {
+                        Task { await brain.connectGoogleAndSync() }
                     }
                     .buttonStyle(PillButtonStyle())
+                    .disabled(accounts.busy != nil)
                 }
             }
-            if accounts.googleConfig == nil {
-                Text("Add your Google client ID to Config/Secrets.xcconfig first (docs/SETUP.md, step 1).")
-                    .font(Theme.caption).foregroundStyle(Theme.warning)
+            ConnectFeedback(progress: accounts.googleProgress, error: accounts.googleError)
+            if accounts.googleConnected, brain.running.contains(.calendar) || brain.running.contains(.gmail) {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small)
+                    Text("Syncing your mail and calendar…").font(Theme.caption).foregroundStyle(Theme.textSecondary)
+                }
             }
         }
     }
 }
 
+/// Optional Microsoft Graph sign-in. Only shown when this build has a Microsoft client ID.
 struct MicrosoftConnectRow: View {
     @Environment(OrbitBrain.self) private var brain
 
     var body: some View {
         let accounts = brain.accounts
-        VStack(alignment: .leading, spacing: 6) {
-            AccountRow(title: "Exeter (Microsoft 365)", symbol: "building.columns", connected: accounts.microsoftConnected,
-                       detail: accounts.microsoftEmail, busy: accounts.busy == "microsoft") {
-                if accounts.microsoftConnected {
-                    Button("Disconnect") { Task { await accounts.disconnectMicrosoft() } }
-                } else {
-                    Button("Connect") {
-                        Task {
-                            await accounts.connectMicrosoft()
-                            await brain.syncCalendar()
-                            await brain.syncMail()
-                        }
+        if accounts.microsoftAvailable {
+            VStack(alignment: .leading, spacing: 6) {
+                AccountRow(title: "Microsoft sign-in (Exeter, optional)", symbol: "building.columns",
+                           connected: accounts.microsoftConnected,
+                           detail: accounts.microsoftConnected ? "Connected as \(accounts.microsoftEmail ?? "your Exeter account")" : nil,
+                           busy: accounts.busy == "microsoft") {
+                    if accounts.microsoftConnected {
+                        Button("Disconnect") { Task { await accounts.disconnectMicrosoft() } }
+                    } else {
+                        Button("Connect") { Task { await brain.connectMicrosoftAndSync() } }
+                            .disabled(accounts.busy != nil)
                     }
-                    .buttonStyle(PillButtonStyle())
                 }
-            }
-            if accounts.microsoftConfig == nil {
-                Text("Add your Microsoft client ID to Config/Secrets.xcconfig first (docs/SETUP.md, step 3).")
-                    .font(Theme.caption).foregroundStyle(Theme.warning)
-            }
-            if let error = accounts.lastError {
-                Text(error).font(Theme.caption).foregroundStyle(Theme.danger).textSelection(.enabled)
+                ConnectFeedback(progress: accounts.microsoftProgress, error: accounts.microsoftError)
+                Text("Only needed for OneNote syncing. Exeter may ask for admin approval; if so, ignore this and use Apple Mail and Calendar.")
+                    .font(Theme.caption).foregroundStyle(Theme.textTertiary)
             }
         }
     }
 }
 
+/// "Advanced" disclosure holding the Microsoft sign-in and the Exeter mail source picker.
+struct ExeterAdvancedOptions: View {
+    @Environment(OrbitBrain.self) private var brain
+    @State private var expanded = false
+
+    var body: some View {
+        DisclosureGroup("Advanced", isExpanded: $expanded) {
+            VStack(alignment: .leading, spacing: 10) {
+                MicrosoftConnectRow()
+                ExeterMailSourcePicker()
+            }
+            .padding(.top, 6)
+        }
+    }
+}
+
 struct ExeterMailSourcePicker: View {
+    @Environment(OrbitBrain.self) private var brain
     @AppStorage(MacPrefs.exeterMailSource) private var source = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Picker("Read Exeter email from", selection: $source) {
-                Text("Automatic").tag("")
-                Text("Microsoft (Graph)").tag("graph")
-                Text("Apple Mail on this Mac").tag("appleMail")
-                Text("Don't read Exeter email").tag("none")
+        Picker("Read Exeter email from", selection: $source) {
+            Text("Automatic").tag("")
+            Text("Apple Mail on this Mac").tag("appleMail")
+            if brain.accounts.microsoftAvailable {
+                Text("Microsoft sign-in").tag("graph")
             }
-            if source == "appleMail" {
-                HStack {
-                    Text("Add your Exeter account to the Mail app, then give Orbit Full Disk Access.")
-                        .font(Theme.caption).foregroundStyle(Theme.textSecondary)
-                    Button("Open Full Disk Access") { OrbitBrain.openFullDiskAccessSettings() }
-                        .buttonStyle(.link)
+            Text("Don't read Exeter email").tag("none")
+        }
+    }
+}
+
+/// Plain-English Exeter setup: add the account to the Mac, allow Full Disk
+/// Access and Calendars, with live ticks. No Microsoft registration needed.
+struct ExeterSetupPanel: View {
+    @Environment(OrbitBrain.self) private var brain
+    @Environment(\.scenePhase) private var scenePhase
+    private var calendars: MacCalendarAccess { .shared }
+    private var mail: ExeterMailStatus { .shared }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            step(1, "Add your Exeter account to your Mac",
+                 "Open Internet Accounts, click Add Account → Microsoft Exchange, and sign in with your @exeter.ac.uk email and password. When it asks which apps to use, tick Mail and Calendars.") {
+                Button("Open Internet Accounts") { MacCalendarAccess.openInternetAccounts() }
+                    .buttonStyle(PillButtonStyle())
+            }
+            step(2, "Let Orbit read your mail",
+                 "Orbit reads Exeter email from the Mail app on this Mac. Click the button, switch Orbit on in the list (use + to add it if it isn't there), then come back. Open the Mail app once so it downloads your mail.") {
+                Button("Grant Full Disk Access") { OrbitBrain.openFullDiskAccessSettings() }
+                    .buttonStyle(PillButtonStyle())
+            }
+            step(3, "Let Orbit see your calendars",
+                 "This brings in your Exeter timetable and any other calendars on this Mac.") {
+                if calendars.denied {
+                    Button("Open Calendar privacy settings") { MacCalendarAccess.openCalendarPrivacySettings() }
+                        .buttonStyle(PillButtonStyle())
+                } else if !calendars.granted {
+                    Button("Allow calendar access") {
+                        Task {
+                            if await calendars.requestAccess() { await brain.syncCalendar() }
+                        }
+                    }
+                    .buttonStyle(PillButtonStyle())
                 }
             }
+
+            VStack(alignment: .leading, spacing: 6) {
+                tick(mail.fullDiskAccess, "Full Disk Access allowed", missing: "Full Disk Access not allowed yet")
+                tick(mail.exeterMailFound, "Exeter mail found",
+                     missing: mail.fullDiskAccess ? "No Exeter mail in the Mail app yet (open Mail and wait for it to download)" : "Exeter mail not found yet")
+                tick(calendars.granted, "Calendar access allowed", missing: "Calendar access not allowed yet")
+                tick(calendars.exeterCalendarFound, "Exeter calendar found",
+                     missing: calendars.granted ? "No Exeter calendar yet (did you tick Calendars in step 1?)" : "Exeter calendar not found yet")
+                if let error = calendars.lastError {
+                    Text(error).font(Theme.caption).foregroundStyle(Theme.danger)
+                }
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.border.opacity(0.25)))
+
+            HStack {
+                Button("Check again") { Task { await recheck(sync: true) } }
+                if mail.checking { ProgressView().controlSize(.small) }
+            }
         }
+        .task { await recheck(sync: false) }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await recheck(sync: false) } }
+        }
+    }
+
+    private func recheck(sync: Bool) async {
+        calendars.refresh()
+        await mail.check()
+        if sync && (mail.exeterMailFound || calendars.granted) {
+            await brain.syncAfterConnecting()
+        }
+    }
+
+    private func step<Actions: View>(_ number: Int, _ title: String, _ text: String,
+                                     @ViewBuilder actions: () -> Actions) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text("\(number)")
+                .font(Theme.body.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 26, height: 26)
+                .background(Circle().fill(Theme.accent))
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title).font(Theme.body.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                Text(text).font(Theme.callout).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                actions()
+            }
+        }
+    }
+
+    private func tick(_ ok: Bool, _ done: String, missing: String) -> some View {
+        Label {
+            Text(ok ? done : missing)
+        } icon: {
+            Image(systemName: ok ? "checkmark.circle.fill" : "circle")
+                .foregroundStyle(ok ? Theme.success : Theme.textTertiary)
+        }
+        .font(Theme.callout)
+        .foregroundStyle(ok ? Theme.textPrimary : Theme.textSecondary)
+    }
+}
+
+/// Calendar permission row for Settings.
+struct MacCalendarsRow: View {
+    @Environment(OrbitBrain.self) private var brain
+    private var calendars: MacCalendarAccess { .shared }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            AccountRow(title: "Calendars on this Mac", symbol: "calendar", connected: calendars.granted,
+                       detail: calendars.granted
+                           ? "\(calendars.calendarNames.count) calendars\(calendars.exeterCalendarFound ? " · Exeter found ✓" : "")"
+                           : (calendars.denied ? "Not allowed (turn on in System Settings)" : "Not allowed yet"),
+                       busy: false) {
+                if calendars.denied {
+                    Button("Open Settings") { MacCalendarAccess.openCalendarPrivacySettings() }
+                } else if !calendars.granted {
+                    Button("Allow") {
+                        Task { if await calendars.requestAccess() { await brain.syncCalendar() } }
+                    }
+                    .buttonStyle(PillButtonStyle())
+                }
+            }
+            if let error = calendars.lastError {
+                Text(error).font(Theme.caption).foregroundStyle(Theme.danger)
+            }
+        }
+        .onAppear { calendars.refresh() }
     }
 }
 
