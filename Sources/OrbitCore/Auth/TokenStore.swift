@@ -85,10 +85,14 @@ public struct KeychainTokenStore: TokenStore {
         ]
         #if os(macOS)
         // Synchronizable items need the modern (iOS-style) keychain on macOS.
+        // The classic file keychain (unsigned builds) doesn't take the synchronizable
+        // or access-group attributes, so only the modern keychain gets them.
         let modern = KeychainSupport.modernAvailable
-        if modern { q[kSecUseDataProtectionKeychain as String] = true }
-        if modern, let accessGroup { q[kSecAttrAccessGroup as String] = accessGroup }
-        q[kSecAttrSynchronizable as String] = (synchronizable && modern) ? kCFBooleanTrue as Any : kCFBooleanFalse as Any
+        if modern {
+            q[kSecUseDataProtectionKeychain as String] = true
+            if let accessGroup { q[kSecAttrAccessGroup as String] = accessGroup }
+            q[kSecAttrSynchronizable as String] = synchronizable ? kCFBooleanTrue as Any : kCFBooleanFalse as Any
+        }
         #else
         if let accessGroup { q[kSecAttrAccessGroup as String] = accessGroup }
         q[kSecAttrSynchronizable as String] = synchronizable ? kCFBooleanTrue as Any : kCFBooleanFalse as Any
@@ -117,7 +121,11 @@ public struct KeychainTokenStore: TokenStore {
             var add = query
             add[kSecValueData as String] = data
             // Synchronizable items can't use a ...ThisDeviceOnly class.
+            #if os(macOS)
+            if KeychainSupport.modernAvailable { add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock }
+            #else
             add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+            #endif
             status = SecItemAdd(add as CFDictionary, nil)
         }
         guard status == errSecSuccess else { throw KeychainError(status: status) }
@@ -129,3 +137,72 @@ public struct KeychainTokenStore: TokenStore {
     }
 }
 #endif
+
+/// Tokens as JSON files readable only by this user (0600), e.g. in Application
+/// Support. The fallback when the keychain refuses an unsigned build.
+public struct FileTokenStore: TokenStore {
+    public var directory: URL
+
+    public init(directory: URL) { self.directory = directory }
+
+    private func url(_ account: String) -> URL {
+        let safe = account.map { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" ? $0 : "_" }
+        return directory.appendingPathComponent("token-\(String(safe)).json")
+    }
+
+    public func load(account: String) throws -> OAuthTokens? {
+        guard let data = try? Data(contentsOf: url(account)) else { return nil }
+        return try JSONDecoder().decode(OAuthTokens.self, from: data)
+    }
+
+    public func save(_ tokens: OAuthTokens, account: String) throws {
+        let fm = FileManager.default
+        try fm.createDirectory(at: directory, withIntermediateDirectories: true,
+                               attributes: [.posixPermissions: 0o700])
+        let file = url(account)
+        try JSONEncoder().encode(tokens).write(to: file, options: .atomic)
+        try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
+    }
+
+    public func delete(account: String) throws {
+        let file = url(account)
+        if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
+    }
+}
+
+/// Tries `primary` (the keychain) and falls back to `secondary` (a file) if it
+/// throws, so a keychain problem never silently loses a sign-in.
+public struct FallbackTokenStore: TokenStore {
+    public var primary: TokenStore
+    public var secondary: TokenStore
+
+    public init(primary: TokenStore, secondary: TokenStore) {
+        self.primary = primary; self.secondary = secondary
+    }
+
+    public func load(account: String) throws -> OAuthTokens? {
+        do {
+            if let tokens = try primary.load(account: account) { return tokens }
+        } catch {
+            OrbitLog.log("keychain", "Reading \(account) from the keychain failed: \(error)")
+        }
+        return try secondary.load(account: account)
+    }
+
+    public func save(_ tokens: OAuthTokens, account: String) throws {
+        do {
+            try primary.save(tokens, account: account)
+            try? secondary.delete(account: account)
+        } catch {
+            OrbitLog.log("keychain", "Saving \(account) to the keychain failed (\(error)); saving to a private file instead")
+            try secondary.save(tokens, account: account)
+        }
+    }
+
+    public func delete(account: String) throws {
+        var firstError: Error?
+        do { try primary.delete(account: account) } catch { firstError = error }
+        do { try secondary.delete(account: account) } catch { firstError = firstError ?? error }
+        if let firstError { throw firstError }
+    }
+}

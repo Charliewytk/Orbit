@@ -153,6 +153,12 @@ public struct AppleMailReader: MailProvider {
         return hits
     }
 
+    /// True when this process can list Apple Mail's folder (i.e. has Full Disk Access
+    /// and Mail has been set up at least once).
+    public static func canReadMailFolder(root: URL = defaultRoot) -> Bool {
+        (try? checkReadable(root)) != nil
+    }
+
     /// Every `.emlx` / `.partial.emlx` under `folder`, skipping mailboxes by name.
     /// Kept synchronous so the directory enumerator isn't used from an async context.
     static func messageFiles(in folder: URL, skipping skipped: [String]) throws -> [MessageFile] {
@@ -184,7 +190,10 @@ public struct AppleMailReader: MailProvider {
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue else {
             throw MailError.accessDenied("\(url.path) not found. Add the account to Mail and give Orbit Full Disk Access.")
         }
-        guard FileManager.default.isReadableFile(atPath: url.path) else {
+        // POSIX permissions say "readable" even when macOS privacy protection blocks
+        // the folder, so actually list it.
+        guard FileManager.default.isReadableFile(atPath: url.path),
+              (try? FileManager.default.contentsOfDirectory(atPath: url.path)) != nil else {
             throw MailError.accessDenied("Orbit needs Full Disk Access to read \(url.path).")
         }
     }
