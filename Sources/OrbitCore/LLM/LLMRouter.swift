@@ -24,6 +24,27 @@ public actor LLMRouter {
     public func setProviders(_ p: [LLMProvider]) { providers = p; failedUntil = [:] }
     public func lastProvider() -> LLMProviderKind? { lastUsed }
 
+    /// Supplies relevant course knowledge + the student profile for a request (see `KnowledgeContext`).
+    public typealias ContextProvider = @Sendable (LLMRequest) async -> String?
+    private var contextProvider: ContextProvider?
+    public func setContextProvider(_ p: ContextProvider?) { contextProvider = p }
+
+    /// Chat and free-text reasoning get the knowledge context as an extra system message.
+    /// JSON extraction, bulk and vision jobs don't (keeps them fast and on-format).
+    public static func wantsKnowledge(_ r: LLMRequest) -> Bool {
+        (r.purpose == .chat || r.purpose == .reasoning) && !r.json
+            && !r.messages.contains { $0.role == .system && $0.text.hasPrefix(KnowledgeContext.marker) }
+    }
+
+    func withKnowledge(_ request: LLMRequest) async -> LLMRequest {
+        guard let contextProvider, Self.wantsKnowledge(request),
+              let ctx = await contextProvider(request), !ctx.isEmpty else { return request }
+        var r = request
+        let insertAt = r.messages.lastIndex { $0.role == .system }.map { $0 + 1 } ?? 0
+        r.messages.insert(.system(KnowledgeContext.marker + "\n" + ctx), at: insertAt)
+        return r
+    }
+
     /// The order providers will be tried in for a purpose.
     public func order(for purpose: LLMPurpose) -> [LLMProvider] {
         var list = providers
@@ -42,6 +63,7 @@ public actor LLMRouter {
     }
 
     public func complete(_ request: LLMRequest) async throws -> String {
+        let request = await withKnowledge(request)
         var errors: [String] = []
         for p in order(for: request.purpose) {
             do {

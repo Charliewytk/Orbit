@@ -278,7 +278,7 @@ public struct NudgeEngine: Sendable {
         return Nudge(id: "gap:\(task.id.uuidString):\(calendar.format(now, "yyyy-MM-dd"))", kind: .freeGap,
                      title: "You've got \(gapText) free",
                      body: "You've got \(gapText) free and \(task.title) is due \(dueText). Start it?",
-                     priority: 70, taskID: task.id, focusMinutes: minutes, focusTitle: task.title)
+                     priority: 82, taskID: task.id, focusMinutes: minutes, focusTitle: task.title)
     }
 
     func deadlineRules(_ input: NudgeInput) -> [Nudge] {
