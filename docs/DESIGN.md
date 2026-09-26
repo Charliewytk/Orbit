@@ -449,6 +449,15 @@ Implement global shortcuts via `.commands { CommandMenu("Go") { … .keyboardSho
 **Reference apps:** Notion, Notion Calendar (Cron), Fantastical, Apple Calendar/Reminders, Things 3.
 Clean, quiet, typographic, native. It must **not look AI-generated**.
 
+### Owner's checklist (every screen must pass)
+- **Space:** generous, consistent whitespace on a strict 4/8 pt grid. One primary thing per screen; secondary things quieter. Content is the star and chrome stays out of the way. Edges and columns align.
+- **Type:** system font only. Size scale limited to **11 / 13 / 15 / 17 / 22 / 26**. Strong heading/body contrast, comfortable line length and line height, no bold/italic overuse.
+- **Colour:** mostly neutrals, with soft off-white/soft-black backgrounds (never pure #FFF/#000 for large areas). One accent, used only for primary actions. Excellent text contrast. Separators are hairlines or just space.
+- **Details:** minimal borders and boxes, soft elevation only where depth is needed, consistent intentional corner radii, and one icon style (SF Symbols, regular weight). No gradients, glows or sparkle.
+- **Motion:** instant response, short non-bouncy springs, clear hover and pressed states.
+- **Feel:** calm, native to macOS, hand-made, nothing template-y.
+- **Rule of thumb:** if you can remove something and the screen still works, remove it. Every element earns its place.
+
 ### Avoid (the "AI-generated app" look)
 - No gradients (backgrounds, buttons, text), no glows, no neon.
 - No purple/indigo "AI" accent. Use a restrained accent: **Notion-style blue `#2383E2`** (dark: `#529CCA`) used sparingly, for selection/links/primary actions only.
