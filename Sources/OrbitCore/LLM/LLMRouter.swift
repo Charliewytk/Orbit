@@ -162,7 +162,7 @@ public enum FlexibleDate {
 
 /// A scripted provider for tests and previews.
 public struct MockLLMProvider: LLMProvider {
-    public let kind: LLMProviderKind = .mock
+    public let kind: LLMProviderKind
     public var displayName: String
     public var isLocal: Bool
     public var supportsVision: Bool
@@ -170,7 +170,9 @@ public struct MockLLMProvider: LLMProvider {
     public var responder: @Sendable (LLMRequest) throws -> String
 
     public init(displayName: String = "Mock", isLocal: Bool = true, supportsVision: Bool = true,
-                available: Bool = true, responder: @escaping @Sendable (LLMRequest) throws -> String) {
+                available: Bool = true, kind: LLMProviderKind = .mock,
+                responder: @escaping @Sendable (LLMRequest) throws -> String) {
+        self.kind = kind
         self.displayName = displayName; self.isLocal = isLocal; self.supportsVision = supportsVision
         self.available = available; self.responder = responder
     }

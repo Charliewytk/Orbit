@@ -68,10 +68,30 @@ modules are 15; year-long ones are often 30). Orbit uses them for "what do I nee
 
 ---
 
-## 5. The AI on your Mac (OpenCode + Ollama)
+## 5. The AI on your Mac (CleanAPIs + OpenCode + Ollama)
 
-Orbit never pays for AI. It uses **OpenCode** (which you already have) as its main brain and
-**Ollama** as an offline backup that also reads your handwriting.
+Orbit's chat & reasoning brain prefers **CleanAPIs** (cloud, `claude-opus-5.5`) when a key is
+configured. **OpenCode** (`opencode serve` on localhost) is the next hop, and **Ollama** stays the
+offline / bulk / vision / private-data path. Private data (full email, full notes, handwriting)
+never leaves this Mac — only summaries/digests go to cloud. Toggle CleanAPIs off in Settings for
+fully offline; nothing breaks.
+
+| Purpose | Order |
+|---|---|
+| Chat / reasoning | CleanAPIs → OpenCode → Ollama |
+| Bulk / vision / privateData | Ollama (local) first; cloud excluded for privateData |
+
+### CleanAPIs (cloud brain)
+
+1. Get a key at <https://cleanapis.com> (`cc_…`).
+2. Any one of:
+   - **Orbit → Settings → AI → CleanAPIs** — paste the key (Show/Hide + Paste), pick model, press **Test**
+   - `~/.local/share/opencode/auth.json` → `{ "cleanapis": {"type":"api","key":"cc_…"} }` (same file `opencode auth` uses)
+   - env `CLEANAPIS_API_KEY` / `CLEANAPI_API_KEY`
+   - `Config/Secrets.xcconfig` → `CLEANAPIS_API_KEY` (see `Config/Secrets.example.xcconfig`)
+3. Settings should say **Reachable ✓** after Test. Chat & reasoning then use cloud first.
+
+See `docs/CLEANAPIS_INTEGRATION.md` for the provider design, privacy rails, and fallback table.
 
 ### OpenCode
 
@@ -288,7 +308,7 @@ Security → Calendars**.
 Use the ELE calendar export link (step 4).
 
 **"No AI available" / the chat can't answer**
-- **Settings → AI** shows OpenCode and Ollama status. Press **Restart** next to OpenCode.
+- **Settings → AI** shows CleanAPIs, OpenCode and Ollama status. Press **Test** on CleanAPIs or **Restart** next to OpenCode.
 - `opencode --version` must work in Terminal. Orbit looks in `~/.opencode/bin`, `/opt/homebrew/bin`,
   `/usr/local/bin` and `~/.local/bin`.
 - **Settings → Diagnostics → OpenCode log** shows what went wrong.
