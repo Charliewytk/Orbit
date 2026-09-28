@@ -102,11 +102,14 @@ public struct ScheduledBlock: Identifiable, Codable, Hashable, Sendable {
     /// Set once written to Google Calendar.
     public var externalEventID: String?
     public var locked: Bool
+    /// Where the work happens ("Forum library (on campus)", "Holland Hall").
+    public var locationHint: String?
 
     public init(id: UUID = UUID(), taskID: UUID, title: String, start: Date, end: Date,
-                moduleCode: String? = nil, externalEventID: String? = nil, locked: Bool = false) {
+                moduleCode: String? = nil, externalEventID: String? = nil, locked: Bool = false, locationHint: String? = nil) {
         self.id = id; self.taskID = taskID; self.title = title; self.start = start; self.end = end
         self.moduleCode = moduleCode; self.externalEventID = externalEventID; self.locked = locked
+        self.locationHint = locationHint
     }
 
     public var minutes: Int { Int(end.timeIntervalSince(start) / 60) }
@@ -383,6 +386,10 @@ public struct UserPrefs: Codable, Hashable, Sendable {
     public var eveningReviewTime: MinuteOfDay
     public var targetGrade: Double
     public var timeZoneID: String
+    /// Term dates; nil = Exeter's defaults (`AcademicCalendarConfig.exeter2026`).
+    public var academicCalendar: AcademicCalendarConfig?
+    /// Meals, reading, shutdown and sleep; nil = Holland Hall defaults (`effectiveRoutine`).
+    public var routine: RoutineSettings?
 
     public init(dayStart: MinuteOfDay = 8 * 60, dayEnd: MinuteOfDay = 22 * 60, workCutoff: MinuteOfDay = 21 * 60,
                 lunch: ClosedRange<MinuteOfDay>? = (12 * 60 + 30)...(13 * 60 + 15),
@@ -395,14 +402,19 @@ public struct UserPrefs: Codable, Hashable, Sendable {
                 ],
                 restDays: Set<Int> = [], importantSenders: [String] = [], localOnlyMode: Bool = false,
                 morningBriefTime: MinuteOfDay = 7 * 60 + 30, eveningReviewTime: MinuteOfDay = 21 * 60 + 30,
-                targetGrade: Double = 70, timeZoneID: String = "Europe/London") {
+                targetGrade: Double = 70, timeZoneID: String = "Europe/London",
+                academicCalendar: AcademicCalendarConfig? = nil, routine: RoutineSettings? = nil) {
         self.dayStart = dayStart; self.dayEnd = dayEnd; self.workCutoff = workCutoff
         self.lunch = lunch; self.dinner = dinner; self.bufferMinutes = bufferMinutes
         self.maxFocusMinutesPerDay = maxFocusMinutesPerDay; self.energyWindows = energyWindows
         self.restDays = restDays; self.importantSenders = importantSenders; self.localOnlyMode = localOnlyMode
         self.morningBriefTime = morningBriefTime; self.eveningReviewTime = eveningReviewTime
-        self.targetGrade = targetGrade; self.timeZoneID = timeZoneID
+        self.targetGrade = targetGrade; self.timeZoneID = timeZoneID; self.academicCalendar = academicCalendar
+        self.routine = routine
     }
+
+    /// The teaching calendar to use.
+    public var academic: AcademicCalendar { AcademicCalendar(config: academicCalendar ?? .exeter2026) }
 
     public var timeZone: TimeZone { TimeZone(identifier: timeZoneID) ?? .current }
 

@@ -1,0 +1,1752 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01DE1A4879BE78BE9732D532 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD7A44B1680FD84ECB59F588 /* Assets.xcassets */; };
+		0288C9A6AEFD2FCD36149638 /* Brain+ELE.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274FECF61DA10B767D5A132C /* Brain+ELE.swift */; };
+		0484AA025F794A236D5146A3 /* NotesLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF8760B0D5BE2094833E4CF1 /* NotesLibraryView.swift */; };
+		04A95A38828861E623F3A02B /* Origin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A122FCD6568F75F623516CA /* Origin.swift */; };
+		06047ADACB0CD2C46026B14B /* Brain+NotesLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7104344EC937C3A0D9BC7C7 /* Brain+NotesLibrary.swift */; };
+		063DDDF73F2C9BCAB3A5CD4F /* MacOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E3DCEE85A3D93E1AA03CEE7 /* MacOnboardingView.swift */; };
+		069E649DF51D25F8DB5C21BF /* ELEDocumentText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A26E953E9B6E92FE92FD2D2 /* ELEDocumentText.swift */; };
+		0760D339354C0E3B90A4D046 /* SelfImproveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4970CBC0A8EB231E3D31D7A2 /* SelfImproveService.swift */; };
+		07DE17DE903E9379A2C9EDD4 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE13C7AC804A7A563E656418 /* Components.swift */; };
+		0B7E68E5F77250A5ED79F59A /* AppModel+Tickets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A983D99FEF4CD1148876A239 /* AppModel+Tickets.swift */; };
+		0EE44503582AEFCF085F709D /* FocusViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FE7BC90FC12EBAD73203D4 /* FocusViews.swift */; };
+		1564CC7CE5B99DCD13A8CCE4 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD4FB9EA79578991D116059 /* Controls.swift */; };
+		17D1948C0000EE89EDC7DD48 /* FeatureSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = E451B7ABD36EC234117AA11E /* FeatureSecrets.swift */; };
+		17E1C58DF4CD3E819B61AACA /* AppModel+Later.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221A84367E7044E7C38E949C /* AppModel+Later.swift */; };
+		18230E319768DF7378253281 /* NotesBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDBC2F98C1CAE73B764E7A4C /* NotesBrowserView.swift */; };
+		1BC7CA2987A71A97148BEB3C /* OrbitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367D1E3D8E9FAE8BB55D57DF /* OrbitIntents.swift */; };
+		1CE9DE6E2931BB3ADEA330AC /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07B1A06AB69B823CBFDF93D6 /* ShareViewController.swift */; };
+		1D029A29E9EF8B66F2151262 /* Fmt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9754FC33E1FBF076358A9B /* Fmt.swift */; };
+		1DC76B723F3FD30849ADDC7D /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F3340339C2F5BF8E04F79F /* Theme.swift */; };
+		1F9447758869D71213672805 /* QuickCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A590EB36A132AD082944115 /* QuickCapture.swift */; };
+		21A3F44E6D9A88F94E9C93E7 /* KeychainBlob.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B881BB0A811614CD380F1F /* KeychainBlob.swift */; };
+		238EF43D8AED70E88359BD73 /* TasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F6D69211B0C93923225A9A /* TasksView.swift */; };
+		23F5E725C6A43732C5656B62 /* CompanionCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89C349842E12B36AE72F0646 /* CompanionCards.swift */; };
+		2631B6D96625BAD4F99E078B /* OrbitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 367D1E3D8E9FAE8BB55D57DF /* OrbitIntents.swift */; };
+		296A123DA9FC00DC6C83B061 /* Brain+NotesBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F734F5E8FA7AE026586517A0 /* Brain+NotesBrowser.swift */; };
+		2B356576B9999457C8257336 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */; };
+		2BA06FE5488569FFF9477B35 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13A6EBF54AED01206D4E4790 /* HomeView.swift */; };
+		2D5E26DE9D444A96CCB14CDF /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
+		2E2D5D6106870337AE710A74 /* RoutineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C0500B75FEAF78E9A58D8C /* RoutineService.swift */; };
+		2FEB16A9A9EA75A29A601218 /* CareersService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E14149F17FD58E9DCA9E1FD /* CareersService.swift */; };
+		31E057151BF272BCADE62561 /* MoneySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E3FA2E51163D76BFFD2261 /* MoneySettingsView.swift */; };
+		32E29FABF1AD5DB6409870D9 /* NudgeBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30990F9F37B14D921477926E /* NudgeBanner.swift */; };
+		34D85362811C30D4664F9D32 /* KeychainBlob.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9B881BB0A811614CD380F1F /* KeychainBlob.swift */; };
+		352CB0984B94C13C9DDC0EDD /* TasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01F6D69211B0C93923225A9A /* TasksView.swift */; };
+		357F8E3090855AF7968C85A6 /* MonzoLoopback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A60EF6A4BA6C98243AAE38C /* MonzoLoopback.swift */; };
+		363F09496EA926A0412A171F /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1FA03B8D3B4486A5BC8549 /* Notifier.swift */; };
+		3746CA24A4D9D3690CD8FD50 /* OrbitBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4DC07C2D54DF82512F861B /* OrbitBackend.swift */; };
+		384959209EEFCD4830ADCFF6 /* MoveLaterButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6C5E33D7E4EF93275199E4F /* MoveLaterButton.swift */; };
+		38AB236ED7A4EE1A303BF106 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F3340339C2F5BF8E04F79F /* Theme.swift */; };
+		3B5736503F1518A27C86CBEA /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 470D7E22DEA73246CD278B14 /* SyncStatus.swift */; };
+		3D4C81155C7A1FB132878892 /* Brain+Academic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7023306912A849F9F5118B72 /* Brain+Academic.swift */; };
+		3E2F2E463F7C58F90E7EAA52 /* ExamService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C73DAA8DE406E44A561713 /* ExamService.swift */; };
+		3F7ECBD5FAD2C3935ADE4A25 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
+		3F92513EEE1B6515DCB0F24B /* TimeGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347D83D603F97FA460D89A54 /* TimeGrid.swift */; };
+		3FCB79447AC1B7F15E0743AD /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
+		40FE35C6FF7ED86E94D020F8 /* Brain+Chat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6256515A892AE09D0AC8E76F /* Brain+Chat.swift */; };
+		414A2FB47301A7FD4FE6223E /* CareersViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2801564622A3E493F68DB5AE /* CareersViews.swift */; };
+		43D24F87A97BD5422A6DE24A /* StudyLabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EFAB41C2FF83108836C3811 /* StudyLabView.swift */; };
+		43DBECBB9FAD0615317AAA58 /* ExamDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 734663A285CECF1411058EC3 /* ExamDashboard.swift */; };
+		45E1595CB306233C0215AED3 /* Hub+Feedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03C1CD84E571061075A58683 /* Hub+Feedback.swift */; };
+		464FFE7D844F44B3E68433D0 /* AcademicHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 552BE448F98D6F67E57F8AD7 /* AcademicHooks.swift */; };
+		4B0C685BA439102C0F5207AC /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483D1EEF8194DD643CA40634 /* CommandPalette.swift */; };
+		4CCCACCB618016CCAC6A292A /* Hub+Flashcards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87CAAAA3B813084E68DCD8AA /* Hub+Flashcards.swift */; };
+		4DEFC0DF7D296E4E254509C6 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
+		4F125F777C1CF7795815B6B8 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 362BD4E5BDDDEC6BE07FC209 /* RootView.swift */; };
+		4F6A6EC8949A08B8A428061F /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2789015C9A4150ED5727F9C3 /* ChatView.swift */; };
+		520EF1C9FBF68D345724E254 /* Brain+ELEWeb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC695A9C69AE1ECAAAEBBD3 /* Brain+ELEWeb.swift */; };
+		55465A85C85FE52188FB3174 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE13C7AC804A7A563E656418 /* Components.swift */; };
+		559F20EA19E369E475134716 /* MoveLaterButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6C5E33D7E4EF93275199E4F /* MoveLaterButton.swift */; };
+		559F530A778BB60CD73CFEBD /* PendingInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4FB4E910EA22C9D19B838A /* PendingInbox.swift */; };
+		55C17733860931C3C8DDDD2D /* PlanImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35EDC351CA53115D018529A4 /* PlanImporter.swift */; };
+		56C9E14764D4F61EC5711C8F /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06293A056AFC21454B132509 /* AppGroup.swift */; };
+		578357B3C5D19B7349D12A39 /* HomeCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76849876FEEEADA1C80595D3 /* HomeCards.swift */; };
+		584428CDD6E96E6B010E78EB /* Glass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A03DA5787C3DC7BCEA3E43 /* Glass.swift */; };
+		59A538A6A8AEBCDF72EC39BD /* QuickCaptureField.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAEF66827FCB480CA1F8BE2F /* QuickCaptureField.swift */; };
+		5B2158DFD8B50770E27276FE /* CompanionIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB3DEF7BE60F5FF706B88B16 /* CompanionIO.swift */; };
+		5DB424B924E34A3418E7A6ED /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD29CEE775EA196E0554F489 /* TodayView.swift */; };
+		6069A4FE8CB50B49C9E4D698 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCDDB8ECAA5080A37878F031 /* Helpers.swift */; };
+		607669605B0D63CA8FFF2DC8 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E476945CCFCD6386F244FCF /* MenuBarView.swift */; };
+		6228777FB78863D734A230DB /* OrbitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C225250CC867FBEEC5E147D9 /* OrbitStore.swift */; };
+		6448D314D214E73E159CE648 /* PendingInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4FB4E910EA22C9D19B838A /* PendingInbox.swift */; };
+		68BD83009812C97E6462BCEC /* UniView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9BB158FF8A480EA9CA3998 /* UniView.swift */; };
+		6A5E2D8BA4D7BC0148514CEA /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE13C7AC804A7A563E656418 /* Components.swift */; };
+		6AD5D09CD556167B9E8A3E87 /* PlanImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35EDC351CA53115D018529A4 /* PlanImporter.swift */; };
+		6E2F316BB3B0A314A7544ED5 /* PendingInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4FB4E910EA22C9D19B838A /* PendingInbox.swift */; };
+		6EB19880CAF059A9D3F878C8 /* PreferencesForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D823B103CAB0715EAC2BEAE6 /* PreferencesForm.swift */; };
+		6F094D6E3699942554F72BBD /* AppModel+Mail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA9AC1AF668262B3B014BA6 /* AppModel+Mail.swift */; };
+		70F4E48E061A854032FF59AD /* GroupsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988486706A4348F99CA3CD2D /* GroupsView.swift */; };
+		7140CC47114B5E33C254D427 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD7A44B1680FD84ECB59F588 /* Assets.xcassets */; };
+		7276E1AD6B3927D46D647E52 /* LecturesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38004E2465FE3EA0374CC71 /* LecturesView.swift */; };
+		73494CD0C7EDFEA37C76E75E /* UniView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9BB158FF8A480EA9CA3998 /* UniView.swift */; };
+		75460D0896850BD1E35B4D14 /* NudgeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BF436872E2E8AA063DB66F4 /* NudgeService.swift */; };
+		763957B0935E642515D757C9 /* Brain+Setup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 292C45DFEBC84F0CC29F16EB /* Brain+Setup.swift */; };
+		7764C40366642245083C8725 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD4FB9EA79578991D116059 /* Controls.swift */; };
+		7BCD6FBC027DB9EBD727BCDD /* Brain+Features.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6458B9D8B8884C8F19ABD796 /* Brain+Features.swift */; };
+		7C67D2C0AED82936578DD238 /* MacCalendarAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E220B2B34402F49F3CE2F4 /* MacCalendarAccess.swift */; };
+		7C9072205525F8A4B25A49E2 /* OrbitCore in Frameworks */ = {isa = PBXBuildFile; productRef = D4CDA32BAAD2F7D5656EA6DB /* OrbitCore */; };
+		7EA2700DA5001AF1EDFEF3B4 /* StoreDataSource+Academic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327A44B01DCB63966F58564E /* StoreDataSource+Academic.swift */; };
+		7F6615D226AB78B3D2EBAAC5 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06293A056AFC21454B132509 /* AppGroup.swift */; };
+		7F9A2D8A95FD596D6DDCF0DB /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCDDB8ECAA5080A37878F031 /* Helpers.swift */; };
+		7FF8C78C560FC07FFBA11E85 /* WelcomeFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 669E88B3599FCC50831390FF /* WelcomeFlow.swift */; };
+		807DFDA7886F58DA9358FB10 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63BB3124ED0C8CE330DE1B4 /* InboxView.swift */; };
+		810575E501153438672658F2 /* Origin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A122FCD6568F75F623516CA /* Origin.swift */; };
+		841AA48F52D3AD8B3BD44B31 /* RichNoteEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124D88564C4B62240284CB53 /* RichNoteEditor.swift */; };
+		85A594542E0DBFC958028154 /* LocalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0FB6F9DEA2C69650C0AFAC0 /* LocalStore.swift */; };
+		86353F54399A05A94F2B432F /* FlashcardViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E6457D26BF981F625976AB2 /* FlashcardViews.swift */; };
+		8642825DFA49D26194638086 /* MoneyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 074A6D141A6641C54FA7795F /* MoneyService.swift */; };
+		892BD803A7F23D435EF1BD72 /* PlannerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B574A7E51B203DFA023CD11B /* PlannerSheet.swift */; };
+		8A5C7598E9337FBD85354866 /* PlansView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DD8D16408E8B0004759237 /* PlansView.swift */; };
+		8CEFA6A3554013EC7F79D20A /* GradesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD99FA7A30C2A5B1696EA06E /* GradesView.swift */; };
+		8F151D5EE14CEE0A34ED63BA /* SyncStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 470D7E22DEA73246CD278B14 /* SyncStatus.swift */; };
+		8F92C3779F6980453D5E88A0 /* PracticePDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0DB863D244FD91E09000A9C /* PracticePDF.swift */; };
+		8FA85BD9D676B41F9638D3C2 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD29CEE775EA196E0554F489 /* TodayView.swift */; };
+		9069A4850D73132F2195ECD6 /* CompanionHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B2864132E04A3D5EAB0401 /* CompanionHub.swift */; };
+		9094AD04C71291DD932B5DEE /* OrbitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 24043A69A360FCBBEE9CCA0C /* OrbitCore */; };
+		9141863A9D089FD19513B7AD /* PlannerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B574A7E51B203DFA023CD11B /* PlannerSheet.swift */; };
+		91A3B7A202C2A1B29C3A5678 /* DictationButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3A190130A1C6E37B3359B3C /* DictationButton.swift */; };
+		92550E9536696918517BBA67 /* Brain+ELELive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A395425995D72856A79463F /* Brain+ELELive.swift */; };
+		92DE951E68CDDE2055F7B799 /* PreferencesForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = D823B103CAB0715EAC2BEAE6 /* PreferencesForm.swift */; };
+		933DF31D15782972ACC16861 /* AppModel+Planner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5E821E3AA12A21E5FDFE09 /* AppModel+Planner.swift */; };
+		9374A7D5ABA0542837EEC89A /* Agenda.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C13598698F53CAB05EFF2D4 /* Agenda.swift */; };
+		9419F7C1945F552A8E6FFACF /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE13C7AC804A7A563E656418 /* Components.swift */; };
+		941DD2FD3B037802EB7928F8 /* OrbitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C225250CC867FBEEC5E147D9 /* OrbitStore.swift */; };
+		9576AC03AFDAA8CEEF5F1E86 /* StudyHub+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84D6D92E2401C7EBDB72663 /* StudyHub+Actions.swift */; };
+		9607F8943A62CC4C8DE2A5C3 /* GoogleEventWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 069805F40B399A2BD824C5C6 /* GoogleEventWriter.swift */; };
+		973514A37B266B797E03B732 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE13C7AC804A7A563E656418 /* Components.swift */; };
+		978D5624C824C13A134CD35A /* Brain+OpenCodeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76EC91B69FFE40138F3957A9 /* Brain+OpenCodeModel.swift */; };
+		97E3E203B3D13D9703FACC51 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06293A056AFC21454B132509 /* AppGroup.swift */; };
+		9975F1D3FD12F3DC78912B73 /* OllamaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47344532D9E718667F731637 /* OllamaManager.swift */; };
+		9AA3B0D1414787497DCED7BC /* SelfImproveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F8677A0E84DA9FA97E313A /* SelfImproveView.swift */; };
+		9B3FD4BE13915A3A59B069F6 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */; };
+		9D3D3D48076F777ACBEF21E6 /* Notifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1FA03B8D3B4486A5BC8549 /* Notifier.swift */; };
+		9D9F3C5525C482D77C11B10F /* EdLoginWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1756AF37FA5BBD75BDA8E07C /* EdLoginWindow.swift */; };
+		9DD2464879277499547D33DE /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1484C73FE06C80C80628AC /* NotesView.swift */; };
+		9DE60BF8AFBFDF94B59F07A8 /* HealthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6600DD00B53B89AC86ED2A3 /* HealthService.swift */; };
+		9DFD2CF5EEF4A2A0D1ED64E9 /* Brain+Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 129617BC2BF2814F433D0541 /* Brain+Messages.swift */; };
+		A5D17A60CBB18D8BA4452A2C /* ShutdownSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A11ECBBE77505084F22AB7 /* ShutdownSheet.swift */; };
+		A64FC2A43CCE564FD54D001E /* RoutineSettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76EBE6F0E8D348AF7D8CB1D /* RoutineSettingsViews.swift */; };
+		A6F10C276BDAAE5A2B6A1A5A /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D63BB3124ED0C8CE330DE1B4 /* InboxView.swift */; };
+		AB68FE8C52760B201EEA84B6 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06293A056AFC21454B132509 /* AppGroup.swift */; };
+		AC49C32207F1B0809A8E4390 /* FeatureHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7374C19F57F0B9B73AEAE76C /* FeatureHub.swift */; };
+		ACA1224FBA5A682FEA663505 /* PendingInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4FB4E910EA22C9D19B838A /* PendingInbox.swift */; };
+		ACD378051E06937E1C98A56F /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B39745D2DAFB6C2A86B81B0 /* BackupService.swift */; };
+		ADE240EB7445E72A2787F66C /* OpenCodeLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FC77D5F642657D896E16E5 /* OpenCodeLauncher.swift */; };
+		AE21C29E60BC7F62028B6F83 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F3340339C2F5BF8E04F79F /* Theme.swift */; };
+		B016E3222B8B6E501752B2FC /* Agenda.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C13598698F53CAB05EFF2D4 /* Agenda.swift */; };
+		B0A15F16A3AE3B785488E11D /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C1484C73FE06C80C80628AC /* NotesView.swift */; };
+		B0D36EC98A9BF90C5A4C2AB4 /* EdViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483F20CCE0DA465ACBB75655 /* EdViews.swift */; };
+		B24C75CB7EC1A927BC4108E5 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9885A5F21A55C1668290C1EF /* AppModel.swift */; };
+		B30462D9D9D4FB620852EEB2 /* AppModel+Later.swift in Sources */ = {isa = PBXBuildFile; fileRef = 221A84367E7044E7C38E949C /* AppModel+Later.swift */; };
+		B345DCDB63E3C334ADF33272 /* OrbitIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272D403AD2470E69BBD096C0 /* OrbitIOSApp.swift */; };
+		B60EA9B1FA5B7718294EF903 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F3340339C2F5BF8E04F79F /* Theme.swift */; };
+		B6B92D70CE39211693E4B6FA /* FeatureSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC62F23B9607BA16C754857 /* FeatureSettingsView.swift */; };
+		B6FAC0D02BC94F249EBD625B /* EdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28F6F425169C92F78F2B2CB /* EdService.swift */; };
+		B890C85795C3BB6D4603E4EC /* StoredModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FB6CB77005B953A6DF69EC9 /* StoredModels.swift */; };
+		B9E401B30AD6B592B7153438 /* MacSettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = E558DC43ECDB0AFF34621965 /* MacSettingsSections.swift */; };
+		BA28FB76033D747C7CEF530C /* StoredModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FB6CB77005B953A6DF69EC9 /* StoredModels.swift */; };
+		BBC94C9C11672BDDCEDD8037 /* ELEWebSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9145F461AFAAAC8AC38E92B /* ELEWebSession.swift */; };
+		C19924F34C22CD2581D700C5 /* Brain+Notes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F52C507EADC6AE6C338F2BB /* Brain+Notes.swift */; };
+		C5C88747F909932A21F2CF75 /* MoneyViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6BE7520F8D1BE911D7440F5 /* MoneyViews.swift */; };
+		C62FB87F949AA3FD4E2843ED /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2789015C9A4150ED5727F9C3 /* ChatView.swift */; };
+		C811ED41D43A88AB58142D1E /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D34A2B583EAD4F05D20E26D /* CalendarView.swift */; };
+		C9CC8DFEF813884C52260167 /* FirmLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC7E2EB28BE5526E96A624B4 /* FirmLogo.swift */; };
+		CA0CD55E0EEF74F113C4F6C3 /* TypedNoteEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2EEC129320CDAFAB5FBB7C4 /* TypedNoteEditor.swift */; };
+		CD39FC453C3CC8A2E113324F /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9640A58E558060830DCA7407 /* UpdateService.swift */; };
+		D3B5E335919BCCEC5F47175D /* AccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303B379BEDA23F2539284A6A /* AccountManager.swift */; };
+		D4138D08E97D5FA749FFAEC3 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D34A2B583EAD4F05D20E26D /* CalendarView.swift */; };
+		D566D26C31E7498E30CE778D /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06293A056AFC21454B132509 /* AppGroup.swift */; };
+		D7882431DEDB2FEA3FD3248E /* OrbitMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3678DE7CA79E5FBB4D96590D /* OrbitMacApp.swift */; };
+		D8848ED313E808FDCA43B13E /* StoreDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908BF17A820F726162A59CA2 /* StoreDataSource.swift */; };
+		D99CADBBF0E46445BFE21400 /* StudyFeatureViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F76E5C6967A8276EBA1AAE /* StudyFeatureViews.swift */; };
+		D9BA696BFD5CC4C728AD3B3C /* StoreConversions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93276956FA21BB075373F198 /* StoreConversions.swift */; };
+		D9EB01FDDEF3C032FDD09307 /* QuickAddField.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF86FC6D84DBEC6ECAAAEB17 /* QuickAddField.swift */; };
+		DA38448D00FEE823B2DCBE23 /* Brain+Calendar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8913482F683D3C72287B6D4 /* Brain+Calendar.swift */; };
+		DB61ADEB1F050F6CDD90F0A9 /* StoreDataSource+Academic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327A44B01DCB63966F58564E /* StoreDataSource+Academic.swift */; };
+		DB7DD19970F9F928F35FF731 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F3340339C2F5BF8E04F79F /* Theme.swift */; };
+		DCB2C771FF79C6E5D9F01F15 /* OrbitWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC5CCEB9635476ACF541A90 /* OrbitWidgets.swift */; };
+		DCB9CA9523C43BD1F382ACF3 /* Glass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A03DA5787C3DC7BCEA3E43 /* Glass.swift */; };
+		DEA33EFD7732E38313E9C959 /* PendingInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4FB4E910EA22C9D19B838A /* PendingInbox.swift */; };
+		E1FEF4D006E69AA143652C06 /* OrbitBrain.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E7F528960B8DE484704617 /* OrbitBrain.swift */; };
+		E206C6F1574701BB139814E7 /* PlansView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DD8D16408E8B0004759237 /* PlansView.swift */; };
+		E237768589B2A6D1899B8E7E /* Hub+Reading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 032315939A4CEDCDBF4276ED /* Hub+Reading.swift */; };
+		E2A588DB73AB704622CADA33 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89AD2355C8939D1FCC914A9 /* SettingsView.swift */; };
+		E30817DB58B200A58F73DD3D /* MacSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63D50184D9EFFB2CF26D875E /* MacSettingsView.swift */; };
+		E3ADEFEEBD3AB4FE1BBD7A88 /* Brain+Briefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70D03E522EF6F73571AF253 /* Brain+Briefs.swift */; };
+		E409A893474CA3CA8F7A154A /* Hub+WeeklyReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB3B29A0348205153B617FD /* Hub+WeeklyReport.swift */; };
+		E5DAB3805CD7CF369173D832 /* Hub+Deadlines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96FBA7BE74D3A9A87E83B928 /* Hub+Deadlines.swift */; };
+		E942466933AFD23C0BE8810B /* StatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFA1F64BB2E45F9CEF7C2B0 /* StatsService.swift */; };
+		E95D9884BF1DCD7D7B708C79 /* OrbitWidgets-macOS.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FD9EAA5BFCBCC35C729EF232 /* OrbitWidgets-macOS.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E99326C17E28D447EC4F4A0F /* OrbitCore in Frameworks */ = {isa = PBXBuildFile; productRef = A63D68DE08B4E1A9A4C368B6 /* OrbitCore */; };
+		EAB4C03F163C47B90D90E631 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483D1EEF8194DD643CA40634 /* CommandPalette.swift */; };
+		ED553B4B40B0B4265C636E59 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9885A5F21A55C1668290C1EF /* AppModel.swift */; };
+		EDB6D01B9A2707A1B7E4CBB9 /* OrbitWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC5CCEB9635476ACF541A90 /* OrbitWidgets.swift */; };
+		EE08DC859FA552D401E2125D /* AppModel+Planner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5E821E3AA12A21E5FDFE09 /* AppModel+Planner.swift */; };
+		EE7447C6C3982A8E08FA5732 /* Fmt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9754FC33E1FBF076358A9B /* Fmt.swift */; };
+		EEEF706F990164AA9DDFC522 /* StudyHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE7674E2BED3AF8F6087B47 /* StudyHub.swift */; };
+		F07A89D8E6BA57243A1C9A22 /* OrbitShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1E8FC039385EDD7686A0B83C /* OrbitShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F1EA5D6C5AD48B1D4C20CE5C /* StoreConversions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93276956FA21BB075373F198 /* StoreConversions.swift */; };
+		F354B5DEB976BAB58C355878 /* OrbitBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F4DC07C2D54DF82512F861B /* OrbitBackend.swift */; };
+		F5E6AEA3FB825AA32CC5AD69 /* Brain+Mail.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6EF5153F35AC0F6B83AD866 /* Brain+Mail.swift */; };
+		F61A0859EDFDD222E6110896 /* QuickAddField.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF86FC6D84DBEC6ECAAAEB17 /* QuickAddField.swift */; };
+		F6700BBB51C446344D4F0893 /* PDFKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6601A2B24F721AF8F7072B /* PDFKitView.swift */; };
+		F7CF7568CB73708A81D33836 /* BriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBC1A0948C339ECBA02E670C /* BriefingView.swift */; };
+		F8F8D9ADCEF08E8E475604A9 /* OrbitWidgets-iOS.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8CF6C2283D0C21720F294D20 /* OrbitWidgets-iOS.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F9150AEA254D5633E5B9A439 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */; };
+		F988BC80119CB0467988E5D2 /* RemoteBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42BF85C042D7905237723FD /* RemoteBackend.swift */; };
+		F99F47F270203AB177BD00F4 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 362BD4E5BDDDEC6BE07FC209 /* RootView.swift */; };
+		FA47D45734C9E087CE18E6A2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89AD2355C8939D1FCC914A9 /* SettingsView.swift */; };
+		FAC68F46B073E83DAF33386E /* FocusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FAC8DE69AD778FBF7DA6524 /* FocusController.swift */; };
+		FAF21A8FAD51D31F563C753B /* AppModel+Tickets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A983D99FEF4CD1148876A239 /* AppModel+Tickets.swift */; };
+		FB80E1C4F20863966746AE3E /* StoreDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908BF17A820F726162A59CA2 /* StoreDataSource.swift */; };
+		FD0180B85C1FD31308AF24D7 /* TimeGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347D83D603F97FA460D89A54 /* TimeGrid.swift */; };
+		FDDE2D8D7652A4FCDB8C2FB6 /* AppModel+Mail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA9AC1AF668262B3B014BA6 /* AppModel+Mail.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9412A7A55DE01040D08B2E8F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0A57824173AF238C16E5DFDB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 40657316F22A1A2AF2CE4B23;
+			remoteInfo = "OrbitWidgets-iOS";
+		};
+		B0AF6D31B3DF51CCAAC6E3E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0A57824173AF238C16E5DFDB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D68EA1C8EEAE29FC744CAEEF;
+			remoteInfo = OrbitShare;
+		};
+		F704CA534C20CA37397581B5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0A57824173AF238C16E5DFDB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 34CC102E54B44A28043FDD3A;
+			remoteInfo = "OrbitWidgets-macOS";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		45C5B28CED7C26F253151D3F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				E95D9884BF1DCD7D7B708C79 /* OrbitWidgets-macOS.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C477AC879677E99DE776B1E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F8F8D9ADCEF08E8E475604A9 /* OrbitWidgets-iOS.appex in Embed Foundation Extensions */,
+				F07A89D8E6BA57243A1C9A22 /* OrbitShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		01F6D69211B0C93923225A9A /* TasksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksView.swift; sourceTree = "<group>"; };
+		032315939A4CEDCDBF4276ED /* Hub+Reading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hub+Reading.swift"; sourceTree = "<group>"; };
+		03C1CD84E571061075A58683 /* Hub+Feedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hub+Feedback.swift"; sourceTree = "<group>"; };
+		06293A056AFC21454B132509 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
+		069805F40B399A2BD824C5C6 /* GoogleEventWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleEventWriter.swift; sourceTree = "<group>"; };
+		074A6D141A6641C54FA7795F /* MoneyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyService.swift; sourceTree = "<group>"; };
+		07B1A06AB69B823CBFDF93D6 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		0A590EB36A132AD082944115 /* QuickCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCapture.swift; sourceTree = "<group>"; };
+		0BB54DCE7DE6CB2E9AA6F3E6 /* Orbit-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "Orbit-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0DE7674E2BED3AF8F6087B47 /* StudyHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyHub.swift; sourceTree = "<group>"; };
+		0F1FA03B8D3B4486A5BC8549 /* Notifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifier.swift; sourceTree = "<group>"; };
+		124D88564C4B62240284CB53 /* RichNoteEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichNoteEditor.swift; sourceTree = "<group>"; };
+		129617BC2BF2814F433D0541 /* Brain+Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Messages.swift"; sourceTree = "<group>"; };
+		13A6EBF54AED01206D4E4790 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		16A03DA5787C3DC7BCEA3E43 /* Glass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Glass.swift; sourceTree = "<group>"; };
+		1756AF37FA5BBD75BDA8E07C /* EdLoginWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdLoginWindow.swift; sourceTree = "<group>"; };
+		18E3FA2E51163D76BFFD2261 /* MoneySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneySettingsView.swift; sourceTree = "<group>"; };
+		1A395425995D72856A79463F /* Brain+ELELive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+ELELive.swift"; sourceTree = "<group>"; };
+		1A60EF6A4BA6C98243AAE38C /* MonzoLoopback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonzoLoopback.swift; sourceTree = "<group>"; };
+		1E3DCEE85A3D93E1AA03CEE7 /* MacOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacOnboardingView.swift; sourceTree = "<group>"; };
+		1E8FC039385EDD7686A0B83C /* OrbitShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = OrbitShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FC62F23B9607BA16C754857 /* FeatureSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureSettingsView.swift; sourceTree = "<group>"; };
+		21E220B2B34402F49F3CE2F4 /* MacCalendarAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacCalendarAccess.swift; sourceTree = "<group>"; };
+		221A84367E7044E7C38E949C /* AppModel+Later.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Later.swift"; sourceTree = "<group>"; };
+		272D403AD2470E69BBD096C0 /* OrbitIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitIOSApp.swift; sourceTree = "<group>"; };
+		274FECF61DA10B767D5A132C /* Brain+ELE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+ELE.swift"; sourceTree = "<group>"; };
+		2789015C9A4150ED5727F9C3 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		2801564622A3E493F68DB5AE /* CareersViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareersViews.swift; sourceTree = "<group>"; };
+		292C45DFEBC84F0CC29F16EB /* Brain+Setup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Setup.swift"; sourceTree = "<group>"; };
+		2BF436872E2E8AA063DB66F4 /* NudgeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NudgeService.swift; sourceTree = "<group>"; };
+		2F4DC07C2D54DF82512F861B /* OrbitBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitBackend.swift; sourceTree = "<group>"; };
+		303B379BEDA23F2539284A6A /* AccountManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountManager.swift; sourceTree = "<group>"; };
+		30990F9F37B14D921477926E /* NudgeBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NudgeBanner.swift; sourceTree = "<group>"; };
+		327A44B01DCB63966F58564E /* StoreDataSource+Academic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StoreDataSource+Academic.swift"; sourceTree = "<group>"; };
+		347D83D603F97FA460D89A54 /* TimeGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeGrid.swift; sourceTree = "<group>"; };
+		35EDC351CA53115D018529A4 /* PlanImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanImporter.swift; sourceTree = "<group>"; };
+		362BD4E5BDDDEC6BE07FC209 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		3678DE7CA79E5FBB4D96590D /* OrbitMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitMacApp.swift; sourceTree = "<group>"; };
+		367D1E3D8E9FAE8BB55D57DF /* OrbitIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitIntents.swift; sourceTree = "<group>"; };
+		3A122FCD6568F75F623516CA /* Origin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Origin.swift; sourceTree = "<group>"; };
+		3AC695A9C69AE1ECAAAEBBD3 /* Brain+ELEWeb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+ELEWeb.swift"; sourceTree = "<group>"; };
+		3CFA1F64BB2E45F9CEF7C2B0 /* StatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsService.swift; sourceTree = "<group>"; };
+		3E476945CCFCD6386F244FCF /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		3E6457D26BF981F625976AB2 /* FlashcardViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashcardViews.swift; sourceTree = "<group>"; };
+		46A11ECBBE77505084F22AB7 /* ShutdownSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShutdownSheet.swift; sourceTree = "<group>"; };
+		470D7E22DEA73246CD278B14 /* SyncStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncStatus.swift; sourceTree = "<group>"; };
+		47344532D9E718667F731637 /* OllamaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaManager.swift; sourceTree = "<group>"; };
+		483D1EEF8194DD643CA40634 /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
+		483F20CCE0DA465ACBB75655 /* EdViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdViews.swift; sourceTree = "<group>"; };
+		4970CBC0A8EB231E3D31D7A2 /* SelfImproveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfImproveService.swift; sourceTree = "<group>"; };
+		4A26E953E9B6E92FE92FD2D2 /* ELEDocumentText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELEDocumentText.swift; sourceTree = "<group>"; };
+		4B39745D2DAFB6C2A86B81B0 /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
+		4C13598698F53CAB05EFF2D4 /* Agenda.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Agenda.swift; sourceTree = "<group>"; };
+		4CA9AC1AF668262B3B014BA6 /* AppModel+Mail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Mail.swift"; sourceTree = "<group>"; };
+		4E14149F17FD58E9DCA9E1FD /* CareersService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CareersService.swift; sourceTree = "<group>"; };
+		4F52C507EADC6AE6C338F2BB /* Brain+Notes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Notes.swift"; sourceTree = "<group>"; };
+		552BE448F98D6F67E57F8AD7 /* AcademicHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcademicHooks.swift; sourceTree = "<group>"; };
+		58F8677A0E84DA9FA97E313A /* SelfImproveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelfImproveView.swift; sourceTree = "<group>"; };
+		5B529C662890D4025D22DE38 /* Orbit.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Orbit.xcconfig; sourceTree = "<group>"; };
+		5FAC8DE69AD778FBF7DA6524 /* FocusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusController.swift; sourceTree = "<group>"; };
+		6256515A892AE09D0AC8E76F /* Brain+Chat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Chat.swift"; sourceTree = "<group>"; };
+		63D50184D9EFFB2CF26D875E /* MacSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSettingsView.swift; sourceTree = "<group>"; };
+		6458B9D8B8884C8F19ABD796 /* Brain+Features.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Features.swift"; sourceTree = "<group>"; };
+		669E88B3599FCC50831390FF /* WelcomeFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFlow.swift; sourceTree = "<group>"; };
+		6C5E821E3AA12A21E5FDFE09 /* AppModel+Planner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Planner.swift"; sourceTree = "<group>"; };
+		6FB6CB77005B953A6DF69EC9 /* StoredModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredModels.swift; sourceTree = "<group>"; };
+		7023306912A849F9F5118B72 /* Brain+Academic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Academic.swift"; sourceTree = "<group>"; };
+		734663A285CECF1411058EC3 /* ExamDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamDashboard.swift; sourceTree = "<group>"; };
+		7374C19F57F0B9B73AEAE76C /* FeatureHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureHub.swift; sourceTree = "<group>"; };
+		76849876FEEEADA1C80595D3 /* HomeCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeCards.swift; sourceTree = "<group>"; };
+		76EC91B69FFE40138F3957A9 /* Brain+OpenCodeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+OpenCodeModel.swift"; sourceTree = "<group>"; };
+		79FC77D5F642657D896E16E5 /* OpenCodeLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenCodeLauncher.swift; sourceTree = "<group>"; };
+		7BD4FB9EA79578991D116059 /* Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Controls.swift; sourceTree = "<group>"; };
+		7D34A2B583EAD4F05D20E26D /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		82DD8D16408E8B0004759237 /* PlansView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlansView.swift; sourceTree = "<group>"; };
+		84F76E5C6967A8276EBA1AAE /* StudyFeatureViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyFeatureViews.swift; sourceTree = "<group>"; };
+		87CAAAA3B813084E68DCD8AA /* Hub+Flashcards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hub+Flashcards.swift"; sourceTree = "<group>"; };
+		89C349842E12B36AE72F0646 /* CompanionCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionCards.swift; sourceTree = "<group>"; };
+		8CF6C2283D0C21720F294D20 /* OrbitWidgets-iOS.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = "OrbitWidgets-iOS.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8EFAB41C2FF83108836C3811 /* StudyLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyLabView.swift; sourceTree = "<group>"; };
+		908BF17A820F726162A59CA2 /* StoreDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreDataSource.swift; sourceTree = "<group>"; };
+		91FE7BC90FC12EBAD73203D4 /* FocusViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusViews.swift; sourceTree = "<group>"; };
+		93276956FA21BB075373F198 /* StoreConversions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreConversions.swift; sourceTree = "<group>"; };
+		9640A58E558060830DCA7407 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
+		96FBA7BE74D3A9A87E83B928 /* Hub+Deadlines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hub+Deadlines.swift"; sourceTree = "<group>"; };
+		988486706A4348F99CA3CD2D /* GroupsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsView.swift; sourceTree = "<group>"; };
+		9885A5F21A55C1668290C1EF /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		9C1484C73FE06C80C80628AC /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
+		9D9754FC33E1FBF076358A9B /* Fmt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fmt.swift; sourceTree = "<group>"; };
+		A0DB863D244FD91E09000A9C /* PracticePDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticePDF.swift; sourceTree = "<group>"; };
+		A0F3340339C2F5BF8E04F79F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A28F6F425169C92F78F2B2CB /* EdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdService.swift; sourceTree = "<group>"; };
+		A70D03E522EF6F73571AF253 /* Brain+Briefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Briefs.swift"; sourceTree = "<group>"; };
+		A89AD2355C8939D1FCC914A9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A983D99FEF4CD1148876A239 /* AppModel+Tickets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Tickets.swift"; sourceTree = "<group>"; };
+		AAEF66827FCB480CA1F8BE2F /* QuickCaptureField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureField.swift; sourceTree = "<group>"; };
+		AC7E2EB28BE5526E96A624B4 /* FirmLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirmLogo.swift; sourceTree = "<group>"; };
+		AD7A44B1680FD84ECB59F588 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AD99FA7A30C2A5B1696EA06E /* GradesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GradesView.swift; sourceTree = "<group>"; };
+		AF4FB4E910EA22C9D19B838A /* PendingInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingInbox.swift; sourceTree = "<group>"; };
+		AF86FC6D84DBEC6ECAAAEB17 /* QuickAddField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddField.swift; sourceTree = "<group>"; };
+		B1C0500B75FEAF78E9A58D8C /* RoutineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineService.swift; sourceTree = "<group>"; };
+		B574A7E51B203DFA023CD11B /* PlannerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerSheet.swift; sourceTree = "<group>"; };
+		B84D6D92E2401C7EBDB72663 /* StudyHub+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StudyHub+Actions.swift"; sourceTree = "<group>"; };
+		B9B881BB0A811614CD380F1F /* KeychainBlob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainBlob.swift; sourceTree = "<group>"; };
+		BCDDB8ECAA5080A37878F031 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
+		BD29CEE775EA196E0554F489 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		BFB3B29A0348205153B617FD /* Hub+WeeklyReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hub+WeeklyReport.swift"; sourceTree = "<group>"; };
+		C225250CC867FBEEC5E147D9 /* OrbitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitStore.swift; sourceTree = "<group>"; };
+		C2EEC129320CDAFAB5FBB7C4 /* TypedNoteEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypedNoteEditor.swift; sourceTree = "<group>"; };
+		C38004E2465FE3EA0374CC71 /* LecturesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LecturesView.swift; sourceTree = "<group>"; };
+		C3C73DAA8DE406E44A561713 /* ExamService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamService.swift; sourceTree = "<group>"; };
+		C6600DD00B53B89AC86ED2A3 /* HealthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthService.swift; sourceTree = "<group>"; };
+		CBC1A0948C339ECBA02E670C /* BriefingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BriefingView.swift; sourceTree = "<group>"; };
+		CC6601A2B24F721AF8F7072B /* PDFKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFKitView.swift; sourceTree = "<group>"; };
+		CD5B66B9875DE00B48ABD530 /* Orbit-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Orbit-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE13C7AC804A7A563E656418 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		CF8760B0D5BE2094833E4CF1 /* NotesLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesLibraryView.swift; sourceTree = "<group>"; };
+		D0FB6F9DEA2C69650C0AFAC0 /* LocalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStore.swift; sourceTree = "<group>"; };
+		D2B2864132E04A3D5EAB0401 /* CompanionHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionHub.swift; sourceTree = "<group>"; };
+		D42BF85C042D7905237723FD /* RemoteBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteBackend.swift; sourceTree = "<group>"; };
+		D63BB3124ED0C8CE330DE1B4 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
+		D6BE7520F8D1BE911D7440F5 /* MoneyViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyViews.swift; sourceTree = "<group>"; };
+		D6C5E33D7E4EF93275199E4F /* MoveLaterButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveLaterButton.swift; sourceTree = "<group>"; };
+		D7104344EC937C3A0D9BC7C7 /* Brain+NotesLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+NotesLibrary.swift"; sourceTree = "<group>"; };
+		D823B103CAB0715EAC2BEAE6 /* PreferencesForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesForm.swift; sourceTree = "<group>"; };
+		DB3DEF7BE60F5FF706B88B16 /* CompanionIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionIO.swift; sourceTree = "<group>"; };
+		DC9BB158FF8A480EA9CA3998 /* UniView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UniView.swift; sourceTree = "<group>"; };
+		E0E7F528960B8DE484704617 /* OrbitBrain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitBrain.swift; sourceTree = "<group>"; };
+		E3A190130A1C6E37B3359B3C /* DictationButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationButton.swift; sourceTree = "<group>"; };
+		E451B7ABD36EC234117AA11E /* FeatureSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureSecrets.swift; sourceTree = "<group>"; };
+		E558DC43ECDB0AFF34621965 /* MacSettingsSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSettingsSections.swift; sourceTree = "<group>"; };
+		E6EF5153F35AC0F6B83AD866 /* Brain+Mail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Mail.swift"; sourceTree = "<group>"; };
+		E76EBE6F0E8D348AF7D8CB1D /* RoutineSettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutineSettingsViews.swift; sourceTree = "<group>"; };
+		E9145F461AFAAAC8AC38E92B /* ELEWebSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ELEWebSession.swift; sourceTree = "<group>"; };
+		E916CC1D9F77632A8CA8529C /* Orbit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Orbit; path = .; sourceTree = SOURCE_ROOT; };
+		EDC5CCEB9635476ACF541A90 /* OrbitWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitWidgets.swift; sourceTree = "<group>"; };
+		F734F5E8FA7AE026586517A0 /* Brain+NotesBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+NotesBrowser.swift"; sourceTree = "<group>"; };
+		F8913482F683D3C72287B6D4 /* Brain+Calendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Brain+Calendar.swift"; sourceTree = "<group>"; };
+		F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		FD9EAA5BFCBCC35C729EF232 /* OrbitWidgets-macOS.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "OrbitWidgets-macOS.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDBC2F98C1CAE73B764E7A4C /* NotesBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesBrowserView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		17FA37903A762CD10FB42877 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C9072205525F8A4B25A49E2 /* OrbitCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B6F24BCC5D30D1B56986AC90 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E99326C17E28D447EC4F4A0F /* OrbitCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C8E0A918E7D2296E3EC3BA18 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9094AD04C71291DD932B5DEE /* OrbitCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		03B267013B353DEAE33E595B /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				3678DE7CA79E5FBB4D96590D /* OrbitMacApp.swift */,
+				C28C08BEB3E16A7FF954E019 /* Brain */,
+				98E9EC0114D13B65D6CA56A5 /* Companion */,
+				62BA3A8A427846F6E07A8E18 /* ELE */,
+				634707236FF69AECEB3B0ECF /* Features */,
+				72A275C69F0BBA6CC676EE1F /* SelfImprove */,
+				9AEFE66792C9F91D41B29B73 /* Study */,
+				BB89356E8D959DA0F256DAF9 /* Views */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
+		0B9B4802E2BA398899973467 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				6C6A6D48BAA5067B5D830406 /* Common */,
+				A5C24CFC129334AB68F12765 /* DesignSystem */,
+				ABBBFB57E7F3AFA7D1996381 /* Intents */,
+				CA87D6448DA518C2EA8BA1E0 /* Resources */,
+				A7FDBD0BBE54DD142CEBB061 /* Services */,
+				94F7EC09ECAA18E0429B2666 /* Store */,
+				827C2B245279B5622E07EF2E /* Views */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		10DC1AB7BDADDF928111AF52 /* Notes */ = {
+			isa = PBXGroup;
+			children = (
+				FDBC2F98C1CAE73B764E7A4C /* NotesBrowserView.swift */,
+				CF8760B0D5BE2094833E4CF1 /* NotesLibraryView.swift */,
+				CC6601A2B24F721AF8F7072B /* PDFKitView.swift */,
+				124D88564C4B62240284CB53 /* RichNoteEditor.swift */,
+				C2EEC129320CDAFAB5FBB7C4 /* TypedNoteEditor.swift */,
+			);
+			path = Notes;
+			sourceTree = "<group>";
+		};
+		2B4E9F071F599FDF74B76F17 /* Routine */ = {
+			isa = PBXGroup;
+			children = (
+				734663A285CECF1411058EC3 /* ExamDashboard.swift */,
+				30990F9F37B14D921477926E /* NudgeBanner.swift */,
+				E76EBE6F0E8D348AF7D8CB1D /* RoutineSettingsViews.swift */,
+				46A11ECBBE77505084F22AB7 /* ShutdownSheet.swift */,
+			);
+			path = Routine;
+			sourceTree = "<group>";
+		};
+		2C4E87FCDCCB800A134D868D /* Calendar */ = {
+			isa = PBXGroup;
+			children = (
+				7D34A2B583EAD4F05D20E26D /* CalendarView.swift */,
+			);
+			path = Calendar;
+			sourceTree = "<group>";
+		};
+		32E9F48C5154A5DFF8A68C9C /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				14DA7E2FAD2CEF64F22255EE /* OnboardingView.swift */,
+				D823B103CAB0715EAC2BEAE6 /* PreferencesForm.swift */,
+				A89AD2355C8939D1FCC914A9 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		46174E7F6097B2DCBF472F87 /* Share */ = {
+			isa = PBXGroup;
+			children = (
+				07B1A06AB69B823CBFDF93D6 /* ShareViewController.swift */,
+			);
+			path = Share;
+			sourceTree = "<group>";
+		};
+		4BA802D5159DFF79E034A547 /* Study */ = {
+			isa = PBXGroup;
+			children = (
+				8EFAB41C2FF83108836C3811 /* StudyLabView.swift */,
+			);
+			path = Study;
+			sourceTree = "<group>";
+		};
+		5D1E5167F6ED0AF844B94876 /* Notes */ = {
+			isa = PBXGroup;
+			children = (
+				9C1484C73FE06C80C80628AC /* NotesView.swift */,
+			);
+			path = Notes;
+			sourceTree = "<group>";
+		};
+		62BA3A8A427846F6E07A8E18 /* ELE */ = {
+			isa = PBXGroup;
+			children = (
+				1A395425995D72856A79463F /* Brain+ELELive.swift */,
+				3AC695A9C69AE1ECAAAEBBD3 /* Brain+ELEWeb.swift */,
+				1756AF37FA5BBD75BDA8E07C /* EdLoginWindow.swift */,
+				4A26E953E9B6E92FE92FD2D2 /* ELEDocumentText.swift */,
+				E9145F461AFAAAC8AC38E92B /* ELEWebSession.swift */,
+			);
+			path = ELE;
+			sourceTree = "<group>";
+		};
+		634707236FF69AECEB3B0ECF /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				4B39745D2DAFB6C2A86B81B0 /* BackupService.swift */,
+				4E14149F17FD58E9DCA9E1FD /* CareersService.swift */,
+				E3A190130A1C6E37B3359B3C /* DictationButton.swift */,
+				A28F6F425169C92F78F2B2CB /* EdService.swift */,
+				C3C73DAA8DE406E44A561713 /* ExamService.swift */,
+				7374C19F57F0B9B73AEAE76C /* FeatureHub.swift */,
+				E451B7ABD36EC234117AA11E /* FeatureSecrets.swift */,
+				5FAC8DE69AD778FBF7DA6524 /* FocusController.swift */,
+				C6600DD00B53B89AC86ED2A3 /* HealthService.swift */,
+				96FBA7BE74D3A9A87E83B928 /* Hub+Deadlines.swift */,
+				03C1CD84E571061075A58683 /* Hub+Feedback.swift */,
+				87CAAAA3B813084E68DCD8AA /* Hub+Flashcards.swift */,
+				032315939A4CEDCDBF4276ED /* Hub+Reading.swift */,
+				BFB3B29A0348205153B617FD /* Hub+WeeklyReport.swift */,
+				074A6D141A6641C54FA7795F /* MoneyService.swift */,
+				1A60EF6A4BA6C98243AAE38C /* MonzoLoopback.swift */,
+				2BF436872E2E8AA063DB66F4 /* NudgeService.swift */,
+				0A590EB36A132AD082944115 /* QuickCapture.swift */,
+				B1C0500B75FEAF78E9A58D8C /* RoutineService.swift */,
+				3CFA1F64BB2E45F9CEF7C2B0 /* StatsService.swift */,
+				9640A58E558060830DCA7407 /* UpdateService.swift */,
+				EE6773F95381208E4EE74E5A /* Views */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		639FC9306A4AB7119E94DF43 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				272D403AD2470E69BBD096C0 /* OrbitIOSApp.swift */,
+				D42BF85C042D7905237723FD /* RemoteBackend.swift */,
+			);
+			path = iOS;
+			sourceTree = "<group>";
+		};
+		6C6A6D48BAA5067B5D830406 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				06293A056AFC21454B132509 /* AppGroup.swift */,
+				AF4FB4E910EA22C9D19B838A /* PendingInbox.swift */,
+				F8C045FFC2609CCC9EA7E1F1 /* WidgetSnapshot.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		6CB339801A5072D6ECAF498F /* Tasks */ = {
+			isa = PBXGroup;
+			children = (
+				01F6D69211B0C93923225A9A /* TasksView.swift */,
+			);
+			path = Tasks;
+			sourceTree = "<group>";
+		};
+		72A275C69F0BBA6CC676EE1F /* SelfImprove */ = {
+			isa = PBXGroup;
+			children = (
+				4970CBC0A8EB231E3D31D7A2 /* SelfImproveService.swift */,
+				58F8677A0E84DA9FA97E313A /* SelfImproveView.swift */,
+			);
+			path = SelfImprove;
+			sourceTree = "<group>";
+		};
+		73ECFE08259F0EF5C66DD054 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				76849876FEEEADA1C80595D3 /* HomeCards.swift */,
+				13A6EBF54AED01206D4E4790 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		814D9411DD4586AA61C12208 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				5B529C662890D4025D22DE38 /* Orbit.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		827C2B245279B5622E07EF2E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				362BD4E5BDDDEC6BE07FC209 /* RootView.swift */,
+				2C4E87FCDCCB800A134D868D /* Calendar */,
+				BCB536DB184FC15CC67FEFB7 /* Chat */,
+				AB6BD7C70B2196473821D945 /* Common */,
+				CD7BCAC774E0A927EE539175 /* Inbox */,
+				5D1E5167F6ED0AF844B94876 /* Notes */,
+				F0BE99D0A1664ECF6339BAAA /* Planner */,
+				FB1AF49D8EDC9A211E4FC8C2 /* Plans */,
+				32E9F48C5154A5DFF8A68C9C /* Settings */,
+				6CB339801A5072D6ECAF498F /* Tasks */,
+				EA1197FDF4D0743468C475E1 /* Today */,
+				D52ED05F95C58CBF851EA2E2 /* Uni */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		85A66F9411A71B01E8DCEC78 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				639FC9306A4AB7119E94DF43 /* iOS */,
+				03B267013B353DEAE33E595B /* macOS */,
+				46174E7F6097B2DCBF472F87 /* Share */,
+				0B9B4802E2BA398899973467 /* Shared */,
+				964C5E9BBD9A1F7C49C0F224 /* Widgets */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		94F7EC09ECAA18E0429B2666 /* Store */ = {
+			isa = PBXGroup;
+			children = (
+				C225250CC867FBEEC5E147D9 /* OrbitStore.swift */,
+				93276956FA21BB075373F198 /* StoreConversions.swift */,
+				6FB6CB77005B953A6DF69EC9 /* StoredModels.swift */,
+			);
+			path = Store;
+			sourceTree = "<group>";
+		};
+		964C5E9BBD9A1F7C49C0F224 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				EDC5CCEB9635476ACF541A90 /* OrbitWidgets.swift */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		98E9EC0114D13B65D6CA56A5 /* Companion */ = {
+			isa = PBXGroup;
+			children = (
+				D2B2864132E04A3D5EAB0401 /* CompanionHub.swift */,
+				DB3DEF7BE60F5FF706B88B16 /* CompanionIO.swift */,
+				A1E2A2B0AAC3BCEC0DFE4F59 /* Views */,
+			);
+			path = Companion;
+			sourceTree = "<group>";
+		};
+		9AEFE66792C9F91D41B29B73 /* Study */ = {
+			isa = PBXGroup;
+			children = (
+				A0DB863D244FD91E09000A9C /* PracticePDF.swift */,
+				0DE7674E2BED3AF8F6087B47 /* StudyHub.swift */,
+				B84D6D92E2401C7EBDB72663 /* StudyHub+Actions.swift */,
+			);
+			path = Study;
+			sourceTree = "<group>";
+		};
+		A0A25C17E75C74C24DCDCEB5 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				E916CC1D9F77632A8CA8529C /* Orbit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		A1E2A2B0AAC3BCEC0DFE4F59 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				CBC1A0948C339ECBA02E670C /* BriefingView.swift */,
+				89C349842E12B36AE72F0646 /* CompanionCards.swift */,
+				AD99FA7A30C2A5B1696EA06E /* GradesView.swift */,
+				988486706A4348F99CA3CD2D /* GroupsView.swift */,
+				C38004E2465FE3EA0374CC71 /* LecturesView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A5C24CFC129334AB68F12765 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				483D1EEF8194DD643CA40634 /* CommandPalette.swift */,
+				CE13C7AC804A7A563E656418 /* Components.swift */,
+				7BD4FB9EA79578991D116059 /* Controls.swift */,
+				16A03DA5787C3DC7BCEA3E43 /* Glass.swift */,
+				BCDDB8ECAA5080A37878F031 /* Helpers.swift */,
+				3A122FCD6568F75F623516CA /* Origin.swift */,
+				AF86FC6D84DBEC6ECAAAEB17 /* QuickAddField.swift */,
+				A0F3340339C2F5BF8E04F79F /* Theme.swift */,
+				347D83D603F97FA460D89A54 /* TimeGrid.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		A7FDBD0BBE54DD142CEBB061 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				4C13598698F53CAB05EFF2D4 /* Agenda.swift */,
+				9885A5F21A55C1668290C1EF /* AppModel.swift */,
+				221A84367E7044E7C38E949C /* AppModel+Later.swift */,
+				4CA9AC1AF668262B3B014BA6 /* AppModel+Mail.swift */,
+				6C5E821E3AA12A21E5FDFE09 /* AppModel+Planner.swift */,
+				A983D99FEF4CD1148876A239 /* AppModel+Tickets.swift */,
+				9D9754FC33E1FBF076358A9B /* Fmt.swift */,
+				B9B881BB0A811614CD380F1F /* KeychainBlob.swift */,
+				0F1FA03B8D3B4486A5BC8549 /* Notifier.swift */,
+				2F4DC07C2D54DF82512F861B /* OrbitBackend.swift */,
+				35EDC351CA53115D018529A4 /* PlanImporter.swift */,
+				908BF17A820F726162A59CA2 /* StoreDataSource.swift */,
+				327A44B01DCB63966F58564E /* StoreDataSource+Academic.swift */,
+				470D7E22DEA73246CD278B14 /* SyncStatus.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AB6BD7C70B2196473821D945 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				D6C5E33D7E4EF93275199E4F /* MoveLaterButton.swift */,
+			);
+			path = Common;
+			sourceTree = "<group>";
+		};
+		ABBBFB57E7F3AFA7D1996381 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				367D1E3D8E9FAE8BB55D57DF /* OrbitIntents.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		B307547D1ABD752BE02491B9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0BB54DCE7DE6CB2E9AA6F3E6 /* Orbit-iOS.app */,
+				CD5B66B9875DE00B48ABD530 /* Orbit-macOS.app */,
+				1E8FC039385EDD7686A0B83C /* OrbitShare.appex */,
+				8CF6C2283D0C21720F294D20 /* OrbitWidgets-iOS.appex */,
+				FD9EAA5BFCBCC35C729EF232 /* OrbitWidgets-macOS.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BB89356E8D959DA0F256DAF9 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				552BE448F98D6F67E57F8AD7 /* AcademicHooks.swift */,
+				E558DC43ECDB0AFF34621965 /* MacSettingsSections.swift */,
+				63D50184D9EFFB2CF26D875E /* MacSettingsView.swift */,
+				3E476945CCFCD6386F244FCF /* MenuBarView.swift */,
+				73ECFE08259F0EF5C66DD054 /* Home */,
+				10DC1AB7BDADDF928111AF52 /* Notes */,
+				BF2D7617166136A8050A9E33 /* Onboarding */,
+				2B4E9F071F599FDF74B76F17 /* Routine */,
+				4BA802D5159DFF79E034A547 /* Study */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		BCB536DB184FC15CC67FEFB7 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				2789015C9A4150ED5727F9C3 /* ChatView.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		BF2D7617166136A8050A9E33 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				1E3DCEE85A3D93E1AA03CEE7 /* MacOnboardingView.swift */,
+				669E88B3599FCC50831390FF /* WelcomeFlow.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		C28C08BEB3E16A7FF954E019 /* Brain */ = {
+			isa = PBXGroup;
+			children = (
+				303B379BEDA23F2539284A6A /* AccountManager.swift */,
+				7023306912A849F9F5118B72 /* Brain+Academic.swift */,
+				A70D03E522EF6F73571AF253 /* Brain+Briefs.swift */,
+				F8913482F683D3C72287B6D4 /* Brain+Calendar.swift */,
+				6256515A892AE09D0AC8E76F /* Brain+Chat.swift */,
+				274FECF61DA10B767D5A132C /* Brain+ELE.swift */,
+				6458B9D8B8884C8F19ABD796 /* Brain+Features.swift */,
+				E6EF5153F35AC0F6B83AD866 /* Brain+Mail.swift */,
+				129617BC2BF2814F433D0541 /* Brain+Messages.swift */,
+				4F52C507EADC6AE6C338F2BB /* Brain+Notes.swift */,
+				F734F5E8FA7AE026586517A0 /* Brain+NotesBrowser.swift */,
+				D7104344EC937C3A0D9BC7C7 /* Brain+NotesLibrary.swift */,
+				76EC91B69FFE40138F3957A9 /* Brain+OpenCodeModel.swift */,
+				292C45DFEBC84F0CC29F16EB /* Brain+Setup.swift */,
+				069805F40B399A2BD824C5C6 /* GoogleEventWriter.swift */,
+				D0FB6F9DEA2C69650C0AFAC0 /* LocalStore.swift */,
+				21E220B2B34402F49F3CE2F4 /* MacCalendarAccess.swift */,
+				47344532D9E718667F731637 /* OllamaManager.swift */,
+				79FC77D5F642657D896E16E5 /* OpenCodeLauncher.swift */,
+				E0E7F528960B8DE484704617 /* OrbitBrain.swift */,
+			);
+			path = Brain;
+			sourceTree = "<group>";
+		};
+		C5F01767FDAE31EE06DFF523 = {
+			isa = PBXGroup;
+			children = (
+				85A66F9411A71B01E8DCEC78 /* App */,
+				814D9411DD4586AA61C12208 /* Config */,
+				A0A25C17E75C74C24DCDCEB5 /* Packages */,
+				B307547D1ABD752BE02491B9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CA87D6448DA518C2EA8BA1E0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AD7A44B1680FD84ECB59F588 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		CD7BCAC774E0A927EE539175 /* Inbox */ = {
+			isa = PBXGroup;
+			children = (
+				D63BB3124ED0C8CE330DE1B4 /* InboxView.swift */,
+			);
+			path = Inbox;
+			sourceTree = "<group>";
+		};
+		D52ED05F95C58CBF851EA2E2 /* Uni */ = {
+			isa = PBXGroup;
+			children = (
+				DC9BB158FF8A480EA9CA3998 /* UniView.swift */,
+			);
+			path = Uni;
+			sourceTree = "<group>";
+		};
+		EA1197FDF4D0743468C475E1 /* Today */ = {
+			isa = PBXGroup;
+			children = (
+				BD29CEE775EA196E0554F489 /* TodayView.swift */,
+			);
+			path = Today;
+			sourceTree = "<group>";
+		};
+		EE6773F95381208E4EE74E5A /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				2801564622A3E493F68DB5AE /* CareersViews.swift */,
+				483F20CCE0DA465ACBB75655 /* EdViews.swift */,
+				1FC62F23B9607BA16C754857 /* FeatureSettingsView.swift */,
+				AC7E2EB28BE5526E96A624B4 /* FirmLogo.swift */,
+				3E6457D26BF981F625976AB2 /* FlashcardViews.swift */,
+				91FE7BC90FC12EBAD73203D4 /* FocusViews.swift */,
+				18E3FA2E51163D76BFFD2261 /* MoneySettingsView.swift */,
+				D6BE7520F8D1BE911D7440F5 /* MoneyViews.swift */,
+				AAEF66827FCB480CA1F8BE2F /* QuickCaptureField.swift */,
+				84F76E5C6967A8276EBA1AAE /* StudyFeatureViews.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		F0BE99D0A1664ECF6339BAAA /* Planner */ = {
+			isa = PBXGroup;
+			children = (
+				B574A7E51B203DFA023CD11B /* PlannerSheet.swift */,
+			);
+			path = Planner;
+			sourceTree = "<group>";
+		};
+		FB1AF49D8EDC9A211E4FC8C2 /* Plans */ = {
+			isa = PBXGroup;
+			children = (
+				82DD8D16408E8B0004759237 /* PlansView.swift */,
+			);
+			path = Plans;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		18B9EBC4B62C95940C97C371 /* Orbit-iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 809A2B230FB376703F2D99A0 /* Build configuration list for PBXNativeTarget "Orbit-iOS" */;
+			buildPhases = (
+				9764E80AF0B5378BEBC9DC10 /* Sources */,
+				B6D5EF42E5B4FF10714C129C /* Resources */,
+				B6F24BCC5D30D1B56986AC90 /* Frameworks */,
+				7C477AC879677E99DE776B1E /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0E4437F34D08BAE3C0B911F5 /* PBXTargetDependency */,
+				E67B8DA423B372FEA7934CA6 /* PBXTargetDependency */,
+			);
+			name = "Orbit-iOS";
+			packageProductDependencies = (
+				A63D68DE08B4E1A9A4C368B6 /* OrbitCore */,
+			);
+			productName = "Orbit-iOS";
+			productReference = 0BB54DCE7DE6CB2E9AA6F3E6 /* Orbit-iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		34CC102E54B44A28043FDD3A /* OrbitWidgets-macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2ADFCCA171372F1E845C992A /* Build configuration list for PBXNativeTarget "OrbitWidgets-macOS" */;
+			buildPhases = (
+				389A7FAFCE2D71DDD061DA9A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "OrbitWidgets-macOS";
+			packageProductDependencies = (
+			);
+			productName = "OrbitWidgets-macOS";
+			productReference = FD9EAA5BFCBCC35C729EF232 /* OrbitWidgets-macOS.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		40657316F22A1A2AF2CE4B23 /* OrbitWidgets-iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 42A2E89ED8E0B6DD6A748BCD /* Build configuration list for PBXNativeTarget "OrbitWidgets-iOS" */;
+			buildPhases = (
+				34EB379148CFA3D510550D87 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "OrbitWidgets-iOS";
+			packageProductDependencies = (
+			);
+			productName = "OrbitWidgets-iOS";
+			productReference = 8CF6C2283D0C21720F294D20 /* OrbitWidgets-iOS.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		5A39DAA9F7759A4003C67271 /* Orbit-macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 46BDE714D4AF77DE53C0C1D3 /* Build configuration list for PBXNativeTarget "Orbit-macOS" */;
+			buildPhases = (
+				B7A88DB6EC289138563F4D8F /* Sources */,
+				78F652474DFC687983CC4324 /* Resources */,
+				C8E0A918E7D2296E3EC3BA18 /* Frameworks */,
+				45C5B28CED7C26F253151D3F /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2E08F896FA8C7D83D91E786A /* PBXTargetDependency */,
+			);
+			name = "Orbit-macOS";
+			packageProductDependencies = (
+				24043A69A360FCBBEE9CCA0C /* OrbitCore */,
+			);
+			productName = "Orbit-macOS";
+			productReference = CD5B66B9875DE00B48ABD530 /* Orbit-macOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D68EA1C8EEAE29FC744CAEEF /* OrbitShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ADF2DA143B39C13B0BD8D0C0 /* Build configuration list for PBXNativeTarget "OrbitShare" */;
+			buildPhases = (
+				90A4F1A42DFB7A7321085C4C /* Sources */,
+				17FA37903A762CD10FB42877 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OrbitShare;
+			packageProductDependencies = (
+				D4CDA32BAAD2F7D5656EA6DB /* OrbitCore */,
+			);
+			productName = OrbitShare;
+			productReference = 1E8FC039385EDD7686A0B83C /* OrbitShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0A57824173AF238C16E5DFDB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					18B9EBC4B62C95940C97C371 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					34CC102E54B44A28043FDD3A = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					40657316F22A1A2AF2CE4B23 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					5A39DAA9F7759A4003C67271 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					D68EA1C8EEAE29FC744CAEEF = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 3B09B19ED5B1850084012594 /* Build configuration list for PBXProject "Orbit" */;
+			developmentRegion = "en-GB";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				"en-GB",
+			);
+			mainGroup = C5F01767FDAE31EE06DFF523;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2F440832854ED13F8DD7B231 /* XCLocalSwiftPackageReference "." */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B307547D1ABD752BE02491B9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				18B9EBC4B62C95940C97C371 /* Orbit-iOS */,
+				5A39DAA9F7759A4003C67271 /* Orbit-macOS */,
+				40657316F22A1A2AF2CE4B23 /* OrbitWidgets-iOS */,
+				34CC102E54B44A28043FDD3A /* OrbitWidgets-macOS */,
+				D68EA1C8EEAE29FC744CAEEF /* OrbitShare */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		78F652474DFC687983CC4324 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7140CC47114B5E33C254D427 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B6D5EF42E5B4FF10714C129C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				01DE1A4879BE78BE9732D532 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		34EB379148CFA3D510550D87 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D566D26C31E7498E30CE778D /* AppGroup.swift in Sources */,
+				07DE17DE903E9379A2C9EDD4 /* Components.swift in Sources */,
+				DCB2C771FF79C6E5D9F01F15 /* OrbitWidgets.swift in Sources */,
+				6448D314D214E73E159CE648 /* PendingInbox.swift in Sources */,
+				DB7DD19970F9F928F35FF731 /* Theme.swift in Sources */,
+				2D5E26DE9D444A96CCB14CDF /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		389A7FAFCE2D71DDD061DA9A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7F6615D226AB78B3D2EBAAC5 /* AppGroup.swift in Sources */,
+				973514A37B266B797E03B732 /* Components.swift in Sources */,
+				EDB6D01B9A2707A1B7E4CBB9 /* OrbitWidgets.swift in Sources */,
+				DEA33EFD7732E38313E9C959 /* PendingInbox.swift in Sources */,
+				38AB236ED7A4EE1A303BF106 /* Theme.swift in Sources */,
+				4DEFC0DF7D296E4E254509C6 /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90A4F1A42DFB7A7321085C4C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				97E3E203B3D13D9703FACC51 /* AppGroup.swift in Sources */,
+				6A5E2D8BA4D7BC0148514CEA /* Components.swift in Sources */,
+				ACA1224FBA5A682FEA663505 /* PendingInbox.swift in Sources */,
+				1CE9DE6E2931BB3ADEA330AC /* ShareViewController.swift in Sources */,
+				B60EA9B1FA5B7718294EF903 /* Theme.swift in Sources */,
+				3F7ECBD5FAD2C3935ADE4A25 /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9764E80AF0B5378BEBC9DC10 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B016E3222B8B6E501752B2FC /* Agenda.swift in Sources */,
+				56C9E14764D4F61EC5711C8F /* AppGroup.swift in Sources */,
+				B30462D9D9D4FB620852EEB2 /* AppModel+Later.swift in Sources */,
+				6F094D6E3699942554F72BBD /* AppModel+Mail.swift in Sources */,
+				933DF31D15782972ACC16861 /* AppModel+Planner.swift in Sources */,
+				FAF21A8FAD51D31F563C753B /* AppModel+Tickets.swift in Sources */,
+				B24C75CB7EC1A927BC4108E5 /* AppModel.swift in Sources */,
+				C811ED41D43A88AB58142D1E /* CalendarView.swift in Sources */,
+				C62FB87F949AA3FD4E2843ED /* ChatView.swift in Sources */,
+				4B0C685BA439102C0F5207AC /* CommandPalette.swift in Sources */,
+				55465A85C85FE52188FB3174 /* Components.swift in Sources */,
+				1564CC7CE5B99DCD13A8CCE4 /* Controls.swift in Sources */,
+				1D029A29E9EF8B66F2151262 /* Fmt.swift in Sources */,
+				DCB9CA9523C43BD1F382ACF3 /* Glass.swift in Sources */,
+				7F9A2D8A95FD596D6DDCF0DB /* Helpers.swift in Sources */,
+				A6F10C276BDAAE5A2B6A1A5A /* InboxView.swift in Sources */,
+				21A3F44E6D9A88F94E9C93E7 /* KeychainBlob.swift in Sources */,
+				384959209EEFCD4830ADCFF6 /* MoveLaterButton.swift in Sources */,
+				9DD2464879277499547D33DE /* NotesView.swift in Sources */,
+				9D3D3D48076F777ACBEF21E6 /* Notifier.swift in Sources */,
+				2B356576B9999457C8257336 /* OnboardingView.swift in Sources */,
+				F354B5DEB976BAB58C355878 /* OrbitBackend.swift in Sources */,
+				B345DCDB63E3C334ADF33272 /* OrbitIOSApp.swift in Sources */,
+				1BC7CA2987A71A97148BEB3C /* OrbitIntents.swift in Sources */,
+				6228777FB78863D734A230DB /* OrbitStore.swift in Sources */,
+				810575E501153438672658F2 /* Origin.swift in Sources */,
+				559F530A778BB60CD73CFEBD /* PendingInbox.swift in Sources */,
+				6AD5D09CD556167B9E8A3E87 /* PlanImporter.swift in Sources */,
+				9141863A9D089FD19513B7AD /* PlannerSheet.swift in Sources */,
+				8A5C7598E9337FBD85354866 /* PlansView.swift in Sources */,
+				6EB19880CAF059A9D3F878C8 /* PreferencesForm.swift in Sources */,
+				D9EB01FDDEF3C032FDD09307 /* QuickAddField.swift in Sources */,
+				F988BC80119CB0467988E5D2 /* RemoteBackend.swift in Sources */,
+				4F125F777C1CF7795815B6B8 /* RootView.swift in Sources */,
+				FA47D45734C9E087CE18E6A2 /* SettingsView.swift in Sources */,
+				D9BA696BFD5CC4C728AD3B3C /* StoreConversions.swift in Sources */,
+				DB61ADEB1F050F6CDD90F0A9 /* StoreDataSource+Academic.swift in Sources */,
+				FB80E1C4F20863966746AE3E /* StoreDataSource.swift in Sources */,
+				B890C85795C3BB6D4603E4EC /* StoredModels.swift in Sources */,
+				8F151D5EE14CEE0A34ED63BA /* SyncStatus.swift in Sources */,
+				238EF43D8AED70E88359BD73 /* TasksView.swift in Sources */,
+				1DC76B723F3FD30849ADDC7D /* Theme.swift in Sources */,
+				FD0180B85C1FD31308AF24D7 /* TimeGrid.swift in Sources */,
+				5DB424B924E34A3418E7A6ED /* TodayView.swift in Sources */,
+				73494CD0C7EDFEA37C76E75E /* UniView.swift in Sources */,
+				3FCB79447AC1B7F15E0743AD /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7A88DB6EC289138563F4D8F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				464FFE7D844F44B3E68433D0 /* AcademicHooks.swift in Sources */,
+				D3B5E335919BCCEC5F47175D /* AccountManager.swift in Sources */,
+				9374A7D5ABA0542837EEC89A /* Agenda.swift in Sources */,
+				AB68FE8C52760B201EEA84B6 /* AppGroup.swift in Sources */,
+				17E1C58DF4CD3E819B61AACA /* AppModel+Later.swift in Sources */,
+				FDDE2D8D7652A4FCDB8C2FB6 /* AppModel+Mail.swift in Sources */,
+				EE08DC859FA552D401E2125D /* AppModel+Planner.swift in Sources */,
+				0B7E68E5F77250A5ED79F59A /* AppModel+Tickets.swift in Sources */,
+				ED553B4B40B0B4265C636E59 /* AppModel.swift in Sources */,
+				ACD378051E06937E1C98A56F /* BackupService.swift in Sources */,
+				3D4C81155C7A1FB132878892 /* Brain+Academic.swift in Sources */,
+				E3ADEFEEBD3AB4FE1BBD7A88 /* Brain+Briefs.swift in Sources */,
+				DA38448D00FEE823B2DCBE23 /* Brain+Calendar.swift in Sources */,
+				40FE35C6FF7ED86E94D020F8 /* Brain+Chat.swift in Sources */,
+				0288C9A6AEFD2FCD36149638 /* Brain+ELE.swift in Sources */,
+				92550E9536696918517BBA67 /* Brain+ELELive.swift in Sources */,
+				520EF1C9FBF68D345724E254 /* Brain+ELEWeb.swift in Sources */,
+				7BCD6FBC027DB9EBD727BCDD /* Brain+Features.swift in Sources */,
+				F5E6AEA3FB825AA32CC5AD69 /* Brain+Mail.swift in Sources */,
+				9DFD2CF5EEF4A2A0D1ED64E9 /* Brain+Messages.swift in Sources */,
+				C19924F34C22CD2581D700C5 /* Brain+Notes.swift in Sources */,
+				296A123DA9FC00DC6C83B061 /* Brain+NotesBrowser.swift in Sources */,
+				06047ADACB0CD2C46026B14B /* Brain+NotesLibrary.swift in Sources */,
+				978D5624C824C13A134CD35A /* Brain+OpenCodeModel.swift in Sources */,
+				763957B0935E642515D757C9 /* Brain+Setup.swift in Sources */,
+				F7CF7568CB73708A81D33836 /* BriefingView.swift in Sources */,
+				D4138D08E97D5FA749FFAEC3 /* CalendarView.swift in Sources */,
+				2FEB16A9A9EA75A29A601218 /* CareersService.swift in Sources */,
+				414A2FB47301A7FD4FE6223E /* CareersViews.swift in Sources */,
+				4F6A6EC8949A08B8A428061F /* ChatView.swift in Sources */,
+				EAB4C03F163C47B90D90E631 /* CommandPalette.swift in Sources */,
+				23F5E725C6A43732C5656B62 /* CompanionCards.swift in Sources */,
+				9069A4850D73132F2195ECD6 /* CompanionHub.swift in Sources */,
+				5B2158DFD8B50770E27276FE /* CompanionIO.swift in Sources */,
+				9419F7C1945F552A8E6FFACF /* Components.swift in Sources */,
+				7764C40366642245083C8725 /* Controls.swift in Sources */,
+				91A3B7A202C2A1B29C3A5678 /* DictationButton.swift in Sources */,
+				069E649DF51D25F8DB5C21BF /* ELEDocumentText.swift in Sources */,
+				BBC94C9C11672BDDCEDD8037 /* ELEWebSession.swift in Sources */,
+				9D9F3C5525C482D77C11B10F /* EdLoginWindow.swift in Sources */,
+				B6FAC0D02BC94F249EBD625B /* EdService.swift in Sources */,
+				B0D36EC98A9BF90C5A4C2AB4 /* EdViews.swift in Sources */,
+				43DBECBB9FAD0615317AAA58 /* ExamDashboard.swift in Sources */,
+				3E2F2E463F7C58F90E7EAA52 /* ExamService.swift in Sources */,
+				AC49C32207F1B0809A8E4390 /* FeatureHub.swift in Sources */,
+				17D1948C0000EE89EDC7DD48 /* FeatureSecrets.swift in Sources */,
+				B6B92D70CE39211693E4B6FA /* FeatureSettingsView.swift in Sources */,
+				C9CC8DFEF813884C52260167 /* FirmLogo.swift in Sources */,
+				86353F54399A05A94F2B432F /* FlashcardViews.swift in Sources */,
+				EE7447C6C3982A8E08FA5732 /* Fmt.swift in Sources */,
+				FAC68F46B073E83DAF33386E /* FocusController.swift in Sources */,
+				0EE44503582AEFCF085F709D /* FocusViews.swift in Sources */,
+				584428CDD6E96E6B010E78EB /* Glass.swift in Sources */,
+				9607F8943A62CC4C8DE2A5C3 /* GoogleEventWriter.swift in Sources */,
+				8CEFA6A3554013EC7F79D20A /* GradesView.swift in Sources */,
+				70F4E48E061A854032FF59AD /* GroupsView.swift in Sources */,
+				9DE60BF8AFBFDF94B59F07A8 /* HealthService.swift in Sources */,
+				6069A4FE8CB50B49C9E4D698 /* Helpers.swift in Sources */,
+				578357B3C5D19B7349D12A39 /* HomeCards.swift in Sources */,
+				2BA06FE5488569FFF9477B35 /* HomeView.swift in Sources */,
+				E5DAB3805CD7CF369173D832 /* Hub+Deadlines.swift in Sources */,
+				45E1595CB306233C0215AED3 /* Hub+Feedback.swift in Sources */,
+				4CCCACCB618016CCAC6A292A /* Hub+Flashcards.swift in Sources */,
+				E237768589B2A6D1899B8E7E /* Hub+Reading.swift in Sources */,
+				E409A893474CA3CA8F7A154A /* Hub+WeeklyReport.swift in Sources */,
+				807DFDA7886F58DA9358FB10 /* InboxView.swift in Sources */,
+				34D85362811C30D4664F9D32 /* KeychainBlob.swift in Sources */,
+				7276E1AD6B3927D46D647E52 /* LecturesView.swift in Sources */,
+				85A594542E0DBFC958028154 /* LocalStore.swift in Sources */,
+				7C67D2C0AED82936578DD238 /* MacCalendarAccess.swift in Sources */,
+				063DDDF73F2C9BCAB3A5CD4F /* MacOnboardingView.swift in Sources */,
+				B9E401B30AD6B592B7153438 /* MacSettingsSections.swift in Sources */,
+				E30817DB58B200A58F73DD3D /* MacSettingsView.swift in Sources */,
+				607669605B0D63CA8FFF2DC8 /* MenuBarView.swift in Sources */,
+				8642825DFA49D26194638086 /* MoneyService.swift in Sources */,
+				31E057151BF272BCADE62561 /* MoneySettingsView.swift in Sources */,
+				C5C88747F909932A21F2CF75 /* MoneyViews.swift in Sources */,
+				357F8E3090855AF7968C85A6 /* MonzoLoopback.swift in Sources */,
+				559F20EA19E369E475134716 /* MoveLaterButton.swift in Sources */,
+				18230E319768DF7378253281 /* NotesBrowserView.swift in Sources */,
+				0484AA025F794A236D5146A3 /* NotesLibraryView.swift in Sources */,
+				B0A15F16A3AE3B785488E11D /* NotesView.swift in Sources */,
+				363F09496EA926A0412A171F /* Notifier.swift in Sources */,
+				32E29FABF1AD5DB6409870D9 /* NudgeBanner.swift in Sources */,
+				75460D0896850BD1E35B4D14 /* NudgeService.swift in Sources */,
+				9975F1D3FD12F3DC78912B73 /* OllamaManager.swift in Sources */,
+				F9150AEA254D5633E5B9A439 /* OnboardingView.swift in Sources */,
+				ADE240EB7445E72A2787F66C /* OpenCodeLauncher.swift in Sources */,
+				3746CA24A4D9D3690CD8FD50 /* OrbitBackend.swift in Sources */,
+				E1FEF4D006E69AA143652C06 /* OrbitBrain.swift in Sources */,
+				2631B6D96625BAD4F99E078B /* OrbitIntents.swift in Sources */,
+				D7882431DEDB2FEA3FD3248E /* OrbitMacApp.swift in Sources */,
+				941DD2FD3B037802EB7928F8 /* OrbitStore.swift in Sources */,
+				04A95A38828861E623F3A02B /* Origin.swift in Sources */,
+				F6700BBB51C446344D4F0893 /* PDFKitView.swift in Sources */,
+				6E2F316BB3B0A314A7544ED5 /* PendingInbox.swift in Sources */,
+				55C17733860931C3C8DDDD2D /* PlanImporter.swift in Sources */,
+				892BD803A7F23D435EF1BD72 /* PlannerSheet.swift in Sources */,
+				E206C6F1574701BB139814E7 /* PlansView.swift in Sources */,
+				8F92C3779F6980453D5E88A0 /* PracticePDF.swift in Sources */,
+				92DE951E68CDDE2055F7B799 /* PreferencesForm.swift in Sources */,
+				F61A0859EDFDD222E6110896 /* QuickAddField.swift in Sources */,
+				1F9447758869D71213672805 /* QuickCapture.swift in Sources */,
+				59A538A6A8AEBCDF72EC39BD /* QuickCaptureField.swift in Sources */,
+				841AA48F52D3AD8B3BD44B31 /* RichNoteEditor.swift in Sources */,
+				F99F47F270203AB177BD00F4 /* RootView.swift in Sources */,
+				2E2D5D6106870337AE710A74 /* RoutineService.swift in Sources */,
+				A64FC2A43CCE564FD54D001E /* RoutineSettingsViews.swift in Sources */,
+				0760D339354C0E3B90A4D046 /* SelfImproveService.swift in Sources */,
+				9AA3B0D1414787497DCED7BC /* SelfImproveView.swift in Sources */,
+				E2A588DB73AB704622CADA33 /* SettingsView.swift in Sources */,
+				A5D17A60CBB18D8BA4452A2C /* ShutdownSheet.swift in Sources */,
+				E942466933AFD23C0BE8810B /* StatsService.swift in Sources */,
+				F1EA5D6C5AD48B1D4C20CE5C /* StoreConversions.swift in Sources */,
+				7EA2700DA5001AF1EDFEF3B4 /* StoreDataSource+Academic.swift in Sources */,
+				D8848ED313E808FDCA43B13E /* StoreDataSource.swift in Sources */,
+				BA28FB76033D747C7CEF530C /* StoredModels.swift in Sources */,
+				D99CADBBF0E46445BFE21400 /* StudyFeatureViews.swift in Sources */,
+				9576AC03AFDAA8CEEF5F1E86 /* StudyHub+Actions.swift in Sources */,
+				EEEF706F990164AA9DDFC522 /* StudyHub.swift in Sources */,
+				43D24F87A97BD5422A6DE24A /* StudyLabView.swift in Sources */,
+				3B5736503F1518A27C86CBEA /* SyncStatus.swift in Sources */,
+				352CB0984B94C13C9DDC0EDD /* TasksView.swift in Sources */,
+				AE21C29E60BC7F62028B6F83 /* Theme.swift in Sources */,
+				3F92513EEE1B6515DCB0F24B /* TimeGrid.swift in Sources */,
+				8FA85BD9D676B41F9638D3C2 /* TodayView.swift in Sources */,
+				CA0CD55E0EEF74F113C4F6C3 /* TypedNoteEditor.swift in Sources */,
+				68BD83009812C97E6462BCEC /* UniView.swift in Sources */,
+				CD39FC453C3CC8A2E113324F /* UpdateService.swift in Sources */,
+				7FF8C78C560FC07FFBA11E85 /* WelcomeFlow.swift in Sources */,
+				9B3FD4BE13915A3A59B069F6 /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0E4437F34D08BAE3C0B911F5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 40657316F22A1A2AF2CE4B23 /* OrbitWidgets-iOS */;
+			targetProxy = 9412A7A55DE01040D08B2E8F /* PBXContainerItemProxy */;
+		};
+		2E08F896FA8C7D83D91E786A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 34CC102E54B44A28043FDD3A /* OrbitWidgets-macOS */;
+			targetProxy = F704CA534C20CA37397581B5 /* PBXContainerItemProxy */;
+		};
+		E67B8DA423B372FEA7934CA6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D68EA1C8EEAE29FC744CAEEF /* OrbitShare */;
+			targetProxy = B0AF6D31B3DF51CCAAC6E3E3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1B823AD61432C603A4B9BEE7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Supporting/macOS/Orbit.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = App/Supporting/macOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit";
+				PRODUCT_NAME = Orbit;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		1FE252A761D3E16C5F5AC228 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = "App/Supporting/Widgets-macOS/OrbitWidgets.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "App/Supporting/Widgets-macOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit.widgets";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		3F6B1875C683C0F8A1BA288F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = App/Supporting/Share/OrbitShare.entitlements;
+				INFOPLIST_FILE = App/Supporting/Share/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit.share";
+				PRODUCT_NAME = OrbitShare;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		58C4C1DF9D487759A4FB7D08 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5B529C662890D4025D22DE38 /* Orbit.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5B5D236FE93FAB336676D508 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Supporting/iOS/Orbit.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = App/Supporting/iOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit";
+				PRODUCT_NAME = Orbit;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		6358B34692992B25AFCDCA0C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = "App/Supporting/Widgets-iOS/OrbitWidgets.entitlements";
+				INFOPLIST_FILE = "App/Supporting/Widgets-iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit.widgets";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		8A6F9805598B14E1ACEB5441 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = App/Supporting/Share/OrbitShare.entitlements;
+				INFOPLIST_FILE = App/Supporting/Share/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit.share";
+				PRODUCT_NAME = OrbitShare;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A51085A0DCB522C39892C4D5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Supporting/iOS/Orbit.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = App/Supporting/iOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit";
+				PRODUCT_NAME = Orbit;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AAC8D9CE8E0FED838B758D00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = "App/Supporting/Widgets-macOS/OrbitWidgets.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = "App/Supporting/Widgets-macOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit.widgets";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		C2F3033D1C5D5037FE53F272 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Supporting/macOS/Orbit.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = App/Supporting/macOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit";
+				PRODUCT_NAME = Orbit;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		C53BAD364A20B0EB45FC0A5C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = "App/Supporting/Widgets-iOS/OrbitWidgets.entitlements";
+				INFOPLIST_FILE = "App/Supporting/Widgets-iOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(ORBIT_BUNDLE_PREFIX).orbit.widgets";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		FBFF5D8A6298BD9025349208 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5B529C662890D4025D22DE38 /* Orbit.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2ADFCCA171372F1E845C992A /* Build configuration list for PBXNativeTarget "OrbitWidgets-macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1FE252A761D3E16C5F5AC228 /* Debug */,
+				AAC8D9CE8E0FED838B758D00 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3B09B19ED5B1850084012594 /* Build configuration list for PBXProject "Orbit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FBFF5D8A6298BD9025349208 /* Debug */,
+				58C4C1DF9D487759A4FB7D08 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		42A2E89ED8E0B6DD6A748BCD /* Build configuration list for PBXNativeTarget "OrbitWidgets-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6358B34692992B25AFCDCA0C /* Debug */,
+				C53BAD364A20B0EB45FC0A5C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		46BDE714D4AF77DE53C0C1D3 /* Build configuration list for PBXNativeTarget "Orbit-macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1B823AD61432C603A4B9BEE7 /* Debug */,
+				C2F3033D1C5D5037FE53F272 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		809A2B230FB376703F2D99A0 /* Build configuration list for PBXNativeTarget "Orbit-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5B5D236FE93FAB336676D508 /* Debug */,
+				A51085A0DCB522C39892C4D5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		ADF2DA143B39C13B0BD8D0C0 /* Build configuration list for PBXNativeTarget "OrbitShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3F6B1875C683C0F8A1BA288F /* Debug */,
+				8A6F9805598B14E1ACEB5441 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		2F440832854ED13F8DD7B231 /* XCLocalSwiftPackageReference "." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = .;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		24043A69A360FCBBEE9CCA0C /* OrbitCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OrbitCore;
+		};
+		A63D68DE08B4E1A9A4C368B6 /* OrbitCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OrbitCore;
+		};
+		D4CDA32BAAD2F7D5656EA6DB /* OrbitCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OrbitCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 0A57824173AF238C16E5DFDB /* Project object */;
+}

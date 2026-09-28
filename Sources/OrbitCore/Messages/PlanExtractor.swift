@@ -7,9 +7,11 @@ public struct PlanExtractionResult: Sendable {
     public var usedAI: Bool
     /// Set when the AI stage failed and only the rule stage's plans are returned.
     public var aiError: String?
+    /// Ticket drops / on-sale alerts found instead of plans (an info card, not a calendar event).
+    public var ticketDrops: [TicketDrop]
 
-    public init(plans: [ExtractedPlan], usedAI: Bool, aiError: String? = nil) {
-        self.plans = plans; self.usedAI = usedAI; self.aiError = aiError
+    public init(plans: [ExtractedPlan], usedAI: Bool, aiError: String? = nil, ticketDrops: [TicketDrop] = []) {
+        self.plans = plans; self.usedAI = usedAI; self.aiError = aiError; self.ticketDrops = ticketDrops
     }
 }
 
@@ -64,6 +66,18 @@ public struct PlanExtractor: Sendable {
         return await analyze(messages, source: .shared).plans
     }
 
+    /// Like `extract(fromSharedText:)` but also returns ticket drops.
+    public func analyze(sharedText text: String, sentAt: Date? = nil, sender: String? = nil,
+                        myNames: Set<String> = []) async -> PlanExtractionResult {
+        var messages = WhatsAppExportParser(myNames: myNames, timeZone: timeParser.timeZone).parse(text, conversation: "Shared")
+        if messages.isEmpty {
+            messages = [ChatMessage(sender: sender ?? "Them", date: sentAt ?? now(), text: text,
+                                    isFromMe: sender.map { MessageText.isMe($0, myNames: myNames) } ?? false,
+                                    source: .shared, conversation: "Shared")]
+        }
+        return await analyze(messages, source: .shared)
+    }
+
     /// A chat export or iMessage history. Only messages after `since` (and within
     /// the last `maxDays`) are read; several conversations may be mixed.
     public func extract(from chat: [ChatMessage], since: Date? = nil) async -> [ExtractedPlan] {
@@ -84,20 +98,41 @@ public struct PlanExtractor: Sendable {
         let groups = Dictionary(grouping: messages) { $0.conversation ?? "" }
 
         var found: [Candidate] = []
+        var drops: [TicketDrop] = []
+        var vetoed: [String] = []
         var usedAI = false
         var aiError: String?
         for key in groups.keys.sorted() {
             let chat = groups[key]!.sorted { $0.date < $1.date }
             guard chat.contains(where: { $0.date > cutoff }) else { continue }
-            let rules = ruleCandidates(in: chat, since: cutoff, source: source)
+            // Ticket drops / promos never become plan candidates.
+            let classifier = MessageIntentClassifier(timeZone: timeParser.timeZone)
+            var kept: [ChatMessage] = []
+            for m in chat {
+                let c = classifier.classifyWithRules(m)
+                if c.intent == .ticketDrop, var drop = c.ticketDrop {
+                    if m.date > cutoff { drop.source = source ?? drop.source; drops.append(drop) }
+                    vetoed.append(PlanTimeParser.normalize(m.text))
+                } else {
+                    kept.append(m)
+                }
+            }
+            let rules = ruleCandidates(in: kept, since: cutoff, source: source)
             var ai: [ExtractedPlan] = []
             if router != nil {
                 do {
-                    ai = try await aiPlans(in: chat.filter { $0.date > cutoff }, source: source, now: now)
+                    let answer = try await aiAnswer(in: chat.filter { $0.date > cutoff }, source: source, now: now)
+                    ai = answer.plans
+                    drops += answer.drops
                     usedAI = true
                 } catch {
                     aiError = "\(error)"
                 }
+            }
+            // An AI "plan" quoting a promo the rules vetoed is dropped.
+            ai.removeAll { p in
+                let q = PlanTimeParser.normalize(p.quote)
+                return !q.isEmpty && vetoed.contains { $0.contains(q) || q.contains($0) }
             }
             found += Self.merge(rules: rules, ai: ai)
         }
@@ -105,7 +140,9 @@ public struct PlanExtractor: Sendable {
         let plans = Self.dedupe(found).map(\.plan).filter {
             $0.confidence >= minConfidence && (includePastPlans || ($0.end ?? $0.start) >= now.addingTimeInterval(-3600))
         }
-        return PlanExtractionResult(plans: plans.sorted { $0.start < $1.start }, usedAI: usedAI, aiError: aiError)
+        let liveDrops = Self.dedupe(drops).filter { includePastPlans || ($0.eventStart ?? now) >= now.addingTimeInterval(-3600) }
+        return PlanExtractionResult(plans: plans.sorted { $0.start < $1.start }, usedAI: usedAI, aiError: aiError,
+                                    ticketDrops: liveDrops)
     }
 
     // MARK: - Rule stage
@@ -279,11 +316,21 @@ public struct PlanExtractor: Sendable {
 
     struct AIResponse: Decodable {
         let plans: [AIPlan]
+        let ticketDrops: [AIDrop]
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: Key.self)
             plans = (try? c.decode([AIPlan].self, forKey: .plans)) ?? []
+            ticketDrops = (try? c.decode([AIDrop].self, forKey: .ticket_drops)) ?? []
         }
-        enum Key: String, CodingKey { case plans }
+        enum Key: String, CodingKey { case plans, ticket_drops }
+    }
+
+    struct AIDrop: Decodable {
+        var title: String?
+        var start: String?
+        var venue: String?
+        var url: String?
+        var quote: String?
     }
 
     struct AIPlan: Decodable {
@@ -319,16 +366,26 @@ public struct PlanExtractor: Sendable {
         Times are UK local time (Europe/London). Resolve relative dates ("tomorrow", "sat", "next fri") \
         from the timestamp of the message that says them, not from today. UK phrasing: "half 7" means 7:30.
         Skip plans that were cancelled or turned down. Set "confirmed" true only if both sides agreed.
+        Ticket releases, promos, "on sale" / "tickets are live" alerts and event adverts are NOT plans, \
+        even with a day and time: list them under "ticket_drops" unless the user said they bought a ticket \
+        or agreed to go.
         Reply with only JSON in this shape:
         {"plans":[{"title":"Dinner with Sam","start":"2026-10-17T19:00","end":null,"location":null,\
-        "people":["Sam"],"confirmed":true,"confidence":0.9,"quote":"exact words from the message"}]}
+        "people":["Sam"],"confirmed":true,"confidence":0.9,"quote":"exact words from the message"}],\
+        "ticket_drops":[{"title":"TP Thursday","start":"2026-10-15T21:00","venue":null,"url":"https://fixr.co/event/…",\
+        "quote":"exact words"}]}
         "start"/"end" are local times without a zone. "people" never includes the user ("Me"). \
         If there are no plans reply {"plans":[]}.
         """
 
     /// Stage 2: asks the AI about every window of messages that mentions a plan.
     func aiPlans(in messages: [ChatMessage], source: MessageSource?, now: Date) async throws -> [ExtractedPlan] {
-        guard let router, !messages.isEmpty else { return [] }
+        try await aiAnswer(in: messages, source: source, now: now).plans
+    }
+
+    func aiAnswer(in messages: [ChatMessage], source: MessageSource?, now: Date) async throws -> (plans: [ExtractedPlan], drops: [TicketDrop]) {
+        guard let router, !messages.isEmpty else { return ([], []) }
+        var drops: [TicketDrop] = []
         let size = max(5, aiWindowSize)
         let step = max(1, size - 5)
         var plans: [ExtractedPlan] = []
@@ -340,11 +397,48 @@ public struct PlanExtractor: Sendable {
                                          purpose: purpose, json: true, temperature: 0.1)
                 let response = try await router.completeJSON(AIResponse.self, request)
                 plans += response.plans.compactMap { toPlan($0, window: window, source: source) }
+                drops += response.ticketDrops.compactMap { toDrop($0, window: window, source: source) }
             }
             if start + size >= messages.count { break }
             start += step
         }
-        return plans
+        return (plans, drops)
+    }
+
+    func toDrop(_ d: AIDrop, window: [ChatMessage], source: MessageSource?) -> TicketDrop? {
+        let quote = d.quote ?? ""
+        let origin = window.first { !quote.isEmpty && $0.text.localizedCaseInsensitiveContains(quote) } ?? window.last
+        guard let origin else { return nil }
+        let rules = MessageIntentClassifier(timeZone: timeParser.timeZone).classifyWithRules(origin)
+        // A message the rules call a real plan (a bought ticket) isn't a drop.
+        if rules.intent == .plan, rules.confidence >= 0.75 { return nil }
+        let url = d.url.flatMap(MessageIntentClassifier.url) ?? rules.ticketDrop?.buyURL
+        return TicketDrop(title: (d.title?.isEmpty == false ? d.title : nil) ?? rules.ticketDrop?.title ?? "Tickets on sale",
+                          eventStart: d.start.flatMap(parseModelDate) ?? rules.ticketDrop?.eventStart,
+                          venue: d.venue ?? rules.ticketDrop?.venue, buyURL: url,
+                          provider: url.flatMap { TicketEmailParser.provider(from: $0.host ?? "") },
+                          quote: quote.isEmpty ? String(origin.text.prefix(300)) : quote,
+                          source: source ?? origin.source, receivedAt: origin.date)
+    }
+
+    static func dedupe(_ drops: [TicketDrop]) -> [TicketDrop] {
+        var seen: [TicketDrop] = []
+        for d in drops {
+            if let i = seen.firstIndex(where: { same($0, d) }) {
+                seen[i].buyURL = seen[i].buyURL ?? d.buyURL
+                seen[i].eventStart = seen[i].eventStart ?? d.eventStart
+            } else {
+                seen.append(d)
+            }
+        }
+        return seen
+    }
+
+    static func same(_ a: TicketDrop, _ b: TicketDrop) -> Bool {
+        if let x = a.buyURL, let y = b.buyURL { return x == y }
+        if a.id == b.id { return true }
+        let closeTime = (a.eventStart != nil && b.eventStart != nil) ? abs(a.eventStart!.timeIntervalSince(b.eventStart!)) < 3 * 3600 : true
+        return closeTime && (PlanTitleMatch.similar(a.title, b.title) || a.quote == b.quote)
     }
 
     func prompt(for window: [ChatMessage], now: Date) -> String {

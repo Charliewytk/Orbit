@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Orbit</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Google sign-in</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Microsoft sign-in</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>msauth.$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ELE sign-in</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>moodlemobile</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Orbit reads the calendars on your Mac (like your Exeter timetable) so it can plan study time around your lectures and events.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Orbit reads the calendars on your Mac (like your Exeter timetable) so it can plan study time around your lectures and events.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Personal use.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Orbit listens only while you hold dictation on, to turn what you say into plans.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Orbit transcribes lecture recordings on your Mac (on-device) when no captions are provided, and turns what you dictate into plans.</string>
+	<key>OrbitAppGroup</key>
+	<string>group.$(ORBIT_BUNDLE_PREFIX).orbit</string>
+	<key>OrbitBuildSHA</key>
+	<string>$(ORBIT_BUILD_SHA)</string>
+	<key>OrbitGoogleClientID</key>
+	<string>$(GOOGLE_CLIENT_ID)</string>
+	<key>OrbitGoogleReversedClientID</key>
+	<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
+	<key>OrbitICloudContainer</key>
+	<string>$(ORBIT_ICLOUD_CONTAINER)</string>
+	<key>OrbitMicrosoftClientID</key>
+	<string>$(MICROSOFT_CLIENT_ID)</string>
+</dict>
+</plist>

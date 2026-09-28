@@ -24,7 +24,7 @@ final class GmailClientTests: XCTestCase {
            "mimeType": "multipart/alternative",
            "headers": [
              {"name": "From", "value": "Sam Jones <sam@example.com>"},
-             {"name": "To", "value": "charlie@gmail.com"},
+             {"name": "To", "value": "student@example.com"},
              {"name": "Cc", "value": "Pat <pat@example.com>"},
              {"name": "Subject", "value": "\(subject)"},
              {"name": "Date", "value": "Tue, 22 Sep 2026 09:15:00 +0000"}
@@ -54,7 +54,7 @@ final class GmailClientTests: XCTestCase {
     }
 
     func testFirstSyncListsPagesFetchesMessagesAndSkipsDeleted() async throws {
-        stub.on("GET", "/users/me/profile", json: #"{"emailAddress": "charlie@gmail.com", "historyId": "5000"}"#)
+        stub.on("GET", "/users/me/profile", json: #"{"emailAddress": "student@example.com", "historyId": "5000"}"#)
         stub.on("GET", "pageToken=p2", json: #"{"messages": [{"id": "m3", "threadId": "t3"}]}"#)
         stub.on("GET", "/users/me/messages?", json: #"{"messages": [{"id": "m1", "threadId": "t1"}, {"id": "m2", "threadId": "t2"}], "nextPageToken": "p2"}"#)
         stub.on("GET", "/messages/m1?format=full", json: Self.fullMessage(id: "m1", subject: "Slides"))
@@ -70,7 +70,7 @@ final class GmailClientTests: XCTestCase {
         XCTAssertEqual(m1.threadID, "t-m1")
         XCTAssertEqual(m1.from, "sam@example.com")
         XCTAssertEqual(m1.fromName, "Sam Jones")
-        XCTAssertEqual(m1.to, ["charlie@gmail.com", "pat@example.com"])
+        XCTAssertEqual(m1.to, ["student@example.com", "pat@example.com"])
         XCTAssertEqual(m1.subject, "Slides")
         XCTAssertEqual(m1.body, "Hi Charlie,\nCan you send the slides by Friday?\n")
         XCTAssertEqual(m1.snippet, "Hi Charlie, Can you send the slides by Friday's lecture?")
@@ -160,5 +160,46 @@ final class GmailClientTests: XCTestCase {
         try await client.markRead(id: "m1")
         let body = try XCTUnwrap(stub.requests(matching: "/modify").first?.httpBody)
         XCTAssertEqual(String(decoding: body, as: UTF8.self), #"{"removeLabelIds":["UNREAD"]}"#)
+    }
+
+    // MARK: Archive / Trash
+
+    func testArchiveRemovesInboxLabelInOneBatch() async throws {
+        stub.on("POST", "/messages/batchModify", json: "{}")
+        try await client.apply(.archive, ids: ["m2", "m1", "m1"])
+        let reqs = stub.requests(matching: "/messages/batchModify")
+        XCTAssertEqual(reqs.count, 1)
+        let body = try XCTUnwrap(reqs.first?.httpBody)
+        XCTAssertEqual(String(decoding: body, as: UTF8.self), #"{"ids":["m1","m2"],"removeLabelIds":["INBOX"]}"#)
+    }
+
+    func testUnarchivePutsInboxBack() async throws {
+        stub.on("POST", "/messages/batchModify", json: "{}")
+        try await client.apply(MailboxAction.archive.inverse, ids: ["m1"])
+        let body = try XCTUnwrap(stub.requests(matching: "/messages/batchModify").first?.httpBody)
+        XCTAssertEqual(String(decoding: body, as: UTF8.self), #"{"addLabelIds":["INBOX"],"ids":["m1"]}"#)
+    }
+
+    func testTrashMovesEachMessageToTrashAndUndoRestores() async throws {
+        stub.on("POST", "/trash", json: #"{"id":"x"}"#)
+        stub.on("POST", "/untrash", json: #"{"id":"x"}"#)
+        try await client.apply(.trash, ids: ["m1", "m2"])
+        XCTAssertEqual(Set(stub.requests(matching: "/trash").compactMap { $0.url?.path }),
+                       ["/gmail/v1/users/me/messages/m1/trash", "/gmail/v1/users/me/messages/m2/trash"])
+        try await client.apply(.untrash, ids: ["m1"])
+        XCTAssertEqual(stub.requests(matching: "/untrash").count, 1)
+        // Never a permanent delete, never a send.
+        XCTAssertTrue(stub.requests(matching: "/send").isEmpty)
+        XCTAssertFalse(stub.requests(matching: "").contains { $0.httpMethod == "DELETE" })
+    }
+
+    func testTrashIgnoresMessagesAlreadyGone() async throws {
+        stub.on("POST", "/trash", status: 404, json: #"{"error":{"code":404}}"#)
+        try await client.apply(.trash, ids: ["gone"])
+    }
+
+    func testModifyScopeIsRequested() {
+        XCTAssertTrue(GmailClient.scopes.contains(GmailClient.modifyScope))
+        XCTAssertTrue(OAuthConfig.googleScopes.contains(GmailClient.modifyScope))
     }
 }

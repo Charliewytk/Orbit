@@ -22,7 +22,10 @@ public struct GmailClient: MailProvider {
     public var maxInitialMessages: Int
     public var maxConcurrentFetches: Int
 
-    /// OAuth scopes: read mail, save drafts, and mark as read.
+    /// Needed for mark-as-read, Archive and Trash (never sending).
+    public static let modifyScope = "https://www.googleapis.com/auth/gmail.modify"
+
+    /// OAuth scopes: read mail, save drafts, and mark as read / archive / trash.
     public static let scopes = [
         "https://www.googleapis.com/auth/gmail.readonly",
         "https://www.googleapis.com/auth/gmail.compose",
@@ -92,6 +95,24 @@ public struct GmailClient: MailProvider {
         return (try await fetchAll(ids, headers: headers), latest)
     }
 
+    /// IDs of messages currently in the inbox from the last `days` days (ids only, cheap).
+    /// Used to hide mail archived or deleted directly in Gmail.
+    public func inboxIDs(days: Int = 14, limit: Int = 500) async throws -> Set<String> {
+        let headers = try await authHeaders()
+        var ids = Set<String>()
+        var pageToken: String?
+        repeat {
+            var query = [URLQueryItem(name: "q", value: "newer_than:\(days)d"),
+                         URLQueryItem(name: "maxResults", value: "500"),
+                         URLQueryItem(name: "labelIds", value: "INBOX")]
+            if let pageToken { query.append(URLQueryItem(name: "pageToken", value: pageToken)) }
+            let page = try await http.get(ListResponse.self, url("messages", query), headers: headers)
+            for m in page.messages ?? [] { ids.insert(m.id) }
+            pageToken = page.nextPageToken
+        } while pageToken != nil && ids.count < limit
+        return ids
+    }
+
     /// Fetches full messages, skipping any deleted since they were listed.
     func fetchAll(_ ids: [String], headers: [String: String]) async throws -> [EmailMessage] {
         let found = try await EmailConcurrency.map(ids, limit: maxConcurrentFetches) { [self] id -> EmailMessage? in
@@ -138,6 +159,43 @@ public struct GmailClient: MailProvider {
         var headers = try await authHeaders()
         headers["Content-Type"] = "application/json"
         _ = try await http.data("POST", url("messages/\(id)/modify"), headers: headers, body: body)
+    }
+
+    /// Archive (batchModify, remove INBOX), Trash (messages.trash), and their undos.
+    /// Needs `gmail.modify`. Never deletes permanently.
+    public func apply(_ action: MailboxAction, ids: [String]) async throws {
+        let ids = Array(Set(ids)).sorted()
+        guard !ids.isEmpty else { return }
+        var h = try await authHeaders()
+        h["Content-Type"] = "application/json"
+        let headers = h
+        switch action {
+        case .archive, .unarchive:
+            // batchModify takes up to 1000 ids per call.
+            for start in stride(from: 0, to: ids.count, by: 1000) {
+                let chunk = Array(ids[start..<min(ids.count, start + 1000)])
+                let body = BatchModify(ids: chunk, addLabelIds: action == .unarchive ? ["INBOX"] : nil,
+                                       removeLabelIds: action == .archive ? ["INBOX"] : nil)
+                _ = try await http.data("POST", url("messages/batchModify"), headers: headers,
+                                        body: try HTTPClient.encoder.encode(body))
+            }
+        case .trash, .untrash:
+            _ = try await EmailConcurrency.map(ids, limit: maxConcurrentFetches) { [self] id -> Bool in
+                do {
+                    _ = try await http.data("POST", url("messages/\(id)/\(action == .trash ? "trash" : "untrash")"),
+                                            headers: headers, body: nil)
+                } catch let error as HTTPError where error.status == 404 {
+                    // Already gone: nothing to do.
+                }
+                return true
+            }
+        }
+    }
+
+    struct BatchModify: Encodable {
+        let ids: [String]
+        let addLabelIds: [String]?
+        let removeLabelIds: [String]?
     }
 
     /// Builds an RFC 2822 reply with threading headers. Base64 body if it isn't plain ASCII.

@@ -61,6 +61,7 @@ public enum UniHTML {
     static let named: [String: String] = [
         "amp": "&", "lt": "<", "gt": ">", "quot": "\"", "apos": "'", "nbsp": " ", "ndash": "–",
         "mdash": "—", "lsquo": "‘", "rsquo": "’", "ldquo": "“", "rdquo": "”", "hellip": "…", "pound": "£",
+        "frac12": "½", "frac14": "¼", "frac34": "¾", "euro": "€",
     ]
 
     public static func decodeEntities(_ s: String) -> String {

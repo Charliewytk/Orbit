@@ -1,0 +1,278 @@
+# XcodeGen spec for Orbit. Generate the Xcode project with:
+#   brew install xcodegen && xcodegen generate
+# (Orbit.xcodeproj is committed too, so this is only needed after editing this file.)
+
+name: Orbit
+
+options:
+  bundleIdPrefix: com.charliewytk
+  developmentLanguage: en-GB
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "18.0"
+    macOS: "15.0"
+
+configFiles:
+  Debug: Config/Orbit.xcconfig
+  Release: Config/Orbit.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    CODE_SIGN_STYLE: Automatic
+    # DEVELOPMENT_TEAM, MARKETING_VERSION and CURRENT_PROJECT_VERSION come from Config/Orbit.xcconfig.
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    GENERATE_INFOPLIST_FILE: NO
+
+packages:
+  OrbitCore:
+    path: .
+
+targets:
+
+  # MARK: iPhone app (the remote)
+
+  Orbit-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: App/Shared
+      - path: App/iOS
+    dependencies:
+      - package: OrbitCore
+      - target: OrbitWidgets-iOS
+      - target: OrbitShare
+    settings:
+      base:
+        PRODUCT_NAME: Orbit
+        PRODUCT_BUNDLE_IDENTIFIER: $(ORBIT_BUNDLE_PREFIX).orbit
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+    info:
+      path: App/Supporting/iOS/Info.plist
+      properties:
+        CFBundleDisplayName: Orbit
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIBackgroundModes:
+          - fetch
+          - remote-notification
+          - processing
+        BGTaskSchedulerPermittedIdentifiers:
+          - $(PRODUCT_BUNDLE_IDENTIFIER).refresh
+          - $(PRODUCT_BUNDLE_IDENTIFIER).processing
+        NSLocalNetworkUsageDescription: Orbit can talk to the AI on your Mac for instant chat replies.
+        NSAppTransportSecurity:
+          # Instant chat talks plain HTTP to your own Mac (over Tailscale or home Wi-Fi).
+          NSAllowsArbitraryLoads: true
+        CFBundleURLTypes:
+          - CFBundleURLName: Google sign-in
+            CFBundleURLSchemes: [$(GOOGLE_REVERSED_CLIENT_ID)]
+          - CFBundleURLName: Microsoft sign-in
+            CFBundleURLSchemes: [msauth.$(PRODUCT_BUNDLE_IDENTIFIER)]
+          - CFBundleURLName: ELE sign-in
+            CFBundleURLSchemes: [moodlemobile]
+        OrbitGoogleClientID: $(GOOGLE_CLIENT_ID)
+        OrbitGoogleReversedClientID: $(GOOGLE_REVERSED_CLIENT_ID)
+        OrbitMicrosoftClientID: $(MICROSOFT_CLIENT_ID)
+        OrbitAppGroup: group.$(ORBIT_BUNDLE_PREFIX).orbit
+        OrbitICloudContainer: $(ORBIT_ICLOUD_CONTAINER)
+    entitlements:
+      path: App/Supporting/iOS/Orbit.entitlements
+      properties:
+        aps-environment: development
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.$(ORBIT_BUNDLE_PREFIX).orbit
+        com.apple.developer.icloud-services:
+          - CloudKit
+        com.apple.security.application-groups:
+          - group.$(ORBIT_BUNDLE_PREFIX).orbit
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)$(ORBIT_BUNDLE_PREFIX).orbit
+    scheme: {}
+
+  # MARK: Mac app (the brain)
+
+  Orbit-macOS:
+    type: application
+    platform: macOS
+    sources:
+      - path: App/Shared
+      - path: App/macOS
+    dependencies:
+      - package: OrbitCore
+      - target: OrbitWidgets-macOS
+    settings:
+      base:
+        PRODUCT_NAME: Orbit
+        PRODUCT_BUNDLE_IDENTIFIER: $(ORBIT_BUNDLE_PREFIX).orbit
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        COMBINE_HIDPI_IMAGES: YES
+        # Not sandboxed: Orbit reads Apple Mail / Messages (with Full Disk Access)
+        # and runs `opencode serve`. Hardened runtime keeps it notarisable.
+        ENABLE_APP_SANDBOX: NO
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_PREVIEWS: YES
+    info:
+      path: App/Supporting/macOS/Info.plist
+      properties:
+        CFBundleDisplayName: Orbit
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.productivity
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        ITSAppUsesNonExemptEncryption: false
+        NSHumanReadableCopyright: Personal use.
+        NSCalendarsFullAccessUsageDescription: Orbit reads the calendars on your Mac (like your Exeter timetable) so it can plan study time around your lectures and events.
+        NSCalendarsUsageDescription: Orbit reads the calendars on your Mac (like your Exeter timetable) so it can plan study time around your lectures and events.
+        NSSpeechRecognitionUsageDescription: Orbit transcribes lecture recordings on your Mac (on-device) when no captions are provided, and turns what you dictate into plans.
+        NSMicrophoneUsageDescription: Orbit listens only while you hold dictation on, to turn what you say into plans.
+        CFBundleURLTypes:
+          - CFBundleURLName: Google sign-in
+            CFBundleURLSchemes: [$(GOOGLE_REVERSED_CLIENT_ID)]
+          - CFBundleURLName: Microsoft sign-in
+            CFBundleURLSchemes: [msauth.$(PRODUCT_BUNDLE_IDENTIFIER)]
+          - CFBundleURLName: ELE sign-in
+            CFBundleURLSchemes: [moodlemobile]
+        OrbitGoogleClientID: $(GOOGLE_CLIENT_ID)
+        OrbitGoogleReversedClientID: $(GOOGLE_REVERSED_CLIENT_ID)
+        OrbitMicrosoftClientID: $(MICROSOFT_CLIENT_ID)
+        OrbitAppGroup: group.$(ORBIT_BUNDLE_PREFIX).orbit
+        OrbitICloudContainer: $(ORBIT_ICLOUD_CONTAINER)
+        # Commit the build came from (the release workflow passes ORBIT_BUILD_SHA); empty for local builds.
+        OrbitBuildSHA: $(ORBIT_BUILD_SHA)
+    entitlements:
+      path: App/Supporting/macOS/Orbit.entitlements
+      properties:
+        com.apple.security.personal-information.calendars: true
+        # Dictation in the planner (hardened runtime needs this for the microphone).
+        com.apple.security.device.audio-input: true
+        com.apple.developer.aps-environment: development
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.$(ORBIT_BUNDLE_PREFIX).orbit
+        com.apple.developer.icloud-services:
+          - CloudKit
+        com.apple.security.application-groups:
+          - group.$(ORBIT_BUNDLE_PREFIX).orbit
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)$(ORBIT_BUNDLE_PREFIX).orbit
+    scheme: {}
+
+  # MARK: Widgets
+
+  OrbitWidgets-iOS:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: App/Widgets
+      - path: App/Shared/Common
+      - path: App/Shared/DesignSystem/Theme.swift
+      - path: App/Shared/DesignSystem/Components.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(ORBIT_BUNDLE_PREFIX).orbit.widgets
+        TARGETED_DEVICE_FAMILY: "1,2"
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+    info:
+      path: App/Supporting/Widgets-iOS/Info.plist
+      properties:
+        CFBundleDisplayName: Orbit
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        OrbitAppGroup: group.$(ORBIT_BUNDLE_PREFIX).orbit
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: App/Supporting/Widgets-iOS/OrbitWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.$(ORBIT_BUNDLE_PREFIX).orbit
+
+  OrbitWidgets-macOS:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: App/Widgets
+      - path: App/Shared/Common
+      - path: App/Shared/DesignSystem/Theme.swift
+      - path: App/Shared/DesignSystem/Components.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(ORBIT_BUNDLE_PREFIX).orbit.widgets
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        # macOS widget extensions must be sandboxed.
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_HARDENED_RUNTIME: YES
+    info:
+      path: App/Supporting/Widgets-macOS/Info.plist
+      properties:
+        CFBundleDisplayName: Orbit
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        OrbitAppGroup: group.$(ORBIT_BUNDLE_PREFIX).orbit
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: App/Supporting/Widgets-macOS/OrbitWidgets.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+          - group.$(ORBIT_BUNDLE_PREFIX).orbit
+
+  # MARK: Share extension (iPhone)
+
+  OrbitShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: App/Share
+      - path: App/Shared/Common
+      - path: App/Shared/DesignSystem/Theme.swift
+      - path: App/Shared/DesignSystem/Components.swift
+    dependencies:
+      - package: OrbitCore
+    settings:
+      base:
+        PRODUCT_NAME: OrbitShare
+        PRODUCT_BUNDLE_IDENTIFIER: $(ORBIT_BUNDLE_PREFIX).orbit.share
+        TARGETED_DEVICE_FAMILY: "1,2"
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+    info:
+      path: App/Supporting/Share/Info.plist
+      properties:
+        CFBundleDisplayName: Orbit
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        OrbitAppGroup: group.$(ORBIT_BUNDLE_PREFIX).orbit
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsImageWithMaxCount: 1
+    entitlements:
+      path: App/Supporting/Share/OrbitShare.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.$(ORBIT_BUNDLE_PREFIX).orbit

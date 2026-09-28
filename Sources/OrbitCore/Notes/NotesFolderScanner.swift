@@ -13,6 +13,8 @@ import CoreGraphics
 public struct NotesFolderScanner: Sendable {
     public enum Kind: String, Codable, Sendable {
         case pdf, markdown, text, image
+        /// Orbit's rich typed notes (`.rtfd` packages, `.rtf`).
+        case richText
     }
 
     public struct Item: Codable, Hashable, Sendable {
@@ -22,6 +24,10 @@ public struct NotesFolderScanner: Sendable {
         public var size: Int
         /// Path below the root, e.g. "BEM2031/Week 5.pdf". Useful for module/week detection.
         public var relativePath: String
+
+        public init(url: URL, kind: Kind, modified: Date, size: Int, relativePath: String) {
+            self.url = url; self.kind = kind; self.modified = modified; self.size = size; self.relativePath = relativePath
+        }
     }
 
     public struct Result: Sendable {
@@ -46,6 +52,7 @@ public struct NotesFolderScanner: Sendable {
         case "md", "markdown": .markdown
         case "txt": .text
         case "png", "jpg", "jpeg", "heic": .image
+        case "rtfd", "rtf": .richText
         default: nil
         }
     }
@@ -64,8 +71,12 @@ public struct NotesFolderScanner: Sendable {
         var newest = since
         for case let url as URL in e {
             let values = try? url.resourceValues(forKeys: Set(keys))
-            if values?.isDirectory == true { continue }
             let ext = url.pathExtension.lowercased()
+            if values?.isDirectory == true {
+                // An .rtfd note is a package: one item, not a folder to walk into.
+                guard ext == "rtfd" else { continue }
+                e.skipDescendants()
+            }
             if ext == "one" || ext == "onetoc2" { unsupported.append(url); continue }
             guard let kind = Self.kind(forExtension: ext) else { continue }
             let modified = values?.contentModificationDate ?? .distantPast

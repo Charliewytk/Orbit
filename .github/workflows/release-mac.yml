@@ -1,0 +1,107 @@
+name: Mac app
+
+# Builds Orbit.app on a GitHub Mac and publishes it as a download on the
+# repo's Releases page ("Orbit for Mac (latest)"). Free on public repos.
+#
+# The build is ad-hoc signed (no Apple team needed), so:
+#   - first launch: right-click Orbit.app → Open (macOS warns it's from an
+#     unidentified developer);
+#   - iCloud sync and synced keychain are off; everything is stored on the Mac.
+
+on:
+  push:
+    branches: [main, claude/zealous-albattani-h2xkcz]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mac-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Orbit.app
+    # Skip work-in-progress snapshots so half-finished versions never get published.
+    if: github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'WIP')
+    # macOS 26 runner with Xcode 26: the Liquid Glass APIs (glassEffect, GlassEffectContainer,
+    # .glass button styles, backgroundExtensionEffect) need the macOS 26 SDK. The app still
+    # targets macOS 15: every macOS 26 call sits behind `#if compiler(>=6.2)` and
+    # `if #available(macOS 26.0, *)`, so an Xcode 16 fallback also builds (without glass).
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)"
+          if [ -z "$XCODE" ]; then
+            echo "::warning::No Xcode 26 on this runner; falling back to Xcode 16 (no Liquid Glass)."
+            XCODE="$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+          fi
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+          swift --version
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Orbit.xcodeproj \
+            -scheme Orbit-macOS \
+            -configuration Release \
+            -destination "generic/platform=macOS" \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            CODE_SIGN_ENTITLEMENTS="$PWD/App/Supporting/macOS/Orbit-Unsigned.entitlements" \
+            ENABLE_HARDENED_RUNTIME=NO \
+            ORBIT_ICLOUD_CONTAINER="" \
+            ORBIT_BUILD_SHA="${{ github.sha }}" \
+            | tee build.log | grep -E "error:|BUILD" || true
+          grep -q "BUILD SUCCEEDED" build.log
+
+      - name: Show errors
+        if: failure()
+        run: grep -E "error:" build.log | sort -u | head -150
+
+      - name: Package
+        id: pkg
+        run: |
+          APP=$(find build/Build/Products/Release -maxdepth 1 -name "*.app" | head -1)
+          echo "Built: $APP"
+          mkdir -p dist
+          cp -R "$APP" dist/Orbit.app
+          # Re-sign the whole bundle ad hoc so macOS accepts it.
+          codesign --force --deep --sign - dist/Orbit.app
+          ditto -c -k --sequesterRsrc --keepParent dist/Orbit.app dist/Orbit-mac.zip
+          # Free the build intermediates and size the image explicitly (hdiutil's guess can be too small).
+          rm -rf build/Build/Intermediates.noindex
+          SIZE_MB=$(( $(du -sm dist/Orbit.app | cut -f1) * 2 + 50 ))
+          hdiutil create -volname Orbit -srcfolder dist/Orbit.app -fs HFS+ -size ${SIZE_MB}m -ov -format UDZO dist/Orbit-mac.dmg
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: mac-latest
+          name: Orbit for Mac (latest)
+          prerelease: true
+          make_latest: true
+          body: |
+            Latest Mac build from commit ${{ steps.pkg.outputs.sha }}.
+
+            sha: ${{ github.sha }}
+
+            **Install:** download `Orbit-mac.dmg`, open it and drag **Orbit** into **Applications**.
+            **First launch:** right-click Orbit in Applications → **Open** → **Open**
+            (macOS warns because it isn't notarised by Apple). After that, open it normally.
+            **Updates:** Orbit checks this release on launch and every 6 hours and can install it for you
+            (Settings → Extras → Updates). The `sha:` line above is how it tells builds apart.
+          files: |
+            dist/Orbit-mac.dmg
+            dist/Orbit-mac.zip

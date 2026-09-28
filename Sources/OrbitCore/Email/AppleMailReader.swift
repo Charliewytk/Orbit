@@ -132,7 +132,7 @@ public struct AppleMailReader: MailProvider {
     /// Finds account folders (`V*/<uuid>`) whose recent mail is addressed to `addressSuffix`.
     /// Samples up to `sample` messages per account.
     public static func detectAccountFolders(root: URL = defaultRoot, addressSuffix: String = "@exeter.ac.uk",
-                                            sample: Int = 20) throws -> [URL] {
+                                            sample: Int = 60) throws -> [URL] {
         let fm = FileManager.default
         try checkReadable(root)
         let versions = try fm.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
@@ -141,16 +141,28 @@ public struct AppleMailReader: MailProvider {
         for v in versions {
             let accounts = (try? fm.contentsOfDirectory(at: v, includingPropertiesForKeys: nil)) ?? []
             for acct in accounts where acct.lastPathComponent != "MailData" {
+                // Gmail accounts in Mail have a "[Gmail]" folder; never treat them as Exeter.
+                let top = (try? fm.contentsOfDirectory(atPath: acct.path)) ?? []
+                if top.contains(where: { $0.hasPrefix("[Gmail]") }) { continue }
                 let files = (try? messageFiles(in: acct, skipping: ["Sent", "Drafts", "Junk"]))?
                     .sorted { $0.modified > $1.modified }.prefix(sample) ?? []
                 let matched = files.contains { file in
                     guard let parsed = try? EMLXParser.parse(contentsOf: file.url).parsed else { return false }
-                    return (parsed.to + parsed.cc).contains { $0.address.lowercased().hasSuffix(addressSuffix.lowercased()) }
+                    // Match the domain anywhere (…@exeter.ac.uk, …@groups.exeter.ac.uk, lists)
+                    // in To/Cc, which is where the account's own address shows up.
+                    let domain = addressSuffix.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "@"))
+                    return (parsed.to + parsed.cc).contains { $0.address.lowercased().hasSuffix(domain) }
                 }
                 if matched { hits.append(acct) }
             }
         }
         return hits
+    }
+
+    /// True when this process can list Apple Mail's folder (i.e. has Full Disk Access
+    /// and Mail has been set up at least once).
+    public static func canReadMailFolder(root: URL = defaultRoot) -> Bool {
+        (try? checkReadable(root)) != nil
     }
 
     /// Every `.emlx` / `.partial.emlx` under `folder`, skipping mailboxes by name.
@@ -184,7 +196,10 @@ public struct AppleMailReader: MailProvider {
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue else {
             throw MailError.accessDenied("\(url.path) not found. Add the account to Mail and give Orbit Full Disk Access.")
         }
-        guard FileManager.default.isReadableFile(atPath: url.path) else {
+        // POSIX permissions say "readable" even when macOS privacy protection blocks
+        // the folder, so actually list it.
+        guard FileManager.default.isReadableFile(atPath: url.path),
+              (try? FileManager.default.contentsOfDirectory(atPath: url.path)) != nil else {
             throw MailError.accessDenied("Orbit needs Full Disk Access to read \(url.path).")
         }
     }

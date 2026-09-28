@@ -34,6 +34,8 @@ public struct OAuthConfig: Codable, Hashable, Sendable {
     public static let googleScopes = [
         "https://www.googleapis.com/auth/gmail.modify",
         "https://www.googleapis.com/auth/calendar",
+        // Only files Orbit itself creates (practice PDFs uploaded to Drive for Notability on the iPad).
+        "https://www.googleapis.com/auth/drive.file",
         "openid", "email",
     ]
 
@@ -48,7 +50,17 @@ public struct OAuthConfig: Codable, Hashable, Sendable {
                     authorizationEndpoint: URL(string: "https://accounts.google.com/o/oauth2/v2/auth")!,
                     tokenEndpoint: URL(string: "https://oauth2.googleapis.com/token")!,
                     clientID: clientID, clientSecret: clientSecret, redirectURI: redirectURI, scopes: scopes,
-                    extraAuthorizeParameters: ["access_type": "offline", "prompt": "consent"])
+                    extraAuthorizeParameters: ["access_type": "offline", "prompt": "consent", "include_granted_scopes": "true"])
+    }
+
+    /// Incremental authorization: asks only for `scopes` (plus the sign-in ones), with
+    /// `include_granted_scopes=true` so Google returns a token covering old and new scopes.
+    public func incremental(adding scopes: [String]) -> OAuthConfig {
+        var copy = self
+        let base = provider == .google ? ["openid", "email"] : ["offline_access"]
+        copy.scopes = scopes + base.filter { !scopes.contains($0) }
+        if provider == .google { copy.extraAuthorizeParameters["include_granted_scopes"] = "true" }
+        return copy
     }
 
     /// Exeter Microsoft 365 (work/school accounts): mail, OneNote, calendar.
@@ -76,6 +88,19 @@ public struct OAuthTokens: Codable, Hashable, Sendable {
                 scope: String? = nil, idToken: String? = nil, tokenType: String? = "Bearer") {
         self.accessToken = accessToken; self.refreshToken = refreshToken; self.expiry = expiry
         self.scope = scope; self.idToken = idToken; self.tokenType = tokenType
+    }
+
+    /// Scopes Google/Microsoft said were granted (space-separated `scope`). Empty when unknown.
+    public var grantedScopes: Set<String> {
+        Set((scope ?? "").split(separator: " ").map(String.init))
+    }
+
+    /// Which of `required` weren't granted. When the provider didn't say (`scope` nil)
+    /// nothing is reported missing; the API call itself will fail with 403 instead.
+    public func missingScopes(_ required: [String]) -> [String] {
+        guard scope != nil else { return [] }
+        let granted = grantedScopes
+        return required.filter { !granted.contains($0) }
     }
 
     /// True when the access token expires within `leeway` seconds of `now`.
@@ -200,7 +225,7 @@ public struct OAuthClient: Sendable {
             ("client_id", config.clientID),
             ("code_verifier", pkce.verifier),
         ]
-        if let secret = config.clientSecret { fields.append(("client_secret", secret)) }
+        if let secret = config.clientSecret, !secret.isEmpty { fields.append(("client_secret", secret)) }
         let res = try await tokenRequest(fields)
         return OAuthTokens(accessToken: res.access_token, refreshToken: res.refresh_token,
                            expiry: res.expires_in.map { now.addingTimeInterval($0) }, scope: res.scope,
@@ -216,7 +241,7 @@ public struct OAuthClient: Sendable {
             ("refresh_token", refreshToken),
             ("client_id", config.clientID),
         ]
-        if let secret = config.clientSecret { fields.append(("client_secret", secret)) }
+        if let secret = config.clientSecret, !secret.isEmpty { fields.append(("client_secret", secret)) }
         if config.provider == .microsoft { fields.append(("scope", config.scopes.joined(separator: " "))) }
         let res = try await tokenRequest(fields)
         return OAuthTokens(accessToken: res.access_token, refreshToken: res.refresh_token ?? refreshToken,

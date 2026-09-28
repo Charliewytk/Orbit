@@ -23,6 +23,8 @@ public struct MorningBrief: Codable, Hashable, Sendable {
     public var firstStart: Date?
     /// AI paragraph, once narrated.
     public var narrative: String?
+    /// Meals, reading, shutdown and tonight's sleep window (see `routineLines(prefs:events:day:)`).
+    public var routine: [String]?
 
     public var calendar: DayCalendar { DayCalendar(timeZone: TimeZone(identifier: timeZoneID) ?? .current) }
 
@@ -57,8 +59,42 @@ public struct MorningBrief: Codable, Hashable, Sendable {
                 "[\(e.category.rawValue)] \(e.subject) from \(e.from)" + (e.summary.isEmpty ? "" : ": \(e.summary)")
             }.joined(separator: "; ") + ".")
         }
-        if flashcardsDue > 0 { lines.append("Flashcards due: \(flashcardsDue).") }
+        if let routine, !routine.isEmpty {
+            lines += routine
+        }
+        if flashcardsDue > 0 {
+            // A short daily review beats a long one: ~30 s a card, capped at 10 minutes.
+            let session = min(flashcardsDue, 10 * 60 / FlashcardDeck.secondsPerCard)
+            let minutes = max(1, Int((Double(session * FlashcardDeck.secondsPerCard) / 60).rounded(.up)))
+            lines.append("Flashcards due: \(flashcardsDue). Suggest a \(minutes)-minute review of \(session) card\(session == 1 ? "" : "s")"
+                         + (flashcardsDue > session ? " (the rest can wait)." : "."))
+        }
         return lines.joined(separator: "\n")
+    }
+
+    /// "Hall meals: Breakfast 07:55–08:40 (serving until 09:30); …" and "Sleep window tonight: 22:30–07:35 (9h 5m)…".
+    public static func routineLines(prefs: UserPrefs, events: [CalendarEvent], day: Date) -> [String] {
+        let r = prefs.effectiveRoutine
+        guard r.enabled else { return [] }
+        let cal = DayCalendar(timeZone: prefs.timeZone)
+        let blocks = RoutinePlanner(prefs: prefs).blocks(on: day, events: events)
+        var out: [String] = []
+        let meals = blocks.filter { $0.kind.isMeal }
+        if !meals.isEmpty {
+            out.append("Hall meals: " + meals.map { m in
+                "\(m.title) \(BriefText.range(m.start, m.end, cal))" + (m.window.map { " (serving until \(cal.time($0.end)))" } ?? "")
+            }.joined(separator: "; ") + ".")
+        }
+        if r.shutdownEnabled || r.readingEnabled {
+            var evening: [String] = []
+            if r.shutdownEnabled { evening.append("shutdown \(cal.time(cal.date(minute: r.shutdownTime, of: day)))") }
+            if r.readingEnabled { evening.append("reading \(cal.time(cal.date(minute: r.readingStart, of: day)))") }
+            out.append("Evening: " + evening.joined(separator: ", ") + "; no uni work after the shutdown.")
+        }
+        if r.protectSleep, let sleep = blocks.first(where: { $0.kind == .sleep }) {
+            out.append("Sleep window tonight: \(cal.time(sleep.start))–\(cal.time(sleep.end)) (\(BriefText.duration(sleep.minutes))). Nothing is planned in it.")
+        }
+        return out
     }
 
     /// A friendly 3–5 sentence summary in UK English.

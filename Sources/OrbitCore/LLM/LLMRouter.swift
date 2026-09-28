@@ -3,10 +3,10 @@ import Foundation
 /// Picks which AI to use for each request and falls back automatically.
 ///
 /// Rules:
-/// - Local-only mode, or `.privateData` → Ollama only.
-/// - `.bulk` → Ollama first (free, fast, private), OpenCode if Ollama is down.
-/// - `.vision` → whichever provider supports images, Ollama first.
-/// - Everything else → OpenCode first, Ollama as backup.
+/// - Local-only mode, or `.privateData` → Ollama only (cloud never sees private data).
+/// - `.bulk` → Ollama first (free, fast, private), then cloud.
+/// - `.vision` → Ollama first (local vision), then cloud.
+/// - `.chat` / `.reasoning` → CleanAPIs (cloud brain, claude-opus-5.5) first, then OpenCode, then Ollama.
 /// A provider that fails is skipped for a cool-down period, so one outage
 /// doesn't slow every request.
 public actor LLMRouter {
@@ -24,24 +24,63 @@ public actor LLMRouter {
     public func setProviders(_ p: [LLMProvider]) { providers = p; failedUntil = [:] }
     public func lastProvider() -> LLMProviderKind? { lastUsed }
 
+    /// Supplies relevant course knowledge + the student profile for a request (see `KnowledgeContext`).
+    public typealias ContextProvider = @Sendable (LLMRequest) async -> String?
+    private var contextProvider: ContextProvider?
+    public func setContextProvider(_ p: ContextProvider?) { contextProvider = p }
+
+    /// Chat and free-text reasoning get the knowledge context as an extra system message.
+    /// JSON extraction, bulk and vision jobs don't (keeps them fast and on-format).
+    public static func wantsKnowledge(_ r: LLMRequest) -> Bool {
+        (r.purpose == .chat || r.purpose == .reasoning) && !r.json
+            && !r.messages.contains { $0.role == .system && $0.text.hasPrefix(KnowledgeContext.marker) }
+    }
+
+    func withKnowledge(_ request: LLMRequest) async -> LLMRequest {
+        guard let contextProvider, Self.wantsKnowledge(request),
+              let ctx = await contextProvider(request), !ctx.isEmpty else { return request }
+        var r = request
+        let insertAt = r.messages.lastIndex { $0.role == .system }.map { $0 + 1 } ?? 0
+        r.messages.insert(.system(KnowledgeContext.marker + "\n" + ctx), at: insertAt)
+        return r
+    }
+
     /// The order providers will be tried in for a purpose.
     public func order(for purpose: LLMPurpose) -> [LLMProvider] {
         var list = providers
         if localOnly || purpose == .privateData { list = list.filter(\.isLocal) }
         if purpose == .vision { list = list.filter(\.supportsVision) }
-        let preferLocal = purpose == .bulk || purpose == .vision || purpose == .privateData
-        // Stable sort: preferred group first, original order kept inside groups.
-        let preferred = list.filter { $0.isLocal == preferLocal }
-        let rest = list.filter { $0.isLocal != preferLocal }
+
+        // Cloud-first for chat/reasoning (CleanAPIs brain), local-first for bulk/vision/private.
+        let ordered: [LLMProvider]
+        switch purpose {
+        case .bulk, .vision, .privateData:
+            let preferred = list.filter(\.isLocal)
+            let rest = list.filter { !$0.isLocal }
+            ordered = preferred + rest
+        default:
+            // Prefer cloud providers in the order the caller supplied them
+            // (CleanAPIs first when present), then OpenCode, then local.
+            // This keeps localOnly / privateData filtering but makes chat feel smart.
+            let cloud = list.filter { !$0.isLocal }
+            let local = list.filter(\.isLocal)
+            // Within cloud, prefer cleanapis over opencode when both present.
+            let cloudSorted = cloud.sorted { a, b in
+                let aIsClean = a.kind == .cleanapis
+                let bIsClean = b.kind == .cleanapis
+                if aIsClean != bIsClean { return aIsClean }
+                return false
+            }
+            ordered = cloudSorted + local
+        }
+
         let now = Date()
-        let ordered = preferred + rest
-        // Providers in cool-down go to the back rather than disappearing, so we
-        // still try them if nothing else works.
         return ordered.filter { (failedUntil[$0.displayName] ?? .distantPast) <= now }
             + ordered.filter { (failedUntil[$0.displayName] ?? .distantPast) > now }
     }
 
     public func complete(_ request: LLMRequest) async throws -> String {
+        let request = await withKnowledge(request)
         var errors: [String] = []
         for p in order(for: request.purpose) {
             do {
@@ -123,7 +162,7 @@ public enum FlexibleDate {
 
 /// A scripted provider for tests and previews.
 public struct MockLLMProvider: LLMProvider {
-    public let kind: LLMProviderKind = .mock
+    public let kind: LLMProviderKind
     public var displayName: String
     public var isLocal: Bool
     public var supportsVision: Bool
@@ -131,7 +170,9 @@ public struct MockLLMProvider: LLMProvider {
     public var responder: @Sendable (LLMRequest) throws -> String
 
     public init(displayName: String = "Mock", isLocal: Bool = true, supportsVision: Bool = true,
-                available: Bool = true, responder: @escaping @Sendable (LLMRequest) throws -> String) {
+                available: Bool = true, kind: LLMProviderKind = .mock,
+                responder: @escaping @Sendable (LLMRequest) throws -> String) {
+        self.kind = kind
         self.displayName = displayName; self.isLocal = isLocal; self.supportsVision = supportsVision
         self.available = available; self.responder = responder
     }
