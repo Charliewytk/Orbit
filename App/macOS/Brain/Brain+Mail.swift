@@ -76,10 +76,15 @@ extension OrbitBrain {
         if let exeter = ids.first(where: { $0.hasPrefix("exeter") }) {
             let count = report.digests.filter { $0.account == .exeter }.count
             var error = report.errors[exeter]
-            if exeter == "exeter-applemail", let e = error, e.localizedCaseInsensitiveContains("full disk") || e.contains("not found") {
-                error = "Needs Full Disk Access (Settings → Mac → Open Full Disk Access) and the Exeter account added to Mail."
+            if exeter == "exeter-applemail", let e = error, e.localizedCaseInsensitiveContains("full disk") || e.contains("not found") || e.contains("isDirectory") {
+                error = "Needs Full Disk Access (Settings → Mac → Open Full Disk Access) and the Exeter account added to Mail. Without it, mail appears to poll every 5h because AppleMailReader is blocked."
+            } else if exeter == "exeter-graph", let e = error, e.localizedCaseInsensitiveContains("auth") || e.contains("401") || e.contains("invalid_grant") {
+                error = "Exeter sign-in expired — reconnect Microsoft in Settings. Re-auth is automatic on next sync; you’ll get one alert per day until then."
             }
-            record(.exeterMail, error: error, detail: "\(count) new via \(exeter == "exeter-graph" ? "Microsoft" : "Apple Mail")")
+            record(.exeterMail, error: error, detail: "\(count) new via \(exeter == "exeter-graph" ? "Microsoft (Graph, 5-min poll, delta)" : "Apple Mail (5-min poll, file scan)")")
+        } else if accounts.microsoftConnected || accounts.googleConnected {
+            // No Exeter provider but Microsoft is connected — explain how to enable it
+            record(.exeterMail, detail: "Microsoft connected but Exeter mail source is ‘\(exeterMailSource)’. Set to Automatic/Graph in Settings → Accounts to enable Outlook.")
         }
         if report.digests.contains(where: { !$0.suggestedTasks.isEmpty || !$0.suggestedEvents.isEmpty }) {
             app?.refreshWidgets()

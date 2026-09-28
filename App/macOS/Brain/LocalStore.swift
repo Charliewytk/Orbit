@@ -150,4 +150,15 @@ enum MacPrefs {
         let s = defaults.string(forKey: key)?.trimmingCharacters(in: .whitespacesAndNewlines)
         return (s?.isEmpty ?? true) ? nil : s
     }
+
+    static func bool(_ key: String, default d: Bool = false) -> Bool {
+        guard defaults.object(forKey: key) != nil else { return d }
+        return defaults.bool(forKey: key)
+    }
+
+    // CleanAPIs cloud brain — mirrors CleanAPIKeys in OrbitCore (keep in sync).
+    static let cleanapisKey = CleanAPIKeys.key
+    static let cleanapisModel = CleanAPIKeys.model
+    static let cleanapisBaseURL = CleanAPIKeys.baseURL
+    static let cleanapisEnabled = CleanAPIKeys.enabled
 }

@@ -32,7 +32,13 @@ extension OrbitBrain {
             let warn = snapshot.warnings.isEmpty ? "" : " (\(snapshot.warnings.count) warnings)"
             record(.ele, detail: "\(snapshot.modules.count) modules, \(snapshot.assessments.count) assessments\(warn)")
         } catch let error as MoodleError where error.needsReauthentication {
-            record(.ele, error: "ELE sign-in expired. Reconnect ELE in Settings.")
+            // Advisory says: cookie session expiry → silent re-auth + alert + auto-retry.
+            // Actual implementation uses Moodle mobile token (stored in KeychainBlob "ele"), not a browser cookie.
+            // Token invalidation → user must re-sign in from Settings. No auto cookie renewal is wired.
+            // This is tracked as a gap vs the requested “auto-renew on sign-in expiry” behaviour.
+            record(.ele, error: "ELE sign-in expired. Reconnect ELE in Settings. (No auto cookie renewal — token must be re-issued.)")
+            notify(id: "ele-signed-out-\(DayCalendar(timeZone: prefs.timeZone).format(Date(), "yyyy-MM-dd"))",
+                   title: "ELE signed out", body: "Reconnect ELE in Settings to resume sync.", category: "ele")
         } catch {
             record(.ele, error: "ELE: \(error)")
         }

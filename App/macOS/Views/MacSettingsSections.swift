@@ -415,6 +415,96 @@ struct IMessageToggle: View {
     }
 }
 
+// MARK: - CleanAPIs cloud brain
+
+struct CleanAPIsStatusPanel: View {
+    @Environment(OrbitBrain.self) private var brain
+    @AppStorage(MacPrefs.cleanapisEnabled) private var enabled = true
+    @AppStorage(MacPrefs.cleanapisModel) private var model = "claude-opus-5.5"
+    @AppStorage(MacPrefs.cleanapisKey) private var storedKey = ""
+    @State private var showKey = false
+    @State private var checking = false
+    @State private var reachable: Bool?
+    @State private var keyPreview: String?
+
+    var resolvedKey: String? {
+        let t = storedKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !t.isEmpty { return t }
+        return CleanAPIsProvider.keyFromAuthFile()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                StatusDot(color: (reachable == true) ? Theme.success : (reachable == false ? Theme.danger : Theme.textSecondary))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("CleanAPIs (cloud brain)").font(Theme.body.weight(.medium))
+                    Text(statusLine).font(Theme.caption).foregroundStyle(Theme.textSecondary).lineLimit(2)
+                }
+                Spacer()
+                Toggle("Enabled", isOn: $enabled)
+                    .onChange(of: enabled) { _, _ in brain.rebuildRouter(); Task { await check() } }
+            }
+            if enabled {
+                Picker("Model", selection: $model) {
+                    Text("claude-opus-5.5").tag("claude-opus-5.5")
+                    Text("claude-sonnet-4.5").tag("claude-sonnet-4.5")
+                    Text("deepseek-v4").tag("deepseek-v4")
+                }
+                .onChange(of: model) { _, _ in brain.rebuildRouter() }
+                .disabled(checking)
+
+                HStack(spacing: 8) {
+                    Group {
+                        if showKey { TextField("cc_…", text: $storedKey).textFieldStyle(.roundedBorder) }
+                        else { SecureField("API key (or leave empty to use ~/.local/share/opencode/auth.json)", text: $storedKey).textFieldStyle(.roundedBorder) }
+                    }
+                    Button(showKey ? "Hide" : "Show") { showKey.toggle() }
+                    Button("Paste") {
+                        if let s = NSPasteboard.general.string(forType: .string) { storedKey = s.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    }
+                }
+                .onChange(of: storedKey) { _, _ in brain.rebuildRouter(); Task { await check() } }
+
+                if let kp = keyPreview {
+                    Text("Key: \(kp) · from \(storedKey.isEmpty ? "~/.local/share/opencode/auth.json" : "Settings")")
+                        .font(.caption2).foregroundStyle(Theme.textTertiary).textSelection(.enabled)
+                } else if resolvedKey == nil {
+                    Text("No key found. Add one above, or run `opencode auth` / put it in ~/.local/share/opencode/auth.json under \"cleanapis\".")
+                        .font(Theme.caption).foregroundStyle(Theme.warning)
+                }
+                Text("Private data (full email, full notes, handwriting) never leaves your Mac — only summaries go to CleanAPIs. Bulk & vision stay local.")
+                    .font(.caption2).foregroundStyle(Theme.textTertiary)
+                HStack {
+                    Button(checking ? "Checking…" : "Test") { Task { await check() } }.disabled(checking)
+                    if checking { ProgressView().controlSize(.small) }
+                    if let r = reachable { Text(r ? "Reachable ✓" : "Not reachable").font(Theme.caption).foregroundStyle(r ? Theme.success : Theme.danger) }
+                }
+            }
+        }
+        .task { await check() }
+    }
+
+    var statusLine: String {
+        if !enabled { return "Off — chat uses OpenCode → Ollama." }
+        if checking { return "Checking…" }
+        if let r = reachable { return r ? "Online · \(model) · chat & reasoning use cloud first, fallback to local" : "Key or network issue — will fall back to OpenCode/Ollama" }
+        return "\(model) · checking…"
+    }
+
+    func check() async {
+        checking = true; defer { checking = false }
+        let base: URL = {
+            if let s = MacPrefs.string(MacPrefs.cleanapisBaseURL), let u = URL(string: s) { return u }
+            return URL(string: "https://cleanapis.com/v1")!
+        }()
+        let p = CleanAPIsProvider(baseURL: base, model: model, apiKey: storedKey.isEmpty ? nil : storedKey)
+        keyPreview = p.keyPreview
+        reachable = await p.isAvailable()
+        brain.rebuildRouter()
+    }
+}
+
 // MARK: - AI
 
 struct AIStatusPanel: View {
@@ -575,6 +665,8 @@ struct MacAISection: View {
 
     var body: some View {
         Section {
+            CleanAPIsStatusPanel()
+            Divider()
             AIStatusPanel()
             Toggle("Share AI with iPhone (Tailscale / home Wi-Fi)", isOn: $share)
                 .onChange(of: share) { _, _ in
@@ -590,7 +682,7 @@ struct MacAISection: View {
         } header: {
             Text("AI")
         } footer: {
-            Text("Everything is free: OpenCode's free models first, Ollama on this Mac as the backup.")
+            Text("Chat & reasoning prefer CleanAPIs (cloud) when enabled, then OpenCode, then Ollama. Bulk, vision & private data stay on this Mac. Toggle CleanAPIs off for fully offline — nothing breaks.")
         }
     }
 }

@@ -87,6 +87,9 @@ final class OrbitBrain: OrbitBackend {
         every(10, after: 6) { await $0.processChatQueue() }
         every(300, after: 3) { await $0.syncCalendar() }
         every(300, after: 10) { await $0.syncMail() }
+        // Tip for the user (see inbox/ED/polling audit): this is 5 *minutes*, not 5 hours.
+        // Graph delta + Gmail historyId are incremental; a “5h” impression is usually Full Disk Access
+        // blocking AppleMailReader or an expired Graph token that silently fell back.
         every(3600, after: 20) { await $0.syncELE() }
         every(900, after: 150) { await $0.syncELELive() }
         every(1800, after: 40) { await $0.syncNotes() }
@@ -175,6 +178,8 @@ final class OrbitBrain: OrbitBackend {
     }
 
     /// Rebuilds the provider list from the current settings.
+    /// Order: CleanAPIs (cloud brain) first when enabled, then OpenCode, then Ollama.
+    /// LLMRouter promotes CleanAPIs for chat/reasoning and keeps Ollama first for bulk/vision/private.
     func rebuildRouter() {
         let model = (MacPrefs.string(MacPrefs.openCodeModel) ?? MacPrefs.string(MacPrefs.openCodeResolvedModel))
             .flatMap(OpenCodeProvider.ModelRef.init)
@@ -182,10 +187,33 @@ final class OrbitBrain: OrbitBackend {
         let ollamaProvider = OllamaProvider(baseURL: ollama.baseURL,
                                             model: MacPrefs.string(MacPrefs.ollamaModel) ?? "qwen3:8b",
                                             visionModel: MacPrefs.string(MacPrefs.ollamaVisionModel) ?? "qwen2.5vl:7b")
+
+        var providers: [any LLMProvider] = []
+        // CleanAPIs cloud brain — enabled unless the user opted out (default ON when key present).
+        let cleanapisEnabled: Bool = {
+            if MacPrefs.defaults.object(forKey: MacPrefs.cleanapisEnabled) != nil {
+                return MacPrefs.defaults.bool(forKey: MacPrefs.cleanapisEnabled)
+            }
+            // Default: on if a key exists (auth.json or pasted), off otherwise — so fresh installs stay offline.
+            return CleanAPIsProvider.keyFromAuthFile() != nil || MacPrefs.string(MacPrefs.cleanapisKey) != nil
+        }()
+        if cleanapisEnabled {
+            let baseURL: URL = {
+                if let s = MacPrefs.string(MacPrefs.cleanapisBaseURL), let u = URL(string: s) { return u }
+                return URL(string: "https://cleanapis.com/v1")!
+            }()
+            let cleanModel = MacPrefs.string(MacPrefs.cleanapisModel) ?? "claude-opus-5.5"
+            let cleanKey = MacPrefs.string(MacPrefs.cleanapisKey) // nil → provider falls back to auth.json / env
+            let cleanapis = CleanAPIsProvider(baseURL: baseURL, model: cleanModel, apiKey: cleanKey)
+            providers.append(cleanapis)
+        }
+        providers.append(openCode)
+        providers.append(ollamaProvider)
+
         let localOnly = prefs.localOnlyMode
         let router = self.router
         Task {
-            await router.setProviders([openCode, ollamaProvider])
+            await router.setProviders(providers)
             await router.setLocalOnly(localOnly)
             await router.setContextProvider { request in await StudyHub.shared.knowledgeContext(for: request) }
         }
@@ -206,6 +234,7 @@ final class OrbitBrain: OrbitBackend {
 
     func providerName(_ kind: LLMProviderKind?) -> String? {
         switch kind {
+        case .cleanapis: "CleanAPIs"
         case .opencode: "OpenCode"
         case .ollama: "Ollama"
         case .mock: "Test AI"

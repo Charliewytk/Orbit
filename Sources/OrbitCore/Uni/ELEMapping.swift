@@ -22,7 +22,7 @@ public struct ELEAnnouncement: Identifiable, Codable, Hashable, Sendable {
 
 /// Learning material on a course page: files, pages, links, folders, reading lists.
 public struct ELEResource: Identifiable, Codable, Hashable, Sendable {
-    public enum Kind: String, Codable, Sendable { case file, page, link, folder, book, readingList, other }
+    public enum Kind: String, Codable, Sendable { case file, page, link, folder, book, readingList, label, other }
 
     public var id: String
     public var moduleCode: String
@@ -127,14 +127,29 @@ public enum ELEMapping {
             case "url": kind = .link
             case "folder": kind = .folder
             case "book": kind = .book
-            case "lti", "label", "assign", "quiz", "forum", "turnitintooltwo", "choice", "feedback", "attendance": return nil
+            case "label":
+                // Labels hold week intros & todo checklists — keep non-empty ones
+                let desc = (m.description ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !desc.isEmpty || !m.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+                kind = .other
+            case "lti":
+                // Keep Ed Discussion and any LTI with a target; drop bare handles
+                let nameLower = m.name.lowercased()
+                let urlLower = (m.externalURL ?? m.url ?? "").lowercased()
+                let isEd = nameLower.contains("ed discussion") || nameLower.contains("ed-discussion") || urlLower.contains("edstem") || urlLower.contains("ed-discussion")
+                if isEd { kind = .link }
+                else if m.externalURL != nil || m.url != nil { kind = .link }
+                else { return nil }
+            case "assign", "quiz", "forum", "turnitintooltwo", "choice", "feedback", "attendance": return nil
             default: kind = .other
             }
         }
         guard m.visible else { return nil }
+        // label has no file; preserve its text as target for display
+        let target: String? = m.externalURL ?? m.contents.first?.fileURL ?? (m.modName == "label" ? m.description : nil)
         return ELEResource(id: "ele-cm-\(m.id)", moduleCode: moduleCode, courseID: courseID, cmid: m.id,
-                           section: section.name, name: m.name, kind: kind, url: m.url,
-                           targetURL: m.externalURL ?? m.contents.first?.fileURL, modified: m.latestModified)
+                           section: section.name, name: m.name.isEmpty ? (m.description.map { String($0.prefix(80)) } ?? m.name) : m.name,
+                           kind: kind, url: m.url, targetURL: target, modified: m.latestModified)
     }
 
     public static func announcement(_ d: MoodleDiscussion, forum: MoodleForum, moduleCode: String, siteURL: String) -> ELEAnnouncement {

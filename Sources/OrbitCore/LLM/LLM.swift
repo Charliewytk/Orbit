@@ -45,7 +45,7 @@ public struct LLMRequest: Sendable {
     }
 }
 
-public enum LLMProviderKind: String, Codable, Sendable { case opencode, ollama, mock }
+public enum LLMProviderKind: String, Codable, Sendable { case cleanapis, opencode, ollama, mock }
 
 public protocol LLMProvider: Sendable {
     var kind: LLMProviderKind { get }

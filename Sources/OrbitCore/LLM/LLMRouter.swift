@@ -3,10 +3,10 @@ import Foundation
 /// Picks which AI to use for each request and falls back automatically.
 ///
 /// Rules:
-/// - Local-only mode, or `.privateData` → Ollama only.
-/// - `.bulk` → Ollama first (free, fast, private), OpenCode if Ollama is down.
-/// - `.vision` → whichever provider supports images, Ollama first.
-/// - Everything else → OpenCode first, Ollama as backup.
+/// - Local-only mode, or `.privateData` → Ollama only (cloud never sees private data).
+/// - `.bulk` → Ollama first (free, fast, private), then cloud.
+/// - `.vision` → Ollama first (local vision), then cloud.
+/// - `.chat` / `.reasoning` → CleanAPIs (cloud brain, claude-opus-5.5) first, then OpenCode, then Ollama.
 /// A provider that fails is skipped for a cool-down period, so one outage
 /// doesn't slow every request.
 public actor LLMRouter {
@@ -50,14 +50,31 @@ public actor LLMRouter {
         var list = providers
         if localOnly || purpose == .privateData { list = list.filter(\.isLocal) }
         if purpose == .vision { list = list.filter(\.supportsVision) }
-        let preferLocal = purpose == .bulk || purpose == .vision || purpose == .privateData
-        // Stable sort: preferred group first, original order kept inside groups.
-        let preferred = list.filter { $0.isLocal == preferLocal }
-        let rest = list.filter { $0.isLocal != preferLocal }
+
+        // Cloud-first for chat/reasoning (CleanAPIs brain), local-first for bulk/vision/private.
+        let ordered: [LLMProvider]
+        switch purpose {
+        case .bulk, .vision, .privateData:
+            let preferred = list.filter(\.isLocal)
+            let rest = list.filter { !$0.isLocal }
+            ordered = preferred + rest
+        default:
+            // Prefer cloud providers in the order the caller supplied them
+            // (CleanAPIs first when present), then OpenCode, then local.
+            // This keeps localOnly / privateData filtering but makes chat feel smart.
+            let cloud = list.filter { !$0.isLocal }
+            let local = list.filter(\.isLocal)
+            // Within cloud, prefer cleanapis over opencode when both present.
+            let cloudSorted = cloud.sorted { a, b in
+                let aIsClean = a.kind == .cleanapis
+                let bIsClean = b.kind == .cleanapis
+                if aIsClean != bIsClean { return aIsClean }
+                return false
+            }
+            ordered = cloudSorted + local
+        }
+
         let now = Date()
-        let ordered = preferred + rest
-        // Providers in cool-down go to the back rather than disappearing, so we
-        // still try them if nothing else works.
         return ordered.filter { (failedUntil[$0.displayName] ?? .distantPast) <= now }
             + ordered.filter { (failedUntil[$0.displayName] ?? .distantPast) > now }
     }
